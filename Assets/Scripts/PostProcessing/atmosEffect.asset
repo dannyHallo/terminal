@@ -1,0 +1,17 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 99f15e070645abb45990bcb8768b1bd8, type: 3}
+  m_Name: atmosEffect
+  m_EditorClassIdentifier: 
+  atmosphereShader: {fileID: 4800000, guid: 960858c2dfae64e4e99c61647e5e69ae, type: 3}
+  displayAtmospheres: 1
+  atmosphereSettings: {fileID: 11400000, guid: 697cd13215eac4342b1515d32931a270, type: 2}
