@@ -168,15 +168,10 @@ Shader "Hidden/Atmosphere"
 				float3 rayOrigin = _WorldSpaceCameraPos;
 				float3 rayDir = normalize(i.viewVector);
 				
-				// float dstToOcean = raySphere(planetCentre, oceanRadius, rayOrigin, rayDir);
-				// float dstToSurface = min(sceneDepth, dstToOcean);
-				
 				float2 hitInfo = raySphere(planetCentre, atmosphereRadius, rayOrigin, rayDir);
 				float dstToAtmosphere = hitInfo.x;
 				float dstThroughAtmosphere = min(hitInfo.y, sceneDepth - dstToAtmosphere);
-				// float dstThroughAtmosphere = hitInfo.y;
-				
-				// return dstThroughAtmosphere / (atmosphereRadius * 2) * float4(rayDir.rgb * 0.5 + 0.5, 0);
+
 			
 				if (dstThroughAtmosphere > 0) {
 					const float epsilon = 0.0001;

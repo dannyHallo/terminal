@@ -7,10 +7,8 @@ using static UnityEngine.Mathf;
 [CreateAssetMenu (menuName = "Celestial Body/Atmosphere")]
 public class AtmosphereSettings : ScriptableObject {
 
-	public bool enabled = true;
 	public ComputeShader opticalDepthCompute;
 	public int textureSize = 256;
-
 	public int inScatteringPoints = 10;
 	public int opticalDepthPoints = 10;
 	public float densityFalloff = 0.25f;
@@ -38,17 +36,7 @@ public class AtmosphereSettings : ScriptableObject {
 	public bool timeFlow = false;
 
 	public void SetProperties (Material material) {
-		/*
-		if (Application.isPlaying) {
-			if (Time.time > 1) {
-				timeOfDay += Time.deltaTime * 0.1f;
-					var sun = GameObject.Find ("Test Sun");
-			sun.transform.position = new Vector3 (Mathf.Cos (timeOfDay), Mathf.Sin (timeOfDay), 0) * sunDst;
-			sun.transform.LookAt (Vector3.zero);
-			}
-		}
-		*/
-		if ((!settingsUpToDate || !Application.isPlaying) || Application.isPlaying) {
+		if (!settingsUpToDate || Application.isPlaying) {
 			var sun = GameObject.Find ("Test Sun");
 			if (sun) {
 				sun.transform.position = new Vector3 (Mathf.Cos (timeOfDay), Mathf.Sin (timeOfDay), 0) * sunDst;

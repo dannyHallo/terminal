@@ -28,7 +28,6 @@
             float3 worldNormal;
         };
 
-        float planetRadius;
         float boundsY;
         float offsetY;
         float normalOffsetWeight;
@@ -40,10 +39,7 @@
 
         void surf (Input IN, inout SurfaceOutputStandard o)
         {
-            // Albedo comes from a texture tinted by color
-            // smoothstep: like lerp
-            float r = length(IN.worldPos);
-            float h = smoothstep(-boundsY/2, boundsY/2, r - planetRadius + offsetY + IN.worldNormal.y * normalOffsetWeight);
+            float h = smoothstep(-boundsY/2, boundsY/2, IN.worldPos.y + offsetY + IN.worldNormal.y * normalOffsetWeight);
             float3 tex = tex2D(ramp, float2(h,.5));
             o.Albedo = tex;
             // Metallic and smoothness come from slider variables

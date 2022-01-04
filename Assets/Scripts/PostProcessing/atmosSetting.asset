@@ -12,7 +12,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 13faefcfe66214c4b804efef04cdbac6, type: 3}
   m_Name: atmosSetting
   m_EditorClassIdentifier: 
-  enabled: 1
   opticalDepthCompute: {fileID: 7200000, guid: 646112d38083e214da51661f0f93148b, type: 3}
   textureSize: 256
   inScatteringPoints: 18
@@ -22,13 +21,13 @@ MonoBehaviour:
   testParams: {x: 6.93, y: 1.26, z: 0.1, w: 3}
   scatteringStrength: 21.23
   intensity: 1
-  planetRadius: 500
+  planetRadius: 72.7
   ditherStrength: 0.8
   ditherScale: 3.89
   blueNoise: {fileID: 2800000, guid: 18b30821a3f047f42aae7c5a160db4d0, type: 3}
-  atmosphereScale: 0.62
-  timeOfDay: 0.0516003
+  atmosphereScale: 1.701
+  timeOfDay: 0.038300075
   sunDst: 1000
-  atmosphereRadius: 810
+  atmosphereRadius: 196.36269
   settingsUpToDate: 1
   timeFlow: 1

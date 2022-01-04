@@ -7,20 +7,14 @@ public class AtmosphereEffect {
 	Light light;
 	protected Material material;
 	public void UpdateSettings (Shader atmosphereShader) {
-		
-		if (material == null || material.shader != atmosphereShader) {
+		if (material == null || material.shader != atmosphereShader)
 			material = new Material (atmosphereShader);
-		}
 
-		if (light == null) {
+		if (light == null)
 			light = GameObject.FindObjectOfType<SunShadowCaster> ()?.GetComponent<Light> ();
-		}
-
 	
-		material.SetFloat ("oceanRadius", 20f);
-
 		if (light) {
-			Vector3 dirFromPlanetToSun = (light.transform.position - new Vector3()).normalized;
+			Vector3 dirFromPlanetToSun = light.transform.position.normalized;
 			//Debug.Log(dirFromPlanetToSun);
 			material.SetVector ("dirToSun", dirFromPlanetToSun);
 		} else {

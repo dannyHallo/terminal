@@ -20,7 +20,6 @@ float weightMultiplier;
 bool closeEdges;
 float hardFloor;
 float hardFloorWeight;
-float planetRadius;
 float4 params;
 float isoLevel;
 
@@ -35,7 +34,7 @@ void Density (int3 id : SV_DispatchThreadID)
         return;
     }
     
-    // World pos for points
+    // World pos
     float3 pos = centre + id * spacing - boundsSize/2;
     float offsetNoise = 0;
 
@@ -55,9 +54,8 @@ void Density (int3 id : SV_DispatchThreadID)
         frequency *= lacunarity;
     }
     
-    float r = length(pos);
     // The higher the position is, the less likely it is gonna appear.
-    float finalVal = planetRadius - r + noise * noiseWeight + (r%params.x) * params.y;
+    float finalVal = -pos.y + noise * noiseWeight + (pos.y%params.x) * params.y;
 
     if (pos.y < hardFloor) {
         finalVal += hardFloorWeight;
@@ -70,11 +68,6 @@ void Density (int3 id : SV_DispatchThreadID)
         
     }
 
-    // float3 vecToHit = hitPoint - pos;
-    // float SqrDst = vecToHit.x * vecToHit.x + vecToHit.y * vecToHit.y + vecToHit.z * vecToHit.z;
-    // if(SqrDst <= (range * range)){
-    //     finalVal = -100;
-    // }
     finalVal = clamp(finalVal, isoLevel - 10, isoLevel + 10);
 
     // This index list can be used in marchingcubes.compute

@@ -6,10 +6,6 @@ public abstract class PostProcessingEffect : ScriptableObject {
 
 	protected Material material;
 
-	public virtual Material GetMaterial () {
-		return null;
-	}
-
 	public virtual void ReleaseBuffers () {
 
 	}

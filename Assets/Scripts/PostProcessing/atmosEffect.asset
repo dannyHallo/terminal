@@ -13,5 +13,4 @@ MonoBehaviour:
   m_Name: atmosEffect
   m_EditorClassIdentifier: 
   atmosphereShader: {fileID: 4800000, guid: 960858c2dfae64e4e99c61647e5e69ae, type: 3}
-  displayAtmospheres: 1
   atmosphereSettings: {fileID: 11400000, guid: 697cd13215eac4342b1515d32931a270, type: 2}

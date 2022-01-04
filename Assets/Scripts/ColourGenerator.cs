@@ -7,7 +7,6 @@ public class ColourGenerator : MonoBehaviour {
     public Material mat;
     public Gradient gradient;
     public float normalOffsetWeight;
-    public AtmosphereSettings atmosphereSettings;
     Texture2D texture;
     public float boundsY;
     public float offsetY;
@@ -24,7 +23,6 @@ public class ColourGenerator : MonoBehaviour {
         Init ();
         UpdateTexture ();
 
-        mat.SetFloat ("planetRadius", atmosphereSettings.planetRadius);
         mat.SetFloat ("boundsY", boundsY);
         mat.SetFloat ("offsetY", offsetY);
         mat.SetFloat ("normalOffsetWeight", normalOffsetWeight);

@@ -10,12 +10,11 @@ using UnityEngine.UI;
 public class PlayerMovement : MonoBehaviour
 {
     public String botName;
-    public FauxGravityAttractor fauxGravityAttractor;
+    public float gravity = 10f;
+    public Scrollbar thrustIndicator;
     public MeshGenerator meshGenerator;
     public Transform playerCamera;
-    public Transform playerBody;
     public AtmosphereSettings atmosphereSettings;
-    public bool masterMode = false;
     bool ableToDig = true;
     //Others
     Rigidbody rb;
@@ -35,8 +34,7 @@ public class PlayerMovement : MonoBehaviour
 
     [Range(1, 10)]
     public int drawRange = 5;
-    float jumpCooldown = 0.25f;
-    public float jumpForce = 150;
+    public float thrustForce = 150;
     public Image screenShotMask;
     //Input
     float x, y;
@@ -62,7 +60,7 @@ public class PlayerMovement : MonoBehaviour
 
     AudioSource audioSource;
     public AudioClip Cam_35mm;
-    
+
     void Awake()
     {
         rb = GetComponent<Rigidbody>();
@@ -90,7 +88,7 @@ public class PlayerMovement : MonoBehaviour
         float rayLength = 500f;
 
         // actual Ray
-        Ray ray = new Ray(new Vector3(0, atmosphereSettings.planetRadius + 400f, 0), Vector3.down);
+        Ray ray = new Ray(new Vector3(0, 30f, 0), Vector3.down);
 
         // debug Ray
         Debug.DrawRay(ray.origin, ray.direction * rayLength, Color.green);
@@ -112,7 +110,7 @@ public class PlayerMovement : MonoBehaviour
     {
         if (!landed)
             TryToLand();
-        fauxGravityAttractor.Attract(transform, masterMode ? 0 : 1);
+        rb.AddForce(Vector3.down * gravity);
         GroundCheck();
         GetInput();
         Movement();
@@ -241,8 +239,8 @@ public class PlayerMovement : MonoBehaviour
 
     private void StartSprint()
     {
-        moveSpeed *= masterMode ? 2.5f : 2f;
-        maxSpeed *= masterMode ? 2.5f : 2f;
+        moveSpeed *= 2f;
+        maxSpeed *= 2f;
     }
 
     private void StopSprint()
@@ -253,7 +251,6 @@ public class PlayerMovement : MonoBehaviour
 
     private void Movement()
     {
-
         //Extra gravity
         //rb.AddForce(Vector3.down * Time.deltaTime * garvity * 4f);
 
@@ -264,7 +261,7 @@ public class PlayerMovement : MonoBehaviour
         //CounterMovement(x, y, mag);
 
         //If holding jump && ready to jump, then jump
-        if (readyToJump && jumping)
+        if (jumping)
             Jump();
 
         //If sliding down a ramp, add force down so player stays grounded and also builds speed
@@ -277,7 +274,7 @@ public class PlayerMovement : MonoBehaviour
         // If speed is larger than maxspeed, cancel out the input so you don't go over max speed
         // if (x != 0 || y != 0)
         {
-            if ((speedMag > maxSpeed) && !masterMode)
+            if (speedMag > maxSpeed)
             {
                 x = 0;
                 y = 0;
@@ -290,29 +287,9 @@ public class PlayerMovement : MonoBehaviour
             rb.velocity = new Vector3(rb.velocity.x / 4, yVelocity, rb.velocity.z / 4);
         }
 
-
-        if (!grounded)
-            multiplier = 0.25f;
-        else
-            multiplier = 1f;
-
-        if (masterMode)
-        {
-            if (jumping)
-                transform.position += transform.up * 1 * moveSpeed * Time.deltaTime * 0.2f;
-            if (crouching)
-                transform.position += transform.up * -1 * moveSpeed * Time.deltaTime * 0.2f;
-            transform.position += transform.forward * y * moveSpeed * Time.deltaTime * 0.2f;
-            transform.position += transform.right * x * moveSpeed * Time.deltaTime * 0.2f;
-        }
-        else
-        {
-            //Apply forces to move player
-            rb.AddForce(transform.forward * y * moveSpeed * Time.deltaTime * 100 * multiplier);
-            rb.AddForce(transform.right * x * moveSpeed * Time.deltaTime * 100 * multiplier);
-        }
-
-
+        //Apply forces to move player
+        rb.AddForce(transform.forward * y * moveSpeed * Time.deltaTime * 100 * multiplier);
+        rb.AddForce(transform.right * x * moveSpeed * Time.deltaTime * 100 * multiplier);
     }
 
     public void NotifyTerrainChanged(Vector3 point, float radius)
@@ -352,26 +329,7 @@ public class PlayerMovement : MonoBehaviour
 
     private void Jump()
     {
-        if (grounded && readyToJump && !masterMode)
-        {
-            readyToJump = false;
-            //Add jump forces
-            rb.AddForce(transform.up * jumpForce * 5f);
-
-            // //If jumping while falling, reset y velocity.
-            // Vector3 vel = rb.velocity;
-            // if (rb.velocity.y < 0.5f)
-            //     rb.velocity = new Vector3(vel.x, 0, vel.z);
-            // else if (rb.velocity.y > 0)
-            //     rb.velocity = new Vector3(vel.x, vel.y / 2, vel.z);
-
-            Invoke(nameof(ResetJump), jumpCooldown);
-        }
-    }
-
-    private void ResetJump()
-    {
-        readyToJump = true;
+        rb.AddForce(transform.up * thrustForce * 0.5f);
     }
 
     private void Look()
