@@ -25,7 +25,7 @@ public class NoiseDensity : DensityGenerator
 
     ComputeBuffer debugBuffer;
 
-    public override ComputeBuffer Generate(ComputeBuffer pointsBuffer, ComputeBuffer additionalPointsBuffer, int numPointsPerAxis, float boundsSize, Vector3 worldBounds, Vector3 centre, Vector3 offset, float spacing, float planetRadius, float isoLevel)
+    public override ComputeBuffer Generate(ComputeBuffer pointsBuffer, ComputeBuffer additionalPointsBuffer, int numPointsPerAxis, float boundsSize, Vector3 worldBounds, Vector3 centre, Vector3 offset, float spacing, float isoLevel)
     {
         buffersToRelease = new List<ComputeBuffer>();
 
@@ -65,6 +65,6 @@ public class NoiseDensity : DensityGenerator
         densityShader.SetBuffer(0, "manualData", additionalPointsBuffer);
         densityShader.SetVector("params", shaderParams);
 
-        return base.Generate(pointsBuffer, additionalPointsBuffer, numPointsPerAxis, boundsSize, worldBounds, centre, offset, spacing, planetRadius, isoLevel);
+        return base.Generate(pointsBuffer, additionalPointsBuffer, numPointsPerAxis, boundsSize, worldBounds, centre, offset, spacing, isoLevel);
     }
 }

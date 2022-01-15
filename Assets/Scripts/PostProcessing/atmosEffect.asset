@@ -12,5 +12,5 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 99f15e070645abb45990bcb8768b1bd8, type: 3}
   m_Name: atmosEffect
   m_EditorClassIdentifier: 
-  atmosphereShader: {fileID: 4800000, guid: 960858c2dfae64e4e99c61647e5e69ae, type: 3}
+  atmosphereShader: {fileID: 4800000, guid: 64caf74e084f8fe4fb0f82c329663a92, type: 3}
   atmosphereSettings: {fileID: 11400000, guid: 697cd13215eac4342b1515d32931a270, type: 2}

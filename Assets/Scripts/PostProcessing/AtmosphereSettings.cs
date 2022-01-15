@@ -4,89 +4,107 @@ using UnityEngine;
 using static UnityEngine.Mathf;
 
 // We can create setting assest in project folder
-[CreateAssetMenu (menuName = "Celestial Body/Atmosphere")]
-public class AtmosphereSettings : ScriptableObject {
+[CreateAssetMenu(menuName = "Celestial Body/Atmosphere")]
+public class AtmosphereSettings : ScriptableObject
+{
 
-	public ComputeShader opticalDepthCompute;
-	public int textureSize = 256;
-	public int inScatteringPoints = 10;
-	public int opticalDepthPoints = 10;
-	public float densityFalloff = 0.25f;
+    // public ComputeShader opticalDepthCompute;
+    // public int textureSize = 256;
+    public int inScatteringPoints = 10;
+    public int opticalDepthPoints = 10;
+    public float densityFalloff = 4f;
 
-	public Vector3 wavelengths = new Vector3 (700, 530, 460);
+    public Vector3 wavelengths = new Vector3(700, 530, 440);
 
-	public Vector4 testParams = new Vector4 (7, 1.26f, 0.1f, 3);
-	public float scatteringStrength = 20;
-	public float intensity = 1;
-	public float planetRadius;
+    public Vector4 testParams = new Vector4(7, 1.26f, 0.1f, 3);
+    public float scatteringStrength = 20;
 
-	public float ditherStrength = 0.8f;
-	public float ditherScale = 4;
-	public Texture2D blueNoise;
+    // public float ditherStrength = 0.8f;
+    // public float ditherScale = 4;
+    // public Texture2D blueNoise;
 
-	[Range (0, 2)]
-	public float atmosphereScale = 0.5f;
+    // [Range(0, 0.2f)] public float atmosphereScale = 0.01f;
+    [Range(0, 100000)] public float planetRadius = 400f;
 
-	[Header ("Test")]
-	public float timeOfDay;
-	public float sunDst = 1;
-	public float atmosphereRadius = 0;
-	RenderTexture opticalDepthTexture;
-	public bool settingsUpToDate;
-	public bool timeFlow = false;
 
-	public void SetProperties (Material material) {
-		if (!settingsUpToDate || Application.isPlaying) {
-			var sun = GameObject.Find ("Test Sun");
-			if (sun) {
-				sun.transform.position = new Vector3 (Mathf.Cos (timeOfDay), Mathf.Sin (timeOfDay), 0) * sunDst;
-				sun.transform.LookAt (Vector3.zero);
-				if(Application.isPlaying && timeFlow)
-					timeOfDay += 0.0001f;
+    [Range(-100, 100)] public float atmosBottom = 0;
+    [Range(0, 20000)] public float atmosHeight = 1000f;
+    [Range(0, 50)] public float scatteringCoefficent = 1;
+    [Range(0, 5)] public float scatteringIntensity = 1;
+    [Range(0, 5)] public float totalIntensity = 1;
+    public float intensity;
+
+    [Header("Sun Settings")]
+    [Range(0, 1)] public float timeOfDay;
+    public float sunDst = 100000;
+    float atmosphereRadius = 0;
+    // RenderTexture opticalDepthTexture;
+    public bool settingsUpToDate;
+    // public bool timeFlow = false;
+
+    public void SetProperties(Material material)
+    {
+        if (!settingsUpToDate || Application.isPlaying)
+        {
+            var sun = GameObject.Find("Test Sun");
+            if (sun)
+            {
+                sun.transform.position = new Vector3(Mathf.Cos(timeOfDay * 2 * Mathf.PI), Mathf.Sin(timeOfDay * 2 * Mathf.PI), 0) * sunDst;
+                sun.transform.LookAt(Vector3.zero);
+                // if(Application.isPlaying && timeFlow)
+                // 	timeOfDay += 0.0001f;
+            }
+			if(timeOfDay > 0.99){
+				timeOfDay = 0;
 			}
+            // MonoBehaviour.print("setting");
+            atmosphereRadius = atmosHeight + planetRadius;
+            material.SetFloat("atmosphereRadius", atmosphereRadius);
+            material.SetFloat("planetRadius", planetRadius);
+            material.SetVector("planetCentre", new Vector3(0, -planetRadius, 0));
 
+            material.SetVector("params", testParams);
+            material.SetInt("numInScatteringPoints", inScatteringPoints);
+            material.SetInt("numOpticalDepthPoints", opticalDepthPoints);
+            material.SetFloat("atmosBottom", atmosBottom);
+            material.SetFloat("atmosHeight", atmosHeight);
+            material.SetFloat("scatteringIntensity", scatteringIntensity);
+            material.SetFloat("totalIntensity", totalIntensity);
+            material.SetFloat("densityFalloff", densityFalloff);
 
-			atmosphereRadius = (1 + atmosphereScale) * planetRadius;
-			material.SetVector ("params", testParams);
-			material.SetInt ("numInScatteringPoints", inScatteringPoints);
-			material.SetInt ("numOpticalDepthPoints", opticalDepthPoints);
-			material.SetFloat ("atmosphereRadius", atmosphereRadius);
-			material.SetFloat ("planetRadius", planetRadius);
-			material.SetFloat ("densityFalloff", densityFalloff);
-			material.SetVector ("planetCentre", new Vector3(0,0,0));
+            // Strength of (rayleigh) scattering is inversely proportional to wavelength^4
+            float scatterX = Pow(scatteringCoefficent / wavelengths.x, 4);
+            float scatterY = Pow(scatteringCoefficent / wavelengths.y, 4);
+            float scatterZ = Pow(scatteringCoefficent / wavelengths.z, 4);
+            material.SetVector("scatteringCoefficients", new Vector3(scatterX, scatterY, scatterZ) * scatteringStrength);
+            material.SetFloat("intensity", intensity);
+            // material.SetFloat ("ditherStrength", ditherStrength);
+            // material.SetFloat ("ditherScale", ditherScale);
+            // material.SetTexture ("_BlueNoise", blueNoise);
 
-			// Strength of (rayleigh) scattering is inversely proportional to wavelength^4
-			float scatterX = Pow (400 / wavelengths.x, 4);
-			float scatterY = Pow (400 / wavelengths.y, 4);
-			float scatterZ = Pow (400 / wavelengths.z, 4);
-			material.SetVector ("scatteringCoefficients", new Vector3 (scatterX, scatterY, scatterZ) * scatteringStrength);
-			material.SetFloat ("intensity", intensity);
-			material.SetFloat ("ditherStrength", ditherStrength);
-			material.SetFloat ("ditherScale", ditherScale);
-			material.SetTexture ("_BlueNoise", blueNoise);
+            // PrecomputeOutScattering ();
+            // material.SetTexture ("_BakedOpticalDepth", opticalDepthTexture);
 
-			PrecomputeOutScattering ();
-			material.SetTexture ("_BakedOpticalDepth", opticalDepthTexture);
+            settingsUpToDate = true;
+        }
+    }
 
-			settingsUpToDate = true;
-		}
-	}
+    // void PrecomputeOutScattering () {
+    // 	if (!settingsUpToDate || opticalDepthTexture == null || !opticalDepthTexture.IsCreated ()) {
+    // 		ComputeHelper.CreateRenderTexture (ref opticalDepthTexture, textureSize, FilterMode.Bilinear);
+    // 		opticalDepthCompute.SetTexture (0, "Result", opticalDepthTexture);
+    // 		opticalDepthCompute.SetInt ("textureSize", textureSize);
+    // 		opticalDepthCompute.SetInt ("numOutScatteringSteps", opticalDepthPoints);
+    // 		// opticalDepthCompute.SetFloat ("atmosphereRadius", (1 + atmosphereScale));
+    // 		opticalDepthCompute.SetFloat ("densityFalloff", densityFalloff);
+    // 		opticalDepthCompute.SetVector ("params", testParams);
+    // 		ComputeHelper.Run (opticalDepthCompute, textureSize, textureSize);
+    // 	}
 
-	void PrecomputeOutScattering () {
-		if (!settingsUpToDate || opticalDepthTexture == null || !opticalDepthTexture.IsCreated ()) {
-			ComputeHelper.CreateRenderTexture (ref opticalDepthTexture, textureSize, FilterMode.Bilinear);
-			opticalDepthCompute.SetTexture (0, "Result", opticalDepthTexture);
-			opticalDepthCompute.SetInt ("textureSize", textureSize);
-			opticalDepthCompute.SetInt ("numOutScatteringSteps", opticalDepthPoints);
-			opticalDepthCompute.SetFloat ("atmosphereRadius", (1 + atmosphereScale));
-			opticalDepthCompute.SetFloat ("densityFalloff", densityFalloff);
-			opticalDepthCompute.SetVector ("params", testParams);
-			ComputeHelper.Run (opticalDepthCompute, textureSize, textureSize);
-		}
+    // }
 
-	}
-
-	void OnValidate () {
-		settingsUpToDate = false;
-	}
+    void OnValidate()
+    {
+        settingsUpToDate = false;
+    }
 }

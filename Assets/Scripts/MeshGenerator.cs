@@ -530,7 +530,7 @@ public class MeshGenerator : MonoBehaviour
         Vector3 worldBounds = new Vector3(numChunks.x, numChunks.y, numChunks.z) * boundsSize;
 
         // Gerenate individual noise value using compute shader， modifies pointsBuffer
-        pointsBuffer = densityGenerator.Generate(pointsBuffer, additionalPointsBuffer, numPointsPerAxis, boundsSize, worldBounds, centre, offset, pointSpacing, atmosphereSettings.planetRadius, isoLevel);
+        pointsBuffer = densityGenerator.Generate(pointsBuffer, additionalPointsBuffer, numPointsPerAxis, boundsSize, worldBounds, centre, offset, pointSpacing, isoLevel);
 
         triangleBuffer.SetCounterValue(0);
         shader.SetBuffer(0, "points", pointsBuffer);

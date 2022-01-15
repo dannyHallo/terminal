@@ -12,22 +12,19 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 13faefcfe66214c4b804efef04cdbac6, type: 3}
   m_Name: atmosSetting
   m_EditorClassIdentifier: 
-  opticalDepthCompute: {fileID: 7200000, guid: 646112d38083e214da51661f0f93148b, type: 3}
-  textureSize: 256
-  inScatteringPoints: 18
-  opticalDepthPoints: 100
-  densityFalloff: 3.73
-  wavelengths: {x: 700, y: 530, z: 420}
+  inScatteringPoints: 7
+  opticalDepthPoints: 15
+  densityFalloff: 1
+  wavelengths: {x: 700, y: 610, z: 440}
   testParams: {x: 6.93, y: 1.26, z: 0.1, w: 3}
-  scatteringStrength: 21.23
-  intensity: 1
-  planetRadius: 72.7
-  ditherStrength: 0.8
-  ditherScale: 3.89
-  blueNoise: {fileID: 2800000, guid: 18b30821a3f047f42aae7c5a160db4d0, type: 3}
-  atmosphereScale: 1.701
-  timeOfDay: 0.038300075
-  sunDst: 1000
-  atmosphereRadius: 196.36269
+  scatteringStrength: 40
+  planetRadius: 100000
+  atmosBottom: -100
+  atmosHeight: 20000
+  scatteringCoefficent: 16.8
+  scatteringIntensity: 3.09
+  totalIntensity: 0.66
+  intensity: 0.66
+  timeOfDay: 0.041
+  sunDst: 10000
   settingsUpToDate: 1
-  timeFlow: 1

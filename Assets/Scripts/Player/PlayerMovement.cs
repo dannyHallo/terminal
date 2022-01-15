@@ -75,8 +75,8 @@ public class PlayerMovement : MonoBehaviour
         rb.constraints = RigidbodyConstraints.FreezeRotation;
         rb.useGravity = false;
         ableToDig = true;
-        transform.position = new Vector3(0, atmosphereSettings.planetRadius + 50f, 0);
-        atmosphereSettings.timeOfDay = 0f;
+        transform.position = new Vector3(0, 50f, 0);
+        // atmosphereSettings.timeOfDay = 0f;
 
         oriMoveSpeed = moveSpeed;
         oriMaxSpeed = maxSpeed;
@@ -126,7 +126,9 @@ public class PlayerMovement : MonoBehaviour
 
     IEnumerator TakePhoto()
     {
-        String filename = "C:/Users/danny/Desktop/" + botName.ToUpper() + "_" + UnityEngine.Random.Range(100, 1000).ToString() + ".png";
+        String desktopPath = Environment.GetFolderPath(Environment.SpecialFolder.Desktop);
+        String filename = desktopPath + "/" + botName.ToUpper() + "_" + UnityEngine.Random.Range(100, 1000).ToString() + ".png";
+        print(filename);
         ScreenCapture.CaptureScreenshot(filename, 2);
         yield return new WaitForSeconds(0.05f);
         audioSource.PlayOneShot(Cam_35mm);
@@ -256,7 +258,7 @@ public class PlayerMovement : MonoBehaviour
 
         //Find actual velocity relative to where player is looking
         float speedMag = Vector2.SqrMagnitude(new Vector2(rb.velocity.x, rb.velocity.z));
-        print(speedMag);
+        // print(speedMag);
         //Counteract sliding and sloppy movement
         //CounterMovement(x, y, mag);
 
