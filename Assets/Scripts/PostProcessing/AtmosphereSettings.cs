@@ -16,7 +16,7 @@ public class AtmosphereSettings : ScriptableObject
 
     public Vector3 wavelengths = new Vector3(700, 530, 440);
 
-    public Vector4 testParams = new Vector4(7, 1.26f, 0.1f, 3);
+    // public Vector4 testParams = new Vector4(7, 1.26f, 0.1f, 3);
     public float scatteringStrength = 20;
 
     // public float ditherStrength = 0.8f;
@@ -24,12 +24,11 @@ public class AtmosphereSettings : ScriptableObject
     // public Texture2D blueNoise;
 
     // [Range(0, 0.2f)] public float atmosphereScale = 0.01f;
-    [Range(0, 100000)] public float planetRadius = 400f;
-
-
-    [Range(-100, 100)] public float atmosBottom = 0;
+    [Range(0, 300000)] public float planetRadius = 100000f;
+    [Range(-10000, 10000)] public float bottomOffset = 0f;
     [Range(0, 20000)] public float atmosHeight = 1000f;
-    [Range(0, 50)] public float scatteringCoefficent = 1;
+
+
     [Range(0, 5)] public float scatteringIntensity = 1;
     [Range(0, 5)] public float totalIntensity = 1;
     public float intensity;
@@ -54,28 +53,25 @@ public class AtmosphereSettings : ScriptableObject
                 // if(Application.isPlaying && timeFlow)
                 // 	timeOfDay += 0.0001f;
             }
-			if(timeOfDay > 0.99){
-				timeOfDay = 0;
-			}
+
             // MonoBehaviour.print("setting");
-            atmosphereRadius = atmosHeight + planetRadius;
+            atmosphereRadius = atmosHeight + planetRadius + bottomOffset;
             material.SetFloat("atmosphereRadius", atmosphereRadius);
-            material.SetFloat("planetRadius", planetRadius);
+            material.SetFloat("planetRadius", planetRadius + bottomOffset);
             material.SetVector("planetCentre", new Vector3(0, -planetRadius, 0));
 
-            material.SetVector("params", testParams);
+            // material.SetVector("params", testParams);
             material.SetInt("numInScatteringPoints", inScatteringPoints);
             material.SetInt("numOpticalDepthPoints", opticalDepthPoints);
-            material.SetFloat("atmosBottom", atmosBottom);
             material.SetFloat("atmosHeight", atmosHeight);
             material.SetFloat("scatteringIntensity", scatteringIntensity);
             material.SetFloat("totalIntensity", totalIntensity);
             material.SetFloat("densityFalloff", densityFalloff);
 
             // Strength of (rayleigh) scattering is inversely proportional to wavelength^4
-            float scatterX = Pow(scatteringCoefficent / wavelengths.x, 4);
-            float scatterY = Pow(scatteringCoefficent / wavelengths.y, 4);
-            float scatterZ = Pow(scatteringCoefficent / wavelengths.z, 4);
+            float scatterX = Pow(20 / wavelengths.x, 4);
+            float scatterY = Pow(20 / wavelengths.y, 4);
+            float scatterZ = Pow(20 / wavelengths.z, 4);
             material.SetVector("scatteringCoefficients", new Vector3(scatterX, scatterY, scatterZ) * scatteringStrength);
             material.SetFloat("intensity", intensity);
             // material.SetFloat ("ditherStrength", ditherStrength);

@@ -13,18 +13,16 @@ MonoBehaviour:
   m_Name: atmosSetting
   m_EditorClassIdentifier: 
   inScatteringPoints: 7
-  opticalDepthPoints: 15
+  opticalDepthPoints: 16
   densityFalloff: 1
   wavelengths: {x: 700, y: 610, z: 440}
-  testParams: {x: 6.93, y: 1.26, z: 0.1, w: 3}
-  scatteringStrength: 40
-  planetRadius: 100000
-  atmosBottom: -100
-  atmosHeight: 20000
-  scatteringCoefficent: 16.8
+  scatteringStrength: 82.4
+  planetRadius: 300000
+  bottomOffset: -3626
+  atmosHeight: 10000
   scatteringIntensity: 3.09
   totalIntensity: 0.66
   intensity: 0.66
-  timeOfDay: 0.041
+  timeOfDay: 0.077
   sunDst: 10000
   settingsUpToDate: 1

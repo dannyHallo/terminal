@@ -8,7 +8,7 @@ public class Chunk : MonoBehaviour
 
     [HideInInspector]
     public Mesh mesh;
-
+    public int lodLevel;
     MeshFilter meshFilter;
     MeshRenderer meshRenderer;
     MeshCollider meshCollider;

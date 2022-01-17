@@ -429,7 +429,7 @@ MonoBehaviour:
   meshGenerator: {fileID: 1227901944}
   playerCamera: {fileID: 327418025}
   atmosphereSettings: {fileID: 11400000, guid: 697cd13215eac4342b1515d32931a270, type: 2}
-  moveSpeed: 300
+  moveSpeed: 100
   maxSpeed: 20
   grounded: 0
   drawRange: 8
@@ -878,7 +878,7 @@ MonoBehaviour:
   noiseWeight: 51.6
   closeEdges: 0
   floorOffset: 8
-  weightMultiplier: 14.03
+  weightMultiplier: 12.7
   hardFloorHeight: 0
   hardFloorWeight: 0
   shaderParams: {x: 0.28, y: 0, z: 0, w: 0}
@@ -1198,22 +1198,20 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   densityGenerator: {fileID: 523467300}
-  fixedMapSize: 1
-  numChunks: {x: 10, y: 7, z: 10}
+  fixedMapSize: 0
+  numChunks: {x: 5, y: 5, z: 5}
   viewer: {fileID: 185543205}
-  viewDistance: 600
+  viewDistanceLod0: 400
+  viewDistanceLod1: 1000
   autoUpdateInEditor: 1
   autoUpdateInGame: 1
   shader: {fileID: 7200000, guid: e6675a5747764487687871eed95a316b, type: 3}
   mat: {fileID: 2100000, guid: d93366c815783437abcf8032ab99990b, type: 2}
-  generateColliders: 1
   isoLevel: 0
   boundsSize: 100
   offset: {x: 0, y: 0, z: 0}
-  numPointsPerAxis: 40
-  showBoundsGizmo: 1
-  boundsGizmoCol: {r: 1, g: 0.1462264, b: 0.1462264, a: 0.03529412}
-  atmosphereSettings: {fileID: 11400000, guid: 697cd13215eac4342b1515d32931a270, type: 2}
+  numPointsPerAxisLod0: 40
+  numPointsPerAxisLod1: 10
   chunkHolderName: TerrainChunkHolder
 --- !u!4 &1227901945
 Transform:
@@ -1459,8 +1457,8 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 2000863095}
-  m_LocalRotation: {x: 0.09082748, y: -0.7012492, z: 0.09082748, w: 0.7012492}
-  m_LocalPosition: {x: 9670.015, y: 2547.7075, z: 0}
+  m_LocalRotation: {x: 0.16938762, y: -0.6865186, z: 0.16938762, w: 0.68651867}
+  m_LocalPosition: {x: 8852.313, y: 4651.5107, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children:
   - {fileID: 1867833545}

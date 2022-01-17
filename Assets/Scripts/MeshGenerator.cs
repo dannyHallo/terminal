@@ -22,42 +22,42 @@ public class MeshGenerator : MonoBehaviour
     public Transform viewer;
 
     [ConditionalHide(nameof(fixedMapSize), false)]
-    public float viewDistance = 30;
+    public float viewDistanceLod0 = 300;
+    public float viewDistanceLod1 = 500;
 
     [Space()]
     public bool autoUpdateInEditor = true;
     public bool autoUpdateInGame = true;
     public ComputeShader shader;
     public Material mat;
-    public bool generateColliders;
+    bool generateColliders = true;
 
     [Header("Voxel Settings")]
     public float isoLevel;
     public float boundsSize = 20;
     public Vector3 offset = Vector3.zero;
 
-    [Range(2, 500)]
-    public int numPointsPerAxis = 30;
+    [Range(2, 50)] public int numPointsPerAxisLod0 = 40;
+    [Range(2, 50)] public int numPointsPerAxisLod1 = 20;
 
-    [Header("Gizmos")]
-    public bool showBoundsGizmo = true;
-    public Color boundsGizmoCol = Color.white;
-    // public float planetRadius = 100f;
-    public AtmosphereSettings atmosphereSettings;
+    // [Header("Gizmos")]
+    bool showBoundsGizmo = true;
+    Color boundsGizmoCol = Color.white;
+
     GameObject chunkHolder;
     public string chunkHolderName = "ChunkHolder";
     List<Chunk> chunks;
-    Dictionary<Vector3Int, Chunk> existingChunks;
+    Dictionary<Vector3Int, Chunk> existingChunksLod0;
+    Dictionary<Vector3Int, Chunk> existingChunksLod1;
     Dictionary<Vector3Int, float[]> existingChunkVolumeData;
     Queue<Chunk> recycleableChunks;
 
-    // Buffers
-    ComputeBuffer triangleBuffer;
-    ComputeBuffer pointsBuffer;
-    ComputeBuffer additionalPointsBuffer;
-    ComputeBuffer triCountBuffer;
+    // Buffers with Lod of level 2
+    ComputeBuffer[] triangleBuffer = new ComputeBuffer[2];
+    ComputeBuffer[] pointsBuffer = new ComputeBuffer[2];
+    ComputeBuffer[] additionalPointsBuffer = new ComputeBuffer[2];
+    ComputeBuffer[] triCountBuffer = new ComputeBuffer[2];
 
-    float[] currentChunk;
     float changeFactor = -0.6f;
     bool settingsUpdated;
 
@@ -80,7 +80,6 @@ public class MeshGenerator : MonoBehaviour
         }
     }
 
-    void Start() { }
     void Update()
     {
         // Update endless terrain while playing
@@ -134,42 +133,57 @@ public class MeshGenerator : MonoBehaviour
     {
         recycleableChunks = new Queue<Chunk>();
         chunks = new List<Chunk>();
-        existingChunks = new Dictionary<Vector3Int, Chunk>();
+        existingChunksLod0 = new Dictionary<Vector3Int, Chunk>();
+        existingChunksLod1 = new Dictionary<Vector3Int, Chunk>();
         existingChunkVolumeData = new Dictionary<Vector3Int, float[]>();
     }
 
     void InitVisibleChunks()
     {
         if (chunks == null)
-        {
             return;
-        }
+
         CreateChunkHolder();
-        int numPoints = numPointsPerAxis * numPointsPerAxis * numPointsPerAxis;
 
         Vector3 p = viewer.position;
         Vector3 ps = p / boundsSize;
+
         // Indicates which chunk the viewer in in
         Vector3Int viewerCoord = new Vector3Int(Mathf.RoundToInt(ps.x), Mathf.RoundToInt(ps.y), Mathf.RoundToInt(ps.z));
-
-        int maxChunksInView = Mathf.CeilToInt(viewDistance / boundsSize);
-        float sqrViewDistance = viewDistance * viewDistance;
+        // All chunks, no matter lod
+        int maxChunksInView = Mathf.CeilToInt(viewDistanceLod1 / boundsSize);
 
         // Kick chunks outside the range
         for (int i = chunks.Count - 1; i >= 0; i--)
         {
             Chunk chunk = chunks[i];
-            // Chunk coord -> World coord, it is actually the CENTRE
+            // Chunk coord -> World coord, returns the centre of the target chunk
             Vector3 centre = CentreFromCoord(chunk.coord);
             Vector3 viewerOffset = p - centre;
+
+            // Vector3 from the centre of the player's chunk to the target chunk's centre
             Vector3 o = new Vector3(Mathf.Abs(viewerOffset.x), Mathf.Abs(viewerOffset.y), Mathf.Abs(viewerOffset.z))
              - Vector3.one * boundsSize / 2;
-            float sqrDst = new Vector3(Mathf.Max(o.x, 0), Mathf.Max(o.y, 0), Mathf.Max(o.z, 0)).sqrMagnitude;
-            if (sqrDst > sqrViewDistance)
+            // Corresponding distance
+            float chunkSqrDst = new Vector3(Mathf.Max(o.x, 0), Mathf.Max(o.y, 0), Mathf.Max(o.z, 0)).sqrMagnitude;
+            float sqrDstLod0 = viewDistanceLod0 * viewDistanceLod0;
+            float sqrDstLod1 = viewDistanceLod1 * viewDistanceLod1;
+
+            if (chunkSqrDst > sqrDstLod1 || (chunkSqrDst < sqrDstLod0 && chunk.lodLevel == 1))
             {
-                existingChunks.Remove(chunk.coord);
-                recycleableChunks.Enqueue(chunk);
+                existingChunksLod1.Remove(chunk.coord);
+                // recycleableChunks.Enqueue(chunk);
+                chunk.DestroyOrDisable();
                 chunks.RemoveAt(i);
+                continue;
+            }
+            if (chunkSqrDst > sqrDstLod0 && chunk.lodLevel == 0)
+            {
+                existingChunksLod0.Remove(chunk.coord);
+                // recycleableChunks.Enqueue(chunk);
+                chunk.DestroyOrDisable();
+                chunks.RemoveAt(i);
+                continue;
             }
         }
 
@@ -181,66 +195,83 @@ public class MeshGenerator : MonoBehaviour
                 for (int z = -maxChunksInView; z <= maxChunksInView; z++)
                 {
                     Vector3Int coord = new Vector3Int(x, y, z) + viewerCoord;
-                    // Already existing
-                    if (existingChunks.ContainsKey(coord))
-                    {
-                        continue;
-                    }
 
+                    if(Mathf.Abs(coord.y) > 1)
+                        continue;
+                        
                     Vector3 centre = CentreFromCoord(coord);
                     Vector3 viewerOffset = p - centre;
                     Vector3 o = new Vector3(Mathf.Abs(viewerOffset.x), Mathf.Abs(viewerOffset.y), Mathf.Abs(viewerOffset.z)) - Vector3.one * boundsSize / 2;
-                    float sqrDst = new Vector3(Mathf.Max(o.x, 0), Mathf.Max(o.y, 0), Mathf.Max(o.z, 0)).sqrMagnitude;
+                    float chunkSqrDst = new Vector3(Mathf.Max(o.x, 0), Mathf.Max(o.y, 0), Mathf.Max(o.z, 0)).sqrMagnitude;
+                    float sqrDstLod0 = viewDistanceLod0 * viewDistanceLod0;
+                    float sqrDstLod1 = viewDistanceLod1 * viewDistanceLod1;
 
-                    // Chunk is within view distance and should be created (if it doesn't already exist)
-                    if (sqrDst <= sqrViewDistance)
+                    // Keep the chunk unchanged
+                    if (existingChunksLod0.ContainsKey(coord))
+                        continue;
+
+                    // Lod0
+                    if (chunkSqrDst <= sqrDstLod0)
                     {
                         Bounds bounds = new Bounds(CentreFromCoord(coord), Vector3.one * boundsSize);
-                        //if (IsVisibleFrom(bounds, Camera.main))
+                        Chunk chunk;
+
+                        // if (recycleableChunks.Count > 0)
+                        //     chunk = recycleableChunks.Dequeue();
+                        // else
+                            chunk = CreateChunk(coord, 0);
+
+                        chunk.coord = coord;
+                        chunk.SetUp(mat, generateColliders);
+                        existingChunksLod0.Add(coord, chunk);
+                        if (!existingChunkVolumeData.ContainsKey(coord))
                         {
-                            if (recycleableChunks.Count > 0)
-                            {
-                                Chunk chunk = recycleableChunks.Dequeue();
-                                chunk.coord = coord;
-                                existingChunks.Add(coord, chunk);
-                                if (!existingChunkVolumeData.ContainsKey(coord))
-                                {
-                                    float[] chunkVolumeData = new float[numPoints];
-                                    existingChunkVolumeData.Add(coord, chunkVolumeData);
-                                }
-                                chunks.Add(chunk);
-                                additionalPointsBuffer = new ComputeBuffer(existingChunkVolumeData[coord].Length, sizeof(float));
-                                additionalPointsBuffer.SetData(existingChunkVolumeData[coord]);
-                                UpdateChunkMesh(chunk, additionalPointsBuffer);
-                                additionalPointsBuffer.Release();
-                            }
-                            else
-                            {
-                                Chunk chunk = CreateChunk(coord);
-                                chunk.coord = coord;
-                                chunk.SetUp(mat, generateColliders);
-                                existingChunks.Add(coord, chunk);
-                                if (!existingChunkVolumeData.ContainsKey(coord))
-                                {
-                                    float[] chunkVolumeData = new float[numPoints];
-                                    existingChunkVolumeData.Add(coord, chunkVolumeData);
-                                }
-                                chunks.Add(chunk);
-                                additionalPointsBuffer = new ComputeBuffer(existingChunkVolumeData[coord].Length, sizeof(float));
-                                additionalPointsBuffer.SetData(existingChunkVolumeData[coord]);
-                                UpdateChunkMesh(chunk, additionalPointsBuffer);
-                                additionalPointsBuffer.Release();
-                            }
+                            int numPoints = numPointsPerAxisLod0 * numPointsPerAxisLod0 * numPointsPerAxisLod0;
+                            float[] chunkVolumeData = new float[numPoints];
+                            existingChunkVolumeData.Add(coord, chunkVolumeData);
                         }
+                        chunks.Add(chunk);
+                        additionalPointsBuffer[0] = new ComputeBuffer(existingChunkVolumeData[coord].Length, sizeof(float));
+                        additionalPointsBuffer[0].SetData(existingChunkVolumeData[coord]);
+                        UpdateChunkMesh(chunk, additionalPointsBuffer[0], 0);
+                        additionalPointsBuffer[0].Release();
+                        continue;
+                    }
+
+                    // Keep the chunk unchanged
+                    if (existingChunksLod1.ContainsKey(coord))
+                        continue;
+
+                    // Lod1
+                    if (chunkSqrDst <= sqrDstLod1)
+                    {
+                        Bounds bounds = new Bounds(CentreFromCoord(coord), Vector3.one * boundsSize);
+                        Chunk chunk;
+
+                        // if (recycleableChunks.Count > 0)
+                        //     chunk = recycleableChunks.Dequeue();
+                        // else
+                            chunk = CreateChunk(coord, 1);
+
+                        chunk.coord = coord;
+                        chunk.SetUp(mat, generateColliders);
+                        existingChunksLod1.Add(coord, chunk);
+                        // if (!existingChunkVolumeData.ContainsKey(coord))
+                        // {
+                        int numPoints = numPointsPerAxisLod1 * numPointsPerAxisLod1 * numPointsPerAxisLod1;
+                        float[] chunkVolumeData = new float[numPoints];
+                        // existingChunkVolumeData.Add(coord, chunkVolumeData);
+                        // }
+                        chunks.Add(chunk);
+                        additionalPointsBuffer[1] = new ComputeBuffer(numPoints, sizeof(float));
+                        additionalPointsBuffer[1].SetData(chunkVolumeData);
+                        UpdateChunkMesh(chunk, additionalPointsBuffer[1], 1);
+                        additionalPointsBuffer[1].Release();
+                        continue;
                     }
                 }
             }
         }
-    }
-
-    void ChangeChunkData(Vector3Int ChunkCoord, float[] chunkData)
-    {
-
     }
 
     public void DrawOnChunk(
@@ -257,6 +288,7 @@ public class MeshGenerator : MonoBehaviour
             changeFactor = Mathf.Abs(changeFactor);
         }
 
+        int numPointsPerAxis = numPointsPerAxisLod0;
         List<Vector3Int> chunksNeedToBeUpdated = new List<Vector3Int>();
         int numPoints = numPointsPerAxis * numPointsPerAxis * numPointsPerAxis;
         Vector3 ps = hitPoint / boundsSize;
@@ -496,15 +528,15 @@ public class MeshGenerator : MonoBehaviour
                 }
             }
         }
-        additionalPointsBuffer = new ComputeBuffer(numPointsPerAxis * numPointsPerAxis * numPointsPerAxis, sizeof(float));
+        additionalPointsBuffer[0] = new ComputeBuffer(numPointsPerAxis * numPointsPerAxis * numPointsPerAxis, sizeof(float));
 
         // Mesh will be updated more than once if chunk edge is met
         for (int i = 0; i < chunksNeedToBeUpdated.Count; i++)
         {
-            additionalPointsBuffer.SetData(existingChunkVolumeData[chunksNeedToBeUpdated[i]]);
-            UpdateChunkMesh(existingChunks[chunksNeedToBeUpdated[i]], additionalPointsBuffer);
+            additionalPointsBuffer[0].SetData(existingChunkVolumeData[chunksNeedToBeUpdated[i]]);
+            UpdateChunkMesh(existingChunksLod0[chunksNeedToBeUpdated[i]], additionalPointsBuffer[0], 0);
         }
-        additionalPointsBuffer.Release();
+        additionalPointsBuffer[0].Release();
 
 
     }
@@ -517,8 +549,22 @@ public class MeshGenerator : MonoBehaviour
         return visiableFromCam;
     }
 
-    public void UpdateChunkMesh(Chunk chunk, ComputeBuffer additionalPointsBuffer)
+    public void UpdateChunkMesh(Chunk chunk, ComputeBuffer additionalPointsBuffer, int lodLevel)
     {
+        int numPointsPerAxis;
+        switch (lodLevel)
+        {
+            case 0:
+                numPointsPerAxis = numPointsPerAxisLod0;
+                break;
+            case 1:
+                numPointsPerAxis = numPointsPerAxisLod1;
+                break;
+            default:
+                numPointsPerAxis = -1;
+                break;
+        }
+
         int numVoxelsPerAxis = numPointsPerAxis - 1;
         // A thread contains several mini threads
         int numThreadsPerAxis = Mathf.CeilToInt(numVoxelsPerAxis / (float)threadGroupSize);
@@ -530,25 +576,25 @@ public class MeshGenerator : MonoBehaviour
         Vector3 worldBounds = new Vector3(numChunks.x, numChunks.y, numChunks.z) * boundsSize;
 
         // Gerenate individual noise value using compute shader， modifies pointsBuffer
-        pointsBuffer = densityGenerator.Generate(pointsBuffer, additionalPointsBuffer, numPointsPerAxis, boundsSize, worldBounds, centre, offset, pointSpacing, isoLevel);
+        pointsBuffer[lodLevel] = densityGenerator.Generate(pointsBuffer[lodLevel], additionalPointsBuffer, numPointsPerAxis, boundsSize, worldBounds, centre, offset, pointSpacing, isoLevel);
 
-        triangleBuffer.SetCounterValue(0);
-        shader.SetBuffer(0, "points", pointsBuffer);
-        shader.SetBuffer(0, "triangles", triangleBuffer);
+        triangleBuffer[lodLevel].SetCounterValue(0);
+        shader.SetBuffer(0, "points", pointsBuffer[lodLevel]);
+        shader.SetBuffer(0, "triangles", triangleBuffer[lodLevel]);
         shader.SetInt("numPointsPerAxis", numPointsPerAxis);
         shader.SetFloat("isoLevel", isoLevel);
 
         shader.Dispatch(0, numThreadsPerAxis, numThreadsPerAxis, numThreadsPerAxis);
 
         // Get number of triangles in the triangle buffer
-        ComputeBuffer.CopyCount(triangleBuffer, triCountBuffer, 0);
+        ComputeBuffer.CopyCount(triangleBuffer[lodLevel], triCountBuffer[lodLevel], 0);
         int[] triCountArray = { 0 };
-        triCountBuffer.GetData(triCountArray);
+        triCountBuffer[lodLevel].GetData(triCountArray);
         int numTris = triCountArray[0];
 
         // Get triangle data from shader
         Triangle[] tris = new Triangle[numTris];
-        triangleBuffer.GetData(tris, 0, 0, numTris);
+        triangleBuffer[lodLevel].GetData(tris, 0, 0, numTris);
 
         Mesh mesh = chunk.mesh;
         mesh.Clear();
@@ -573,15 +619,14 @@ public class MeshGenerator : MonoBehaviour
 
     public void UpdateAllChunks()
     {
-        additionalPointsBuffer = new ComputeBuffer(numPointsPerAxis * numPointsPerAxis * numPointsPerAxis, sizeof(float));
-        additionalPointsBuffer.SetData(new float[numPointsPerAxis * numPointsPerAxis * numPointsPerAxis]);
+        additionalPointsBuffer[0] = new ComputeBuffer(numPointsPerAxisLod0 * numPointsPerAxisLod0 * numPointsPerAxisLod0, sizeof(float));
+        additionalPointsBuffer[0].SetData(new float[numPointsPerAxisLod0 * numPointsPerAxisLod0 * numPointsPerAxisLod0]);
         // Create mesh for each chunk
         foreach (Chunk chunk in chunks)
         {
-
-            UpdateChunkMesh(chunk, additionalPointsBuffer);
+            UpdateChunkMesh(chunk, additionalPointsBuffer[0], 0);
         }
-        additionalPointsBuffer.Release();
+        additionalPointsBuffer[0].Release();
 
     }
 
@@ -595,41 +640,54 @@ public class MeshGenerator : MonoBehaviour
 
     void CreateBuffers()
     {
-        // Points in a cube volume
-        int numPoints = numPointsPerAxis * numPointsPerAxis * numPointsPerAxis;
-        int numVoxelsPerAxis = numPointsPerAxis - 1;
-        // Voxels(mini cubes) in a volume
-        int numVoxels = numVoxelsPerAxis * numVoxelsPerAxis * numVoxelsPerAxis;
-        // Max triangles to be create per voxel is 5
-        int maxTriangleCount = numVoxels * 5;
-
-        if (!Application.isPlaying || (pointsBuffer == null || numPoints != pointsBuffer.count))
+        if (!Application.isPlaying || pointsBuffer[0] == null)
         {
             // Playing: release buffer and create
             // Editor: buffers are released immediately, so we don't need to release manually
             if (Application.isPlaying)
-            {
                 ReleaseBuffers();
-            }
+
+            // Points in a cube volume
+            int numPoints = numPointsPerAxisLod0 * numPointsPerAxisLod0 * numPointsPerAxisLod0;
+            int numVoxelsPerAxis = numPointsPerAxisLod0 - 1;
+            // Voxels(mini cubes) in a volume
+            int numVoxels = numVoxelsPerAxis * numVoxelsPerAxis * numVoxelsPerAxis;
+            // Max triangles to be create per voxel is 5
+            int maxTriangleCount = numVoxels * 5;
+
 
             // ComputeBuffer(Num of elements, size per element, type of the buffer)
             // 3 points, x, y, z, stored in float
-            triangleBuffer = new ComputeBuffer(maxTriangleCount, sizeof(float) * 3 * 3, ComputeBufferType.Append);
+            triangleBuffer[0] = new ComputeBuffer(maxTriangleCount, sizeof(float) * 3 * 3, ComputeBufferType.Append);
             // stores x, y, z, volumeValue
-            pointsBuffer = new ComputeBuffer(numPoints, sizeof(float) * 4);
+            pointsBuffer[0] = new ComputeBuffer(numPoints, sizeof(float) * 4);
             // A int to store total count of triangles
-            triCountBuffer = new ComputeBuffer(1, sizeof(int), ComputeBufferType.Raw);
+            triCountBuffer[0] = new ComputeBuffer(1, sizeof(int), ComputeBufferType.Raw);
+
+            numPoints = numPointsPerAxisLod1 * numPointsPerAxisLod1 * numPointsPerAxisLod1;
+            numVoxelsPerAxis = numPointsPerAxisLod1 - 1;
+            // Voxels(mini cubes) in a volume
+            numVoxels = numVoxelsPerAxis * numVoxelsPerAxis * numVoxelsPerAxis;
+            // Max triangles to be create per voxel is 5
+            maxTriangleCount = numVoxels * 5;
+
+            triangleBuffer[1] = new ComputeBuffer(maxTriangleCount, sizeof(float) * 3 * 3, ComputeBufferType.Append);
+            pointsBuffer[1] = new ComputeBuffer(numPoints, sizeof(float) * 4);
+            triCountBuffer[1] = new ComputeBuffer(1, sizeof(int), ComputeBufferType.Raw);
         }
     }
 
     void ReleaseBuffers()
     {
-        if (triangleBuffer != null)
+        for (int i = 0; i < 1; i++)
         {
-            // If this buffer is not null, then these are not null
-            triangleBuffer.Release();
-            pointsBuffer.Release();
-            triCountBuffer.Release();
+            if (triangleBuffer[i] != null)
+            {
+                // If this buffer is not null, then these are not null
+                triangleBuffer[i].Release();
+                pointsBuffer[i].Release();
+                triCountBuffer[i].Release();
+            }
         }
     }
 
@@ -709,7 +767,7 @@ public class MeshGenerator : MonoBehaviour
                     // Otherwise, create new chunk
                     if (!chunkAlreadyExists)
                     {
-                        var newChunk = CreateChunk(coord);
+                        var newChunk = CreateChunk(coord, 0);
                         chunks.Add(newChunk);
                     }
 
@@ -726,12 +784,13 @@ public class MeshGenerator : MonoBehaviour
         }
     }
 
-    Chunk CreateChunk(Vector3Int coord)
+    Chunk CreateChunk(Vector3Int coord, int lodLevel)
     {
         GameObject chunk = new GameObject($"Chunk ({coord.x}, {coord.y}, {coord.z})");
         chunk.transform.parent = chunkHolder.transform;
         Chunk newChunk = chunk.AddComponent<Chunk>();
         newChunk.coord = coord;
+        newChunk.lodLevel = lodLevel;
         return newChunk;
     }
 
@@ -741,7 +800,7 @@ public class MeshGenerator : MonoBehaviour
         int y = Mathf.RoundToInt(pos.y);
         int z = Mathf.RoundToInt(pos.z);
 
-        return z * numPointsPerAxis * numPointsPerAxis + y * numPointsPerAxis + x;
+        return z * numPointsPerAxisLod0 * numPointsPerAxisLod0 + y * numPointsPerAxisLod0 + x;
 
     }
 

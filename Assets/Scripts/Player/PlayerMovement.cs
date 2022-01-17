@@ -275,13 +275,13 @@ public class PlayerMovement : MonoBehaviour
 
         // If speed is larger than maxspeed, cancel out the input so you don't go over max speed
         // if (x != 0 || y != 0)
-        {
-            if (speedMag > maxSpeed)
-            {
-                x = 0;
-                y = 0;
-            }
-        }
+        // {
+        //     if (speedMag > maxSpeed)
+        //     {
+        //         x = 0;
+        //         y = 0;
+        //     }
+        // }
         // No input
         if (grounded)
         {
@@ -331,7 +331,7 @@ public class PlayerMovement : MonoBehaviour
 
     private void Jump()
     {
-        rb.AddForce(transform.up * thrustForce * 0.5f);
+        rb.AddForce(transform.up * thrustForce * 1f);
     }
 
     private void Look()
