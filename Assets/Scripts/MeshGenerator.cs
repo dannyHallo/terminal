@@ -21,13 +21,11 @@ public class MeshGenerator : MonoBehaviour
     [ConditionalHide(nameof(fixedMapSize), false)]
     public Transform viewer;
 
-    [ConditionalHide(nameof(fixedMapSize), false)]
-    public float viewDistanceLod0 = 300;
-    public float viewDistanceLod1 = 500;
+    public lodSetup[] lodSetups;
 
     [Space()]
-    public bool autoUpdateInEditor = true;
-    public bool autoUpdateInGame = true;
+    bool autoUpdateInEditor = true;
+    bool autoUpdateInGame = true;
     public ComputeShader shader;
     public Material mat;
     bool generateColliders = true;
@@ -37,9 +35,6 @@ public class MeshGenerator : MonoBehaviour
     public float boundsSize = 20;
     public Vector3 offset = Vector3.zero;
 
-    [Range(2, 50)] public int numPointsPerAxisLod0 = 40;
-    [Range(2, 50)] public int numPointsPerAxisLod1 = 20;
-
     // [Header("Gizmos")]
     bool showBoundsGizmo = true;
     Color boundsGizmoCol = Color.white;
@@ -47,19 +42,26 @@ public class MeshGenerator : MonoBehaviour
     GameObject chunkHolder;
     public string chunkHolderName = "ChunkHolder";
     List<Chunk> chunks;
-    Dictionary<Vector3Int, Chunk> existingChunksLod0;
-    Dictionary<Vector3Int, Chunk> existingChunksLod1;
+    Dictionary<Vector3Int, Chunk> existingChunks;
     Dictionary<Vector3Int, float[]> existingChunkVolumeData;
     Queue<Chunk> recycleableChunks;
 
     // Buffers with Lod of level 2
-    ComputeBuffer[] triangleBuffer = new ComputeBuffer[2];
-    ComputeBuffer[] pointsBuffer = new ComputeBuffer[2];
-    ComputeBuffer[] additionalPointsBuffer = new ComputeBuffer[2];
-    ComputeBuffer[] triCountBuffer = new ComputeBuffer[2];
+    ComputeBuffer[] triangleBuffer;
+    ComputeBuffer[] pointsBuffer;
+    ComputeBuffer[] additionalPointsBuffer;
+    ComputeBuffer[] triCountBuffer;
 
     float changeFactor = -0.6f;
     bool settingsUpdated;
+
+    [System.Serializable]
+    public struct lodSetup
+    {
+        public int numPointsPerAxis;
+        public int viewDistance;
+
+    }
 
     void Awake()
     {
@@ -83,7 +85,7 @@ public class MeshGenerator : MonoBehaviour
     void Update()
     {
         // Update endless terrain while playing
-        if (Application.isPlaying && !fixedMapSize)
+        if (Application.isPlaying)
         {
             Run();
         }
@@ -104,7 +106,6 @@ public class MeshGenerator : MonoBehaviour
         {
             InitChunks();
             UpdateAllChunks();
-
         }
         else
         {
@@ -133,8 +134,7 @@ public class MeshGenerator : MonoBehaviour
     {
         recycleableChunks = new Queue<Chunk>();
         chunks = new List<Chunk>();
-        existingChunksLod0 = new Dictionary<Vector3Int, Chunk>();
-        existingChunksLod1 = new Dictionary<Vector3Int, Chunk>();
+        existingChunks = new Dictionary<Vector3Int, Chunk>();
         existingChunkVolumeData = new Dictionary<Vector3Int, float[]>();
     }
 
@@ -151,7 +151,7 @@ public class MeshGenerator : MonoBehaviour
         // Indicates which chunk the viewer in in
         Vector3Int viewerCoord = new Vector3Int(Mathf.RoundToInt(ps.x), Mathf.RoundToInt(ps.y), Mathf.RoundToInt(ps.z));
         // All chunks, no matter lod
-        int maxChunksInView = Mathf.CeilToInt(viewDistanceLod1 / boundsSize);
+        int maxChunksInView = Mathf.CeilToInt(lodSetups[lodSetups.Length - 1].viewDistance / boundsSize);
 
         // Kick chunks outside the range
         for (int i = chunks.Count - 1; i >= 0; i--)
@@ -165,25 +165,19 @@ public class MeshGenerator : MonoBehaviour
             Vector3 o = new Vector3(Mathf.Abs(viewerOffset.x), Mathf.Abs(viewerOffset.y), Mathf.Abs(viewerOffset.z))
              - Vector3.one * boundsSize / 2;
             // Corresponding distance
-            float chunkSqrDst = new Vector3(Mathf.Max(o.x, 0), Mathf.Max(o.y, 0), Mathf.Max(o.z, 0)).sqrMagnitude;
-            float sqrDstLod0 = viewDistanceLod0 * viewDistanceLod0;
-            float sqrDstLod1 = viewDistanceLod1 * viewDistanceLod1;
+            float chunkDst = new Vector3(Mathf.Max(o.x, 0), Mathf.Max(o.y, 0), Mathf.Max(o.z, 0)).magnitude;
 
-            if (chunkSqrDst > sqrDstLod1 || (chunkSqrDst < sqrDstLod0 && chunk.lodLevel == 1))
+            for (int j = 0; j < lodSetups.Length; j++)
             {
-                existingChunksLod1.Remove(chunk.coord);
-                // recycleableChunks.Enqueue(chunk);
-                chunk.DestroyOrDisable();
-                chunks.RemoveAt(i);
-                continue;
-            }
-            if (chunkSqrDst > sqrDstLod0 && chunk.lodLevel == 0)
-            {
-                existingChunksLod0.Remove(chunk.coord);
-                // recycleableChunks.Enqueue(chunk);
-                chunk.DestroyOrDisable();
-                chunks.RemoveAt(i);
-                continue;
+                if ((chunkDst > lodSetups[j].viewDistance && chunk.lodLevel == j)
+                || (chunkDst < lodSetups[j].viewDistance && chunk.lodLevel == j + 1))
+                {
+                    existingChunks.Remove(chunk.coord);
+                    // recycleableChunks.Enqueue(chunk);
+                    chunk.DestroyOrDisable();
+                    chunks.RemoveAt(i);
+                    continue;
+                }
             }
         }
 
@@ -196,82 +190,71 @@ public class MeshGenerator : MonoBehaviour
                 {
                     Vector3Int coord = new Vector3Int(x, y, z) + viewerCoord;
 
-                    if(Mathf.Abs(coord.y) > 1)
+                    if (Mathf.Abs(coord.y) > 1)
                         continue;
-                        
+
+                    // Keep the chunk unchanged
+                    if (existingChunks.ContainsKey(coord))
+                        continue;
+
                     Vector3 centre = CentreFromCoord(coord);
                     Vector3 viewerOffset = p - centre;
                     Vector3 o = new Vector3(Mathf.Abs(viewerOffset.x), Mathf.Abs(viewerOffset.y), Mathf.Abs(viewerOffset.z)) - Vector3.one * boundsSize / 2;
-                    float chunkSqrDst = new Vector3(Mathf.Max(o.x, 0), Mathf.Max(o.y, 0), Mathf.Max(o.z, 0)).sqrMagnitude;
-                    float sqrDstLod0 = viewDistanceLod0 * viewDistanceLod0;
-                    float sqrDstLod1 = viewDistanceLod1 * viewDistanceLod1;
+                    float chunkDst = new Vector3(Mathf.Max(o.x, 0), Mathf.Max(o.y, 0), Mathf.Max(o.z, 0)).magnitude;
 
-                    // Keep the chunk unchanged
-                    if (existingChunksLod0.ContainsKey(coord))
-                        continue;
-
-                    // Lod0
-                    if (chunkSqrDst <= sqrDstLod0)
+                    for (int i = 0; i < lodSetups.Length; i++)
                     {
-                        Bounds bounds = new Bounds(CentreFromCoord(coord), Vector3.one * boundsSize);
-                        Chunk chunk;
-
-                        // if (recycleableChunks.Count > 0)
-                        //     chunk = recycleableChunks.Dequeue();
-                        // else
-                            chunk = CreateChunk(coord, 0);
-
-                        chunk.coord = coord;
-                        chunk.SetUp(mat, generateColliders);
-                        existingChunksLod0.Add(coord, chunk);
-                        if (!existingChunkVolumeData.ContainsKey(coord))
+                        if (chunkDst <= lodSetups[i].viewDistance)
                         {
-                            int numPoints = numPointsPerAxisLod0 * numPointsPerAxisLod0 * numPointsPerAxisLod0;
+                            int numPoints = lodSetups[i].numPointsPerAxis * lodSetups[i].numPointsPerAxis * lodSetups[i].numPointsPerAxis;
+                            Bounds bounds = new Bounds(CentreFromCoord(coord), Vector3.one * boundsSize);
+                            Chunk chunk = CreateChunk(coord, i);
                             float[] chunkVolumeData = new float[numPoints];
-                            existingChunkVolumeData.Add(coord, chunkVolumeData);
+
+                            chunk.coord = coord;
+                            chunk.SetUp(mat, generateColliders);
+                            existingChunks.Add(coord, chunk);
+                            chunks.Add(chunk);
+
+                            additionalPointsBuffer[i] = new ComputeBuffer(numPoints, sizeof(float));
+
+                            if (i == 0)
+                            {
+                                // Create additional point data
+                                if (!existingChunkVolumeData.ContainsKey(coord))
+                                {
+                                    additionalPointsBuffer[i].SetData(chunkVolumeData);
+                                }
+                                else
+                                {
+                                    additionalPointsBuffer[i].SetData(existingChunkVolumeData[coord]);
+                                }
+                                UpdateChunkMesh(chunk, additionalPointsBuffer[i], i);
+                            }
+                            else
+                            {
+                                additionalPointsBuffer[i].SetData(chunkVolumeData);
+                                UpdateChunkMesh(chunk, additionalPointsBuffer[i], i);
+                            }
+                            additionalPointsBuffer[i].Release();
+                            break;
                         }
-                        chunks.Add(chunk);
-                        additionalPointsBuffer[0] = new ComputeBuffer(existingChunkVolumeData[coord].Length, sizeof(float));
-                        additionalPointsBuffer[0].SetData(existingChunkVolumeData[coord]);
-                        UpdateChunkMesh(chunk, additionalPointsBuffer[0], 0);
-                        additionalPointsBuffer[0].Release();
-                        continue;
-                    }
-
-                    // Keep the chunk unchanged
-                    if (existingChunksLod1.ContainsKey(coord))
-                        continue;
-
-                    // Lod1
-                    if (chunkSqrDst <= sqrDstLod1)
-                    {
-                        Bounds bounds = new Bounds(CentreFromCoord(coord), Vector3.one * boundsSize);
-                        Chunk chunk;
-
-                        // if (recycleableChunks.Count > 0)
-                        //     chunk = recycleableChunks.Dequeue();
-                        // else
-                            chunk = CreateChunk(coord, 1);
-
-                        chunk.coord = coord;
-                        chunk.SetUp(mat, generateColliders);
-                        existingChunksLod1.Add(coord, chunk);
-                        // if (!existingChunkVolumeData.ContainsKey(coord))
-                        // {
-                        int numPoints = numPointsPerAxisLod1 * numPointsPerAxisLod1 * numPointsPerAxisLod1;
-                        float[] chunkVolumeData = new float[numPoints];
-                        // existingChunkVolumeData.Add(coord, chunkVolumeData);
-                        // }
-                        chunks.Add(chunk);
-                        additionalPointsBuffer[1] = new ComputeBuffer(numPoints, sizeof(float));
-                        additionalPointsBuffer[1].SetData(chunkVolumeData);
-                        UpdateChunkMesh(chunk, additionalPointsBuffer[1], 1);
-                        additionalPointsBuffer[1].Release();
-                        continue;
                     }
                 }
             }
         }
+    }
+
+    void ChangeVolumeData(Vector3Int chunkCoord, int id, float rangeFactor)
+    {
+        if (!existingChunkVolumeData.ContainsKey(chunkCoord))
+        {
+            int numPointsPerAxis = lodSetups[0].numPointsPerAxis;
+            int numPoints = numPointsPerAxis * numPointsPerAxis * numPointsPerAxis;
+            float[] chunkVolumeData = new float[numPoints];
+            existingChunkVolumeData.Add(chunkCoord, chunkVolumeData);
+        }
+        existingChunkVolumeData[chunkCoord][id] += changeFactor * rangeFactor;
     }
 
     public void DrawOnChunk(
@@ -288,7 +271,7 @@ public class MeshGenerator : MonoBehaviour
             changeFactor = Mathf.Abs(changeFactor);
         }
 
-        int numPointsPerAxis = numPointsPerAxisLod0;
+        int numPointsPerAxis = lodSetups[0].numPointsPerAxis;
         List<Vector3Int> chunksNeedToBeUpdated = new List<Vector3Int>();
         int numPoints = numPointsPerAxis * numPointsPerAxis * numPointsPerAxis;
         Vector3 ps = hitPoint / boundsSize;
@@ -297,23 +280,6 @@ public class MeshGenerator : MonoBehaviour
         float pointSpacing = boundsSize / (numPointsPerAxis - 1);
         // The exact chunk the player is drawing at
         //print(hitCoord);
-
-        for (int x = -2; x <= 2; x++)
-        {
-            for (int y = -2; y <= 2; y++)
-            {
-                for (int z = -2; z <= 2; z++)
-                {
-                    if (!existingChunkVolumeData.ContainsKey(originalHittingCoord + new Vector3Int(x, y, z)))
-                    {
-                        // print("Added unknown data");
-                        float[] chunkVolumeData = new float[numPoints];
-                        existingChunkVolumeData.Add(originalHittingCoord + new Vector3Int(x, y, z), chunkVolumeData);
-                    }
-                }
-            }
-        }
-
 
         // Get idVector from hitpoint
         Vector3 IdVector = new Vector3(
@@ -363,56 +329,56 @@ public class MeshGenerator : MonoBehaviour
                         && currentVectorRoundToInt.z == 0)
                         {
                             int id = PosToIndex(new Vector3(numPointsPerAxis - 1, numPointsPerAxis - 1, numPointsPerAxis - 1));
-                            existingChunkVolumeData[currentProcessingCoord + new Vector3Int(-1, -1, -1)][id] += changeFactor * rangeFactor;
+                            ChangeVolumeData(currentProcessingCoord + new Vector3Int(-1, -1, -1), id, rangeFactor);
                         }
                         if (currentVectorRoundToInt.x == numPointsPerAxis - 1
                         && currentVectorRoundToInt.y == 0
                         && currentVectorRoundToInt.z == 0)
                         {
                             int id = PosToIndex(new Vector3(0, numPointsPerAxis - 1, numPointsPerAxis - 1));
-                            existingChunkVolumeData[currentProcessingCoord + new Vector3Int(1, -1, -1)][id] += changeFactor * rangeFactor;
+                            ChangeVolumeData(currentProcessingCoord + new Vector3Int(1, -1, -1), id, rangeFactor);
                         }
                         if (currentVectorRoundToInt.x == 0
                         && currentVectorRoundToInt.y == numPointsPerAxis - 1
                         && currentVectorRoundToInt.z == 0)
                         {
                             int id = PosToIndex(new Vector3(numPointsPerAxis - 1, 0, numPointsPerAxis - 1));
-                            existingChunkVolumeData[currentProcessingCoord + new Vector3Int(-1, 1, -1)][id] += changeFactor * rangeFactor;
+                            ChangeVolumeData(currentProcessingCoord + new Vector3Int(-1, 1, -1), id, rangeFactor);
                         }
                         if (currentVectorRoundToInt.x == 0
                         && currentVectorRoundToInt.y == 0
                         && currentVectorRoundToInt.z == numPointsPerAxis - 1)
                         {
                             int id = PosToIndex(new Vector3(numPointsPerAxis - 1, numPointsPerAxis - 1, 0));
-                            existingChunkVolumeData[currentProcessingCoord + new Vector3Int(-1, -1, 1)][id] += changeFactor * rangeFactor;
+                            ChangeVolumeData(currentProcessingCoord + new Vector3Int(-1, -1, 1), id, rangeFactor);
                         }
                         if (currentVectorRoundToInt.x == numPointsPerAxis - 1
                         && currentVectorRoundToInt.y == numPointsPerAxis - 1
                         && currentVectorRoundToInt.z == 0)
                         {
                             int id = PosToIndex(new Vector3(0, 0, numPointsPerAxis - 1));
-                            existingChunkVolumeData[currentProcessingCoord + new Vector3Int(1, 1, -1)][id] += changeFactor * rangeFactor;
+                            ChangeVolumeData(currentProcessingCoord + new Vector3Int(1, 1, -1), id, rangeFactor);
                         }
                         if (currentVectorRoundToInt.x == numPointsPerAxis - 1
                         && currentVectorRoundToInt.y == 0
                         && currentVectorRoundToInt.z == numPointsPerAxis - 1)
                         {
                             int id = PosToIndex(new Vector3(0, numPointsPerAxis - 1, 0));
-                            existingChunkVolumeData[currentProcessingCoord + new Vector3Int(1, -1, 1)][id] += changeFactor * rangeFactor;
+                            ChangeVolumeData(currentProcessingCoord + new Vector3Int(1, -1, 1), id, rangeFactor);
                         }
                         if (currentVectorRoundToInt.x == 0
                         && currentVectorRoundToInt.y == numPointsPerAxis - 1
                         && currentVectorRoundToInt.z == numPointsPerAxis - 1)
                         {
                             int id = PosToIndex(new Vector3(numPointsPerAxis - 1, 0, 0));
-                            existingChunkVolumeData[currentProcessingCoord + new Vector3Int(-1, 1, 1)][id] += changeFactor * rangeFactor;
+                            ChangeVolumeData(currentProcessingCoord + new Vector3Int(-1, 1, 1), id, rangeFactor);
                         }
                         if (currentVectorRoundToInt.x == numPointsPerAxis - 1
                         && currentVectorRoundToInt.y == numPointsPerAxis - 1
                         && currentVectorRoundToInt.z == numPointsPerAxis - 1)
                         {
                             int id = PosToIndex(new Vector3(0, 0, 0));
-                            existingChunkVolumeData[currentProcessingCoord + new Vector3Int(1, 1, 1)][id] += changeFactor * rangeFactor;
+                            ChangeVolumeData(currentProcessingCoord + new Vector3Int(1, 1, 1), id, rangeFactor);
                         }
 
                         // On 12 edges of a cube
@@ -420,110 +386,109 @@ public class MeshGenerator : MonoBehaviour
                         && currentVectorRoundToInt.z == 0)
                         {
                             int id = PosToIndex(new Vector3(currentVectorRoundToInt.x, numPointsPerAxis - 1, numPointsPerAxis - 1));
-                            existingChunkVolumeData[currentProcessingCoord + new Vector3Int(0, -1, -1)][id] += changeFactor * rangeFactor;
+                            ChangeVolumeData(currentProcessingCoord + new Vector3Int(0, -1, -1), id, rangeFactor);
                         }
                         if (currentVectorRoundToInt.y == 0
                         && currentVectorRoundToInt.z == numPointsPerAxis - 1)
                         {
                             int id = PosToIndex(new Vector3(currentVectorRoundToInt.x, numPointsPerAxis - 1, 0));
-                            existingChunkVolumeData[currentProcessingCoord + new Vector3Int(0, -1, 1)][id] += changeFactor * rangeFactor;
+                            ChangeVolumeData(currentProcessingCoord + new Vector3Int(0, -1, 1), id, rangeFactor);
                         }
                         if (currentVectorRoundToInt.y == numPointsPerAxis - 1
                         && currentVectorRoundToInt.z == 0)
                         {
                             int id = PosToIndex(new Vector3(currentVectorRoundToInt.x, 0, numPointsPerAxis - 1));
-                            existingChunkVolumeData[currentProcessingCoord + new Vector3Int(0, 1, -1)][id] += changeFactor * rangeFactor;
+                            ChangeVolumeData(currentProcessingCoord + new Vector3Int(0, 1, -1), id, rangeFactor);
                         }
                         if (currentVectorRoundToInt.y == numPointsPerAxis - 1
                         && currentVectorRoundToInt.z == numPointsPerAxis - 1)
                         {
                             int id = PosToIndex(new Vector3(currentVectorRoundToInt.x, 0, 0));
-                            existingChunkVolumeData[currentProcessingCoord + new Vector3Int(0, 1, 1)][id] += changeFactor * rangeFactor;
+                            ChangeVolumeData(currentProcessingCoord + new Vector3Int(0, 1, 1), id, rangeFactor);
                         }
 
                         if (currentVectorRoundToInt.x == 0
                         && currentVectorRoundToInt.y == 0)
                         {
                             int id = PosToIndex(new Vector3(numPointsPerAxis - 1, numPointsPerAxis - 1, currentVectorRoundToInt.z));
-                            existingChunkVolumeData[currentProcessingCoord + new Vector3Int(-1, -1, 0)][id] += changeFactor * rangeFactor;
+                            ChangeVolumeData(currentProcessingCoord + new Vector3Int(-1, -1, 0), id, rangeFactor);
                         }
                         if (currentVectorRoundToInt.x == 0
                         && currentVectorRoundToInt.y == numPointsPerAxis - 1)
                         {
                             int id = PosToIndex(new Vector3(numPointsPerAxis - 1, 0, currentVectorRoundToInt.z));
-                            existingChunkVolumeData[currentProcessingCoord + new Vector3Int(-1, 1, 0)][id] += changeFactor * rangeFactor;
+                            ChangeVolumeData(currentProcessingCoord + new Vector3Int(-1, 1, 0), id, rangeFactor);
                         }
                         if (currentVectorRoundToInt.x == numPointsPerAxis - 1
                         && currentVectorRoundToInt.y == 0)
                         {
                             int id = PosToIndex(new Vector3(0, numPointsPerAxis - 1, currentVectorRoundToInt.z));
-                            existingChunkVolumeData[currentProcessingCoord + new Vector3Int(1, -1, 0)][id] += changeFactor * rangeFactor;
+                            ChangeVolumeData(currentProcessingCoord + new Vector3Int(1, -1, 0), id, rangeFactor);
                         }
                         if (currentVectorRoundToInt.x == numPointsPerAxis - 1
                         && currentVectorRoundToInt.y == numPointsPerAxis - 1)
                         {
                             int id = PosToIndex(new Vector3(0, 0, currentVectorRoundToInt.z));
-                            existingChunkVolumeData[currentProcessingCoord + new Vector3Int(1, 1, 0)][id] += changeFactor * rangeFactor;
+                            ChangeVolumeData(currentProcessingCoord + new Vector3Int(1, 1, 0), id, rangeFactor);
                         }
 
                         if (currentVectorRoundToInt.x == 0
                         && currentVectorRoundToInt.z == 0)
                         {
                             int id = PosToIndex(new Vector3(numPointsPerAxis - 1, currentVectorRoundToInt.y, numPointsPerAxis - 1));
-                            existingChunkVolumeData[currentProcessingCoord + new Vector3Int(-1, 0, -1)][id] += changeFactor * rangeFactor;
+                            ChangeVolumeData(currentProcessingCoord + new Vector3Int(-1, 0, -1), id, rangeFactor);
                         }
                         if (currentVectorRoundToInt.x == 0
                         && currentVectorRoundToInt.z == numPointsPerAxis - 1)
                         {
                             int id = PosToIndex(new Vector3(numPointsPerAxis - 1, currentVectorRoundToInt.y, 0));
-                            existingChunkVolumeData[currentProcessingCoord + new Vector3Int(-1, 0, 1)][id] += changeFactor * rangeFactor;
+                            ChangeVolumeData(currentProcessingCoord + new Vector3Int(-1, 0, 1), id, rangeFactor);
                         }
                         if (currentVectorRoundToInt.x == numPointsPerAxis - 1
                         && currentVectorRoundToInt.z == 0)
                         {
                             int id = PosToIndex(new Vector3(0, currentVectorRoundToInt.y, numPointsPerAxis - 1));
-                            existingChunkVolumeData[currentProcessingCoord + new Vector3Int(1, 0, -1)][id] += changeFactor * rangeFactor;
+                            ChangeVolumeData(currentProcessingCoord + new Vector3Int(1, 0, -1), id, rangeFactor);
                         }
                         if (currentVectorRoundToInt.x == numPointsPerAxis - 1
                         && currentVectorRoundToInt.z == numPointsPerAxis - 1)
                         {
                             int id = PosToIndex(new Vector3(0, currentVectorRoundToInt.y, 0));
-                            existingChunkVolumeData[currentProcessingCoord + new Vector3Int(1, 0, 1)][id] += changeFactor * rangeFactor;
+                            ChangeVolumeData(currentProcessingCoord + new Vector3Int(1, 0, 1), id, rangeFactor);
                         }
 
                         // On 6 faces of a cube
                         if (currentVectorRoundToInt.x == 0)
                         {
                             int id = PosToIndex(new Vector3(numPointsPerAxis - 1, currentVectorRoundToInt.y, currentVectorRoundToInt.z));
-                            existingChunkVolumeData[currentProcessingCoord + new Vector3Int(-1, 0, 0)][id] += changeFactor * rangeFactor;
+                            ChangeVolumeData(currentProcessingCoord + new Vector3Int(-1, 0, 0), id, rangeFactor);
                         }
                         if (currentVectorRoundToInt.x == numPointsPerAxis - 1)
                         {
                             int id = PosToIndex(new Vector3(0, currentVectorRoundToInt.y, currentVectorRoundToInt.z));
-                            existingChunkVolumeData[currentProcessingCoord + new Vector3Int(1, 0, 0)][id] += changeFactor * rangeFactor;
+                            ChangeVolumeData(currentProcessingCoord + new Vector3Int(1, 0, 0), id, rangeFactor);
                         }
                         if (currentVectorRoundToInt.z == 0)
                         {
                             int id = PosToIndex(new Vector3(currentVectorRoundToInt.x, currentVectorRoundToInt.y, numPointsPerAxis - 1));
-                            existingChunkVolumeData[currentProcessingCoord + new Vector3Int(0, 0, -1)][id] += changeFactor * rangeFactor;
+                            ChangeVolumeData(currentProcessingCoord + new Vector3Int(0, 0, -1), id, rangeFactor);
                         }
                         if (currentVectorRoundToInt.z == numPointsPerAxis - 1)
                         {
                             int id = PosToIndex(new Vector3(currentVectorRoundToInt.x, currentVectorRoundToInt.y, 0));
-                            existingChunkVolumeData[currentProcessingCoord + new Vector3Int(0, 0, 1)][id] += changeFactor * rangeFactor;
+                            ChangeVolumeData(currentProcessingCoord + new Vector3Int(0, 0, 1), id, rangeFactor);
                         }
                         if (currentVectorRoundToInt.y == 0)
                         {
                             int id = PosToIndex(new Vector3(currentVectorRoundToInt.x, numPointsPerAxis - 1, currentVectorRoundToInt.z));
-                            existingChunkVolumeData[currentProcessingCoord + new Vector3Int(0, -1, 0)][id] += changeFactor * rangeFactor;
+                            ChangeVolumeData(currentProcessingCoord + new Vector3Int(0, -1, 0), id, rangeFactor);
                         }
                         if (currentVectorRoundToInt.y == numPointsPerAxis - 1)
                         {
                             int id = PosToIndex(new Vector3(currentVectorRoundToInt.x, 0, currentVectorRoundToInt.z));
-                            existingChunkVolumeData[currentProcessingCoord + new Vector3Int(0, 1, 0)][id] += changeFactor * rangeFactor;
+                            ChangeVolumeData(currentProcessingCoord + new Vector3Int(0, 1, 0), id, rangeFactor);
                         }
-
-                        existingChunkVolumeData[currentProcessingCoord][currentId] += changeFactor * rangeFactor;
+                        ChangeVolumeData(currentProcessingCoord, currentId, rangeFactor);
                     }
                 }
             }
@@ -534,7 +499,7 @@ public class MeshGenerator : MonoBehaviour
         for (int i = 0; i < chunksNeedToBeUpdated.Count; i++)
         {
             additionalPointsBuffer[0].SetData(existingChunkVolumeData[chunksNeedToBeUpdated[i]]);
-            UpdateChunkMesh(existingChunksLod0[chunksNeedToBeUpdated[i]], additionalPointsBuffer[0], 0);
+            UpdateChunkMesh(existingChunks[chunksNeedToBeUpdated[i]], additionalPointsBuffer[0], 0);
         }
         additionalPointsBuffer[0].Release();
 
@@ -551,20 +516,7 @@ public class MeshGenerator : MonoBehaviour
 
     public void UpdateChunkMesh(Chunk chunk, ComputeBuffer additionalPointsBuffer, int lodLevel)
     {
-        int numPointsPerAxis;
-        switch (lodLevel)
-        {
-            case 0:
-                numPointsPerAxis = numPointsPerAxisLod0;
-                break;
-            case 1:
-                numPointsPerAxis = numPointsPerAxisLod1;
-                break;
-            default:
-                numPointsPerAxis = -1;
-                break;
-        }
-
+        int numPointsPerAxis = lodSetups[lodLevel].numPointsPerAxis;
         int numVoxelsPerAxis = numPointsPerAxis - 1;
         // A thread contains several mini threads
         int numThreadsPerAxis = Mathf.CeilToInt(numVoxelsPerAxis / (float)threadGroupSize);
@@ -619,8 +571,8 @@ public class MeshGenerator : MonoBehaviour
 
     public void UpdateAllChunks()
     {
-        additionalPointsBuffer[0] = new ComputeBuffer(numPointsPerAxisLod0 * numPointsPerAxisLod0 * numPointsPerAxisLod0, sizeof(float));
-        additionalPointsBuffer[0].SetData(new float[numPointsPerAxisLod0 * numPointsPerAxisLod0 * numPointsPerAxisLod0]);
+        additionalPointsBuffer[0] = new ComputeBuffer(lodSetups[0].numPointsPerAxis * lodSetups[0].numPointsPerAxis * lodSetups[0].numPointsPerAxis, sizeof(float));
+        additionalPointsBuffer[0].SetData(new float[lodSetups[0].numPointsPerAxis * lodSetups[0].numPointsPerAxis * lodSetups[0].numPointsPerAxis]);
         // Create mesh for each chunk
         foreach (Chunk chunk in chunks)
         {
@@ -640,46 +592,48 @@ public class MeshGenerator : MonoBehaviour
 
     void CreateBuffers()
     {
-        if (!Application.isPlaying || pointsBuffer[0] == null)
+        int lodLen = lodSetups.Length;
+        int numPoints;
+        int numVoxelsPerAxis;
+        int numVoxels;
+        int maxTriangleCount;
+
+        triangleBuffer = new ComputeBuffer[lodLen];
+        pointsBuffer = new ComputeBuffer[lodLen];
+        triCountBuffer = new ComputeBuffer[lodLen];
+        additionalPointsBuffer = new ComputeBuffer[lodLen];
+
+        if (!Application.isPlaying || triangleBuffer[0] == null)
         {
             // Playing: release buffer and create
             // Editor: buffers are released immediately, so we don't need to release manually
             if (Application.isPlaying)
                 ReleaseBuffers();
 
-            // Points in a cube volume
-            int numPoints = numPointsPerAxisLod0 * numPointsPerAxisLod0 * numPointsPerAxisLod0;
-            int numVoxelsPerAxis = numPointsPerAxisLod0 - 1;
-            // Voxels(mini cubes) in a volume
-            int numVoxels = numVoxelsPerAxis * numVoxelsPerAxis * numVoxelsPerAxis;
-            // Max triangles to be create per voxel is 5
-            int maxTriangleCount = numVoxels * 5;
+            for (int i = 0; i < lodLen; i++)
+            {
+                // Points in a cube volume
+                numPoints = lodSetups[i].numPointsPerAxis * lodSetups[i].numPointsPerAxis * lodSetups[i].numPointsPerAxis;
+                numVoxelsPerAxis = lodSetups[i].numPointsPerAxis - 1;
+                // Voxels(mini cubes) in a volume
+                numVoxels = numVoxelsPerAxis * numVoxelsPerAxis * numVoxelsPerAxis;
+                // Max triangles to be create per voxel is 5
+                maxTriangleCount = numVoxels * 5;
 
-
-            // ComputeBuffer(Num of elements, size per element, type of the buffer)
-            // 3 points, x, y, z, stored in float
-            triangleBuffer[0] = new ComputeBuffer(maxTriangleCount, sizeof(float) * 3 * 3, ComputeBufferType.Append);
-            // stores x, y, z, volumeValue
-            pointsBuffer[0] = new ComputeBuffer(numPoints, sizeof(float) * 4);
-            // A int to store total count of triangles
-            triCountBuffer[0] = new ComputeBuffer(1, sizeof(int), ComputeBufferType.Raw);
-
-            numPoints = numPointsPerAxisLod1 * numPointsPerAxisLod1 * numPointsPerAxisLod1;
-            numVoxelsPerAxis = numPointsPerAxisLod1 - 1;
-            // Voxels(mini cubes) in a volume
-            numVoxels = numVoxelsPerAxis * numVoxelsPerAxis * numVoxelsPerAxis;
-            // Max triangles to be create per voxel is 5
-            maxTriangleCount = numVoxels * 5;
-
-            triangleBuffer[1] = new ComputeBuffer(maxTriangleCount, sizeof(float) * 3 * 3, ComputeBufferType.Append);
-            pointsBuffer[1] = new ComputeBuffer(numPoints, sizeof(float) * 4);
-            triCountBuffer[1] = new ComputeBuffer(1, sizeof(int), ComputeBufferType.Raw);
+                // ComputeBuffer(Num of elements, size per element, type of the buffer)
+                // 3 points, x, y, z, stored in float
+                triangleBuffer[i] = new ComputeBuffer(maxTriangleCount, sizeof(float) * 3 * 3, ComputeBufferType.Append);
+                // stores x, y, z, volumeValue
+                pointsBuffer[i] = new ComputeBuffer(numPoints, sizeof(float) * 4);
+                // A int to store total count of triangles
+                triCountBuffer[i] = new ComputeBuffer(1, sizeof(int), ComputeBufferType.Raw);
+            }
         }
     }
 
     void ReleaseBuffers()
     {
-        for (int i = 0; i < 1; i++)
+        for (int i = 0; i < lodSetups.Length; i++)
         {
             if (triangleBuffer[i] != null)
             {
@@ -687,6 +641,7 @@ public class MeshGenerator : MonoBehaviour
                 triangleBuffer[i].Release();
                 pointsBuffer[i].Release();
                 triCountBuffer[i].Release();
+                // additionalPointsBuffer[i].Release();
             }
         }
     }
@@ -800,7 +755,7 @@ public class MeshGenerator : MonoBehaviour
         int y = Mathf.RoundToInt(pos.y);
         int z = Mathf.RoundToInt(pos.z);
 
-        return z * numPointsPerAxisLod0 * numPointsPerAxisLod0 + y * numPointsPerAxisLod0 + x;
+        return z * lodSetups[0].numPointsPerAxis * lodSetups[0].numPointsPerAxis + y * lodSetups[0].numPointsPerAxis + x;
 
     }
 

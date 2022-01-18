@@ -20,7 +20,8 @@ public class Chunk : MonoBehaviour
         if (Application.isPlaying)
         {
             mesh.Clear();
-            gameObject.SetActive(false);
+            // gameObject.SetActive(false);
+            Destroy(this.gameObject);
         }
         else
         {
