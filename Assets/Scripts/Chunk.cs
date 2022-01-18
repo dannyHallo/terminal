@@ -19,6 +19,8 @@ public class Chunk : MonoBehaviour
     {
         if (Application.isPlaying)
         {
+            Destroy(mesh);
+            Destroy(meshFilter);
             mesh.Clear();
             // gameObject.SetActive(false);
             Destroy(this.gameObject);
@@ -32,11 +34,11 @@ public class Chunk : MonoBehaviour
     // Add components/get references in case lost (references can be lost when working in the editor)
     public void SetUp(Material mat, bool generateCollider)
     {
-        if(setuped)
+        if (setuped)
             return;
         setuped = true;
         this.generateCollider = generateCollider;
-        if(gameObject.tag != "Chunk")
+        if (gameObject.tag != "Chunk")
             gameObject.tag = "Chunk";
         meshFilter = GetComponent<MeshFilter>();
         meshRenderer = GetComponent<MeshRenderer>();
@@ -82,14 +84,14 @@ public class Chunk : MonoBehaviour
     }
 
     public void UpdateColliders()
-{
-    if (generateCollider)
     {
-        meshCollider.sharedMesh = null;
-        meshCollider.sharedMesh = mesh;
-        // force update
-        meshCollider.enabled = false;
-        meshCollider.enabled = true;
+        if (generateCollider)
+        {
+            meshCollider.sharedMesh = null;
+            meshCollider.sharedMesh = mesh;
+            // force update
+            meshCollider.enabled = false;
+            meshCollider.enabled = true;
+        }
     }
-}
 }

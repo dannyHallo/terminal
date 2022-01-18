@@ -1202,15 +1202,12 @@ MonoBehaviour:
   numChunks: {x: 5, y: 5, z: 5}
   viewer: {fileID: 185543205}
   lodSetups:
-  - numPointsPerAxis: 32
-    viewDistance: 500
-  - numPointsPerAxis: 20
-    viewDistance: 1200
+  - numPointsPerAxis: 40
+    viewDistance: 800
   shader: {fileID: 7200000, guid: e6675a5747764487687871eed95a316b, type: 3}
   mat: {fileID: 2100000, guid: d93366c815783437abcf8032ab99990b, type: 2}
   isoLevel: 0
   boundsSize: 120
-  offset: {x: 0, y: 0, z: 0}
   chunkHolderName: TerrainChunkHolder
 --- !u!4 &1227901945
 Transform:

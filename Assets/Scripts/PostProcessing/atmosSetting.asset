@@ -14,15 +14,17 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   inScatteringPoints: 7
   opticalDepthPoints: 16
-  densityFalloff: 1
+  ditherStrength: 1
+  ditherScale: 4
+  blueNoise: {fileID: 2800000, guid: 18b30821a3f047f42aae7c5a160db4d0, type: 3}
   wavelengths: {x: 700, y: 610, z: 440}
+  densityFalloff: 1
   scatteringStrength: 82.4
+  scatteringIntensity: 1.55
+  totalIntensity: 0.66
   planetRadius: 300000
   bottomOffset: -3626
   atmosHeight: 10000
-  scatteringIntensity: 3.09
-  totalIntensity: 0.66
-  intensity: 0.66
   timeOfDay: 0.077
   sunDst: 10000
   settingsUpToDate: 1

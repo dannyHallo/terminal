@@ -22,22 +22,22 @@ public class MeshGenerator : MonoBehaviour
     public Transform viewer;
 
     public lodSetup[] lodSetups;
-
-    [Space()]
-    bool autoUpdateInEditor = true;
-    bool autoUpdateInGame = true;
     public ComputeShader shader;
     public Material mat;
-    bool generateColliders = true;
+
 
     [Header("Voxel Settings")]
     public float isoLevel;
     public float boundsSize = 20;
-    public Vector3 offset = Vector3.zero;
+    Vector3 offset = Vector3.zero;
 
     // [Header("Gizmos")]
-    bool showBoundsGizmo = true;
     Color boundsGizmoCol = Color.white;
+
+    bool showBoundsGizmo = true;
+    bool generateColliders = true;
+    bool autoUpdateInEditor = true;
+    bool autoUpdateInGame = true;
 
     GameObject chunkHolder;
     public string chunkHolderName = "ChunkHolder";
@@ -598,17 +598,23 @@ public class MeshGenerator : MonoBehaviour
         int numVoxels;
         int maxTriangleCount;
 
-        triangleBuffer = new ComputeBuffer[lodLen];
-        pointsBuffer = new ComputeBuffer[lodLen];
-        triCountBuffer = new ComputeBuffer[lodLen];
-        additionalPointsBuffer = new ComputeBuffer[lodLen];
+        if (triangleBuffer == null)
+        {
+            triangleBuffer = new ComputeBuffer[lodLen];
+            pointsBuffer = new ComputeBuffer[lodLen];
+            triCountBuffer = new ComputeBuffer[lodLen];
+            additionalPointsBuffer = new ComputeBuffer[lodLen];
+        }
 
         if (!Application.isPlaying || triangleBuffer[0] == null)
         {
             // Playing: release buffer and create
             // Editor: buffers are released immediately, so we don't need to release manually
             if (Application.isPlaying)
+            {
+                print("1");
                 ReleaseBuffers();
+            }
 
             for (int i = 0; i < lodLen; i++)
             {
@@ -637,13 +643,20 @@ public class MeshGenerator : MonoBehaviour
         {
             if (triangleBuffer[i] != null)
             {
+                print("2");
                 // If this buffer is not null, then these are not null
                 triangleBuffer[i].Release();
                 pointsBuffer[i].Release();
                 triCountBuffer[i].Release();
-                // additionalPointsBuffer[i].Release();
             }
         }
+        // for (int i = 0; i < lodSetups.Length; i++)
+        // {
+        //     if (additionalPointsBuffer[i] != null)
+        //     {
+        //         additionalPointsBuffer[i].Release();
+        //     }
+        // }
     }
 
     Vector3 CentreFromCoord(Vector3Int coord)

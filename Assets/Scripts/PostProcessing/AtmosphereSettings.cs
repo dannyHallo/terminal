@@ -7,31 +7,40 @@ using static UnityEngine.Mathf;
 [CreateAssetMenu(menuName = "Celestial Body/Atmosphere")]
 public class AtmosphereSettings : ScriptableObject
 {
-
     // public ComputeShader opticalDepthCompute;
     // public int textureSize = 256;
+    [Header("Performance")]
     public int inScatteringPoints = 10;
     public int opticalDepthPoints = 10;
-    public float densityFalloff = 4f;
 
+
+    [Header("Dither Settings")]
+    public float ditherStrength = 0.8f;
+    public float ditherScale = 4;
+    public Texture2D blueNoise;
+
+
+    [Header("Color")]
     public Vector3 wavelengths = new Vector3(700, 530, 440);
-
-    // public Vector4 testParams = new Vector4(7, 1.26f, 0.1f, 3);
+    public float densityFalloff = 4f;
     public float scatteringStrength = 20;
 
-    // public float ditherStrength = 0.8f;
-    // public float ditherScale = 4;
-    // public Texture2D blueNoise;
 
-    // [Range(0, 0.2f)] public float atmosphereScale = 0.01f;
+    [Header("Intensity")]
+    [Range(0, 5)] public float scatteringIntensity = 1;
+    [Range(0, 5)] public float totalIntensity = 0.66f;
+
+
+    [Header("Planet Settings")]
     [Range(0, 300000)] public float planetRadius = 100000f;
     [Range(-10000, 10000)] public float bottomOffset = 0f;
     [Range(0, 20000)] public float atmosHeight = 1000f;
 
 
-    [Range(0, 5)] public float scatteringIntensity = 1;
-    [Range(0, 5)] public float totalIntensity = 1;
-    public float intensity;
+    // [Header("Test Paras")]
+    // public Vector4 testParams = new Vector4(7, 1.26f, 0.1f, 3);
+
+
 
     [Header("Sun Settings")]
     [Range(0, 1)] public float timeOfDay;
@@ -73,10 +82,11 @@ public class AtmosphereSettings : ScriptableObject
             float scatterY = Pow(20 / wavelengths.y, 4);
             float scatterZ = Pow(20 / wavelengths.z, 4);
             material.SetVector("scatteringCoefficients", new Vector3(scatterX, scatterY, scatterZ) * scatteringStrength);
-            material.SetFloat("intensity", intensity);
-            // material.SetFloat ("ditherStrength", ditherStrength);
-            // material.SetFloat ("ditherScale", ditherScale);
-            // material.SetTexture ("_BlueNoise", blueNoise);
+
+            // Dithering            
+            material.SetFloat("ditherScale", ditherScale);
+            material.SetFloat("ditherStrength", ditherStrength);
+            material.SetTexture("_BlueNoise", blueNoise);
 
             // PrecomputeOutScattering ();
             // material.SetTexture ("_BakedOpticalDepth", opticalDepthTexture);

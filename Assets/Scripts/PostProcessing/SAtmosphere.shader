@@ -68,7 +68,6 @@ Shader "Hidden/SAtmosphere"
 			// Paramaters
 			int numInScatteringPoints;
 			int numOpticalDepthPoints;
-			float intensity;
 			float4 scatteringCoefficients;
 			float scatteringIntensity;
 			float totalIntensity;
@@ -121,8 +120,8 @@ Shader "Hidden/SAtmosphere"
 			}
 			
 			float3 calculateLight(float3 rayOrigin, float3 rayDir, float rayLength, float3 originalCol, float2 uv) {
-				// float blueNoise = tex2Dlod(_BlueNoise, float4(squareUV(uv) * ditherScale,0,0));
-				// blueNoise = (blueNoise - 0.5) * ditherStrength;
+				float blueNoise = tex2Dlod(_BlueNoise, float4(squareUV(uv) * ditherScale,0,0));
+				blueNoise = (blueNoise - 0.5) * ditherStrength;
 				
 				float3 inScatterPoint = rayOrigin;
 				float stepSize = rayLength / (numInScatteringPoints - 1);
@@ -136,9 +135,10 @@ Shader "Hidden/SAtmosphere"
 					float3 transmittance = exp(-(sunRayOpticalDepth + viewRayOpticalDepth) * scatteringCoefficients);
 					float localDensity = densityAtPoint(inScatterPoint);
 					
-					inScatteredLight += localDensity * transmittance * intensity * scatteringIntensity * scatteringCoefficients * stepSize;
+					inScatteredLight += localDensity * transmittance * scatteringIntensity * scatteringCoefficients * stepSize;
 					inScatterPoint += rayDir * stepSize;
 				}
+				inScatteredLight += blueNoise * 0.01;
 
 				float originalColTransmittance = exp(-viewRayOpticalDepth * (scatteringCoefficients.x + scatteringCoefficients.y + scatteringCoefficients.z)/3);
 				return (originalCol * 1 + inScatteredLight) * totalIntensity;
