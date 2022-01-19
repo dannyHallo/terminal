@@ -311,8 +311,8 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 147981840}
   m_LocalRotation: {x: 1, y: 0, z: 0, w: 0}
-  m_LocalPosition: {x: 587.6185, y: -112.74307, z: -1415.3383}
-  m_LocalScale: {x: 10000, y: 1, z: 10000}
+  m_LocalPosition: {x: 0, y: -100000, z: 0}
+  m_LocalScale: {x: 100000, y: 1, z: 100000}
   m_Children: []
   m_Father: {fileID: 0}
   m_RootOrder: 8
@@ -402,6 +402,7 @@ GameObject:
   m_Component:
   - component: {fileID: 185543205}
   - component: {fileID: 185543204}
+  - component: {fileID: 185543208}
   - component: {fileID: 185543207}
   - component: {fileID: 185543206}
   m_Layer: 3
@@ -424,15 +425,15 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   botName: Origin
-  gravity: 10
+  gravity: 80
   thrustIndicator: {fileID: 0}
   meshGenerator: {fileID: 1227901944}
   playerCamera: {fileID: 327418025}
   atmosphereSettings: {fileID: 11400000, guid: 697cd13215eac4342b1515d32931a270, type: 2}
-  moveSpeed: 100
+  moveSpeed: 150
   maxSpeed: 20
   grounded: 0
-  drawRange: 8
+  drawRange: 6
   thrustForce: 150
   screenShotMask: {fileID: 180104741}
   playerMask:
@@ -448,7 +449,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 185543203}
   m_LocalRotation: {x: 0, y: 0.7071068, z: 0, w: 0.7071068}
-  m_LocalPosition: {x: 0, y: 50, z: 0}
+  m_LocalPosition: {x: 0, y: 283.39, z: 0}
   m_LocalScale: {x: 0.5, y: 0.5, z: 0.5}
   m_Children:
   - {fileID: 131373988}
@@ -568,6 +569,20 @@ Rigidbody:
   m_Interpolate: 0
   m_Constraints: 0
   m_CollisionDetection: 2
+--- !u!114 &185543208
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 185543203}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fe6df9fc26ebc34429613590def8f6c6, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  atmosphereSettings: {fileID: 11400000, guid: 697cd13215eac4342b1515d32931a270, type: 2}
+  planetCentre: {x: 0, y: -300000, z: 0}
 --- !u!1 &327418022
 GameObject:
   m_ObjectHideFlags: 0
@@ -796,16 +811,16 @@ MonoBehaviour:
   mat: {fileID: 2100000, guid: d93366c815783437abcf8032ab99990b, type: 2}
   gradient:
     serializedVersion: 2
-    key0: {r: 0, g: 0.15465692, b: 0.3962264, a: 1}
-    key1: {r: 1, g: 0.6018832, b: 0, a: 1}
+    key0: {r: 0.16509432, g: 0.51481104, b: 1, a: 1}
+    key1: {r: 1, g: 0.80566037, b: 0.514151, a: 1}
     key2: {r: 0.6981132, g: 0.47500697, b: 0.31941974, a: 0}
-    key3: {r: 1, g: 1, b: 1, a: 0}
-    key4: {r: 0.5849056, g: 0.41660732, b: 0.5194562, a: 0}
+    key3: {r: 0.23584908, g: 0.23584908, b: 0.23584908, a: 0}
+    key4: {r: 0.23584908, g: 0.23584908, b: 0.23584908, a: 0}
     key5: {r: 0.5849056, g: 0.41660732, b: 0.5194562, a: 0}
     key6: {r: 1, g: 1, b: 1, a: 0}
     key7: {r: 1, g: 1, b: 1, a: 0}
     ctime0: 0
-    ctime1: 12722
+    ctime1: 13878
     ctime2: 43754
     ctime3: 65535
     ctime4: 65535
@@ -823,9 +838,9 @@ MonoBehaviour:
     m_Mode: 0
     m_NumColorKeys: 4
     m_NumAlphaKeys: 2
-  normalOffsetWeight: 11.23
-  boundsY: 107.8
-  offsetY: -44.8
+  normalOffsetWeight: 0
+  boundsY: 495.1
+  offsetY: -239.63
 --- !u!4 &410678713
 Transform:
   m_ObjectHideFlags: 0
@@ -869,19 +884,19 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 39819c572c3204902847662df1fa9c6e, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  densityShader: {fileID: 7200000, guid: 6f17253ba515b49de95452c1dcbdc45c, type: 3}
   seed: 0
   numOctaves: 6
-  lacunarity: 1.9
+  lacunarity: 2
   persistence: 0.35
-  noiseScale: 0.31
-  noiseWeight: 51.6
+  noiseScale: 0.04
+  noiseWeight: 300
   closeEdges: 0
-  floorOffset: 8
-  weightMultiplier: 12.7
-  hardFloorHeight: 0
+  floorOffset: 1
+  weightMultiplier: 8
+  hardFloorHeight: 1
   hardFloorWeight: 0
   shaderParams: {x: 0.28, y: 0, z: 0, w: 0}
+  densityShader: {fileID: 7200000, guid: 6f17253ba515b49de95452c1dcbdc45c, type: 3}
 --- !u!4 &523467301
 Transform:
   m_ObjectHideFlags: 0
@@ -1101,7 +1116,7 @@ Transform:
   m_GameObject: {fileID: 1081395773}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 2000, y: 2000, z: 2000}
+  m_LocalScale: {x: 300, y: 300, z: 300}
   m_Children: []
   m_Father: {fileID: 2000863096}
   m_RootOrder: 1
@@ -1197,17 +1212,17 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0c246675c48dd4e6796ca3fe12dabbb2, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  densityGenerator: {fileID: 523467300}
+  noiseDensity: {fileID: 523467300}
   fixedMapSize: 1
-  numChunks: {x: 5, y: 5, z: 5}
+  numChunks: {x: 6, y: 6, z: 6}
   viewer: {fileID: 185543205}
   lodSetups:
-  - numPointsPerAxis: 40
-    viewDistance: 800
+  - numPointsPerAxis: 48
+    viewDistance: 3200
   shader: {fileID: 7200000, guid: e6675a5747764487687871eed95a316b, type: 3}
   mat: {fileID: 2100000, guid: d93366c815783437abcf8032ab99990b, type: 2}
   isoLevel: 0
-  boundsSize: 120
+  boundsSize: 600
   chunkHolderName: TerrainChunkHolder
 --- !u!4 &1227901945
 Transform:
@@ -1413,7 +1428,7 @@ Light:
   m_BounceIntensity: 0
   m_ColorTemperature: 6570
   m_UseColorTemperature: 0
-  m_BoundingSphereOverride: {x: 2.532e-42, y: 2.534e-42, z: 2.535e-42, w: 2.536e-42}
+  m_BoundingSphereOverride: {x: 4.591775e-39, y: 2, z: 0, w: 0}
   m_UseBoundingSphereOverride: 0
   m_UseViewFrustumForShadowCasterCull: 1
   m_ShadowRadius: 0
@@ -1453,8 +1468,8 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 2000863095}
-  m_LocalRotation: {x: 0.16938762, y: -0.6865186, z: 0.16938762, w: 0.68651867}
-  m_LocalPosition: {x: 8852.313, y: 4651.5107, z: 0}
+  m_LocalRotation: {x: -0.03774658, y: -0.7060986, z: -0.03774658, w: 0.70609856}
+  m_LocalPosition: {x: 2982.9023, y: -36.443634, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children:
   - {fileID: 1867833545}

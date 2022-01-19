@@ -2,28 +2,38 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public class AtmosphereEffect {
+public class AtmosphereEffect
+{
 
-	Light light;
-	protected Material material;
-	public void UpdateSettings (Shader atmosphereShader) {
-		if (material == null || material.shader != atmosphereShader)
-			material = new Material (atmosphereShader);
+    Light light;
+    GameObject player;
+    protected Material material;
 
-		if (light == null)
-			light = GameObject.FindObjectOfType<SunShadowCaster> ()?.GetComponent<Light> ();
-	
-		if (light) {
-			Vector3 dirFromPlanetToSun = light.transform.position.normalized;
-			//Debug.Log(dirFromPlanetToSun);
-			material.SetVector ("dirToSun", dirFromPlanetToSun);
-		} else {
-			material.SetVector ("dirToSun", Vector3.up);
-			Debug.Log ("No SunShadowCaster found");
-		}
-	}
+    public void UpdateSettings(Shader atmosphereShader)
+    {
+        if (material == null || material.shader != atmosphereShader)
+            material = new Material(atmosphereShader);
 
-	public Material GetMaterial () {
-		return material;
-	}
+        if (light == null)
+            light = GameObject.FindObjectOfType<SunShadowCaster>()?.GetComponent<Light>();
+
+        if (player == null)
+            player = GameObject.FindObjectOfType<PlayerMovement>()?.gameObject;
+
+        if (light)
+        {
+            Vector3 dirFromPlanetToSun = (light.transform.position - player.transform.position).normalized;
+            material.SetVector("dirToSun", dirFromPlanetToSun);
+        }
+        else
+        {
+            material.SetVector("dirToSun", Vector3.up);
+            Debug.Log("No SunShadowCaster found");
+        }
+    }
+
+    public Material GetMaterial()
+    {
+        return material;
+    }
 }

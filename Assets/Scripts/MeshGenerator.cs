@@ -9,7 +9,7 @@ public class MeshGenerator : MonoBehaviour
     const int threadGroupSize = 8;
 
     [Header("General Settings")]
-    public DensityGenerator densityGenerator;
+    public NoiseDensity noiseDensity;
 
     public bool fixedMapSize;
 
@@ -190,8 +190,8 @@ public class MeshGenerator : MonoBehaviour
                 {
                     Vector3Int coord = new Vector3Int(x, y, z) + viewerCoord;
 
-                    if (Mathf.Abs(coord.y) > 1)
-                        continue;
+                    // if (Mathf.Abs(coord.y) > 1)
+                    //     continue;
 
                     // Keep the chunk unchanged
                     if (existingChunks.ContainsKey(coord))
@@ -220,16 +220,16 @@ public class MeshGenerator : MonoBehaviour
 
                             if (i == 0)
                             {
-                                // Create additional point data
                                 if (!existingChunkVolumeData.ContainsKey(coord))
                                 {
                                     additionalPointsBuffer[i].SetData(chunkVolumeData);
+                                    UpdateChunkMesh(chunk, additionalPointsBuffer[i], i);
                                 }
                                 else
                                 {
                                     additionalPointsBuffer[i].SetData(existingChunkVolumeData[coord]);
+                                    UpdateChunkMesh(chunk, additionalPointsBuffer[i], i);
                                 }
-                                UpdateChunkMesh(chunk, additionalPointsBuffer[i], i);
                             }
                             else
                             {
@@ -514,6 +514,7 @@ public class MeshGenerator : MonoBehaviour
         return visiableFromCam;
     }
 
+    // TODO:
     public void UpdateChunkMesh(Chunk chunk, ComputeBuffer additionalPointsBuffer, int lodLevel)
     {
         int numPointsPerAxis = lodSetups[lodLevel].numPointsPerAxis;
@@ -527,8 +528,26 @@ public class MeshGenerator : MonoBehaviour
 
         Vector3 worldBounds = new Vector3(numChunks.x, numChunks.y, numChunks.z) * boundsSize;
 
+        // Indecator of the points are full or empty
+        int[] pointStatusData = new int[2];
+        pointStatusData[0] = 0;
+        pointStatusData[1] = 0;
+        ComputeBuffer pointsStatus = new ComputeBuffer(2, sizeof(int));
+        pointsStatus.SetData(pointStatusData);
+        
         // Gerenate individual noise value using compute shader， modifies pointsBuffer
-        pointsBuffer[lodLevel] = densityGenerator.Generate(pointsBuffer[lodLevel], additionalPointsBuffer, numPointsPerAxis, boundsSize, worldBounds, centre, offset, pointSpacing, isoLevel);
+        noiseDensity.Generate(pointsBuffer[lodLevel], additionalPointsBuffer, pointsStatus, numPointsPerAxis, boundsSize, worldBounds, centre, offset, pointSpacing, isoLevel);
+        pointsStatus.GetData(pointStatusData);
+        // print(pointStatusData[0] + ", " + pointStatusData[1]);
+        pointsStatus.Release();
+        
+        if(pointStatusData[0] == 0 || pointStatusData[1] == 0){
+            chunk.gameObject.SetActive(false);
+            return;
+        }else{
+            if(!chunk.gameObject.activeInHierarchy)
+                chunk.gameObject.SetActive(true);
+        }
 
         triangleBuffer[lodLevel].SetCounterValue(0);
         shader.SetBuffer(0, "points", pointsBuffer[lodLevel]);
@@ -612,7 +631,6 @@ public class MeshGenerator : MonoBehaviour
             // Editor: buffers are released immediately, so we don't need to release manually
             if (Application.isPlaying)
             {
-                print("1");
                 ReleaseBuffers();
             }
 
@@ -643,7 +661,6 @@ public class MeshGenerator : MonoBehaviour
         {
             if (triangleBuffer[i] != null)
             {
-                print("2");
                 // If this buffer is not null, then these are not null
                 triangleBuffer[i].Release();
                 pointsBuffer[i].Release();

@@ -75,7 +75,7 @@ public class PlayerMovement : MonoBehaviour
         rb.constraints = RigidbodyConstraints.FreezeRotation;
         rb.useGravity = false;
         ableToDig = true;
-        transform.position = new Vector3(0, 50f, 0);
+        transform.position = new Vector3(0, 1000f, 0);
         // atmosphereSettings.timeOfDay = 0f;
 
         oriMoveSpeed = moveSpeed;
@@ -85,10 +85,10 @@ public class PlayerMovement : MonoBehaviour
     // Land on planet initially
     void TryToLand()
     {
-        float rayLength = 500f;
+        float rayLength = 2000f;
 
         // actual Ray
-        Ray ray = new Ray(new Vector3(0, 30f, 0), Vector3.down);
+        Ray ray = new Ray(transform.position + new Vector3(0, 30f, 0), Vector3.down);
 
         // debug Ray
         Debug.DrawRay(ray.origin, ray.direction * rayLength, Color.green);
@@ -96,7 +96,7 @@ public class PlayerMovement : MonoBehaviour
         RaycastHit hit;
         if (Physics.Raycast(ray, out hit, rayLength, playerMask))
         {
-            transform.position = hit.point + new Vector3(0, 1f, 0);
+            transform.position = hit.point + new Vector3(0, 3f, 0);
             landed = true;
         }
     }

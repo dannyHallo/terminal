@@ -37,37 +37,35 @@ public class AtmosphereSettings : ScriptableObject
     [Range(0, 20000)] public float atmosHeight = 1000f;
 
 
+    [Header("Sun Settings")]
+    [Range(0, 1)] public float startTimeOfDay;
+    [Range(1, 10)] public float sunSpeed;
+    public float sunDistance = 100000;
+    public bool allowTimeFlow = true;
+
+    float atmosphereRadius = 0;
+    // RenderTexture opticalDepthTexture;
+    
     // [Header("Test Paras")]
     // public Vector4 testParams = new Vector4(7, 1.26f, 0.1f, 3);
 
-
-
-    [Header("Sun Settings")]
-    [Range(0, 1)] public float timeOfDay;
-    public float sunDst = 100000;
-    float atmosphereRadius = 0;
-    // RenderTexture opticalDepthTexture;
+    [Header("Update")]
     public bool settingsUpToDate;
-    // public bool timeFlow = false;
 
+    ObjectControl objectControl;
+    
     public void SetProperties(Material material)
     {
+        if(!objectControl){
+            objectControl = GameObject.Find("Bot1").GetComponent<ObjectControl>();
+        }
+
         if (!settingsUpToDate || Application.isPlaying)
         {
-            var sun = GameObject.Find("Test Sun");
-            if (sun)
-            {
-                sun.transform.position = new Vector3(Mathf.Cos(timeOfDay * 2 * Mathf.PI), Mathf.Sin(timeOfDay * 2 * Mathf.PI), 0) * sunDst;
-                sun.transform.LookAt(Vector3.zero);
-                // if(Application.isPlaying && timeFlow)
-                // 	timeOfDay += 0.0001f;
-            }
-
-            // MonoBehaviour.print("setting");
             atmosphereRadius = atmosHeight + planetRadius + bottomOffset;
             material.SetFloat("atmosphereRadius", atmosphereRadius);
             material.SetFloat("planetRadius", planetRadius + bottomOffset);
-            material.SetVector("planetCentre", new Vector3(0, -planetRadius, 0));
+            material.SetVector("planetCentre", objectControl.planetCentre);
 
             // material.SetVector("params", testParams);
             material.SetInt("numInScatteringPoints", inScatteringPoints);

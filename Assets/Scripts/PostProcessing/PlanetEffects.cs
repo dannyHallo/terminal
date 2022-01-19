@@ -41,8 +41,6 @@ public class PlanetEffects : PostProcessingEffect
 
     public class EffectHolder
     {
-        // public CelestialBodyGenerator generator;
-        // public OceanEffect oceanEffect;
         public AtmosphereEffect atmosphereEffect;
 
         public EffectHolder()
