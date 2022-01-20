@@ -148,7 +148,7 @@ public class PlayerMovement : MonoBehaviour
     private void CheckRay()
     {
         Vector3 rayOrigin = new Vector3(0.5f, 0.5f, 0f); // center of the screen
-        float rayLength = 1000f;
+        float rayLength = 3000f;
 
         // actual Ray
         Ray ray = Camera.main.ViewportPointToRay(rayOrigin);

@@ -4,12 +4,9 @@ using UnityEngine;
 [ExecuteInEditMode, ImageEffectAllowedInSceneView]
 public class PostProcessingCore : MonoBehaviour
 {
-
-    public PostProcessingEffect[] effects;
-    Shader defaultShader;
     Material defaultMat;
+    public PostProcessingEffect[] effects;
     List<RenderTexture> temporaryTextures = new List<RenderTexture>();  // Temp textures to release
-    public bool debugOceanMask;
 
     public event System.Action<RenderTexture> onPostProcessingComplete;
     public event System.Action<RenderTexture> onPostProcessingBegin;
@@ -23,42 +20,47 @@ public class PostProcessingCore : MonoBehaviour
             onPostProcessingBegin(finalDest);
         }
 
+        if (!defaultMat)
+        {
+            defaultMat = new Material(Shader.Find("Unlit/Texture"));
+        }
+
         temporaryTextures.Clear();
 
         RenderTexture currentSource = initSource;
         RenderTexture currentDest = null;
 
-        if (effects != null)
+        if (effects != null && effects.Length != 0)
         {
-            for (int i = 0; i < effects.Length; i++)
+            foreach (var effect in effects)
             {
-                PostProcessingEffect effect = effects[i];
-                if (effect != null)
+                // Final effect is rendered into final destination texture
+                if (effect == effects[effects.Length - 1])
                 {
-                    // Final effect, so render into final destination texture
-                    if (i == effects.Length - 1)
-                    {
-                        currentDest = finalDest;
-                    }
-                    // Get temporary texture to render this effect into
-                    else
-                    {
-                        currentDest = TemporaryRenderTexture(finalDest);		// Create a blank RenderTexture with the same property of the last one
-                        temporaryTextures.Add(currentDest);                     // Temp textures are going to be released
-                    }
-
-                    effect.Render(currentSource, currentDest);              	// render the effect
-                    currentSource = currentDest;                                // output texture of this effect becomes input for next effect
+                    currentDest = finalDest;
                 }
+
+                // Get temporary texture to render this effect into
+                else
+                {
+                    currentDest = TemporaryRenderTexture(finalDest);        // Create a blank RenderTexture with the same property of the last one
+                    temporaryTextures.Add(currentDest);                     // Temp textures are going to be released
+                }
+
+                effect.Render(currentSource, currentDest);                  // render the effect
+                currentSource = currentDest;                                // output texture of this effect becomes input for next effect
             }
-        }else{
-			print("The effect list is null!");
-		}
+        }
+        else
+        {
+            RenderMaterials(initSource, finalDest, defaultMat);
+            // return;
+        }
 
         // Release temporary textures
-        for (int i = 0; i < temporaryTextures.Count; i++)
+        foreach (var texture in temporaryTextures)
         {
-            RenderTexture.ReleaseTemporary(temporaryTextures[i]);
+            RenderTexture.ReleaseTemporary(texture);
         }
 
         // Trigger post processing complete event
@@ -67,6 +69,16 @@ public class PostProcessingCore : MonoBehaviour
             onPostProcessingComplete(finalDest);
         }
 
+    }
+
+    // Helper function for blitting single material
+    public static void RenderMaterials(RenderTexture source, RenderTexture destination, Material material)
+    {
+        RenderTexture currentSource = source;
+        RenderTexture currentDestination = null;
+
+        currentDestination = destination;
+        Graphics.Blit(currentSource, currentDestination, material);
     }
 
     // Helper function for blitting a list of materials
@@ -108,15 +120,7 @@ public class PostProcessingCore : MonoBehaviour
         }
     }
 
-    // Helper function for blitting single material
-    public static void RenderMaterials(RenderTexture source, RenderTexture destination, Material material)
-    {
-        RenderTexture currentSource = source;
-        RenderTexture currentDestination = null;
 
-        currentDestination = destination;
-        Graphics.Blit(currentSource, currentDestination, material);
-    }
 
     public static RenderTexture TemporaryRenderTexture(RenderTexture template)
     {

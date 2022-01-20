@@ -433,7 +433,7 @@ MonoBehaviour:
   moveSpeed: 150
   maxSpeed: 20
   grounded: 0
-  drawRange: 6
+  drawRange: 8
   thrustForce: 150
   screenShotMask: {fileID: 180104741}
   playerMask:
@@ -683,7 +683,6 @@ MonoBehaviour:
   - {fileID: 11400000, guid: 5821bd498b7d4714aaf26be75bdfbee2, type: 2}
   - {fileID: 11400000, guid: 84b638ca20bd24edf9d42d3686bb3b4d, type: 2}
   - {fileID: 11400000, guid: 9670340ab10df4930aaaeecbce049971, type: 2}
-  debugOceanMask: 0
 --- !u!1 &359341414
 GameObject:
   m_ObjectHideFlags: 0
@@ -1217,8 +1216,8 @@ MonoBehaviour:
   numChunks: {x: 6, y: 6, z: 6}
   viewer: {fileID: 185543205}
   lodSetups:
-  - numPointsPerAxis: 48
-    viewDistance: 3200
+  - numPointsPerAxis: 64
+    viewDistance: 2800
   shader: {fileID: 7200000, guid: e6675a5747764487687871eed95a316b, type: 3}
   mat: {fileID: 2100000, guid: d93366c815783437abcf8032ab99990b, type: 2}
   isoLevel: 0
@@ -1468,8 +1467,8 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 2000863095}
-  m_LocalRotation: {x: -0.03774658, y: -0.7060986, z: -0.03774658, w: 0.70609856}
-  m_LocalPosition: {x: 2982.9023, y: -36.443634, z: 0}
+  m_LocalRotation: {x: 0.12375999, y: -0.69619215, z: 0.12375999, w: 0.6961921}
+  m_LocalPosition: {x: 2816.2017, y: 1317.3188, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children:
   - {fileID: 1867833545}
