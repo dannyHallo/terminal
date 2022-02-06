@@ -48,7 +48,7 @@ void Density (int3 id : SV_DispatchThreadID)
         // 0-1
         float n = snoise((pos+offsetNoise) * frequency + offsets[j] + offset);
         float v = 0;
-        if(j == 0){
+        if(j == -1){
             v = abs(n);
         }
         else{

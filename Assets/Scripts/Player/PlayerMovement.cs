@@ -12,7 +12,7 @@ public class PlayerMovement : MonoBehaviour
     public String botName;
     public float gravity = 10f;
     public Scrollbar thrustIndicator;
-    public MeshGenerator meshGenerator;
+    public TerrainMesh terrainMesh;
     public Transform playerCamera;
     public AtmosphereSettings atmosphereSettings;
     bool ableToDig = true;
@@ -169,7 +169,7 @@ public class PlayerMovement : MonoBehaviour
                 {
                     if (ableToDig)
                     {
-                        meshGenerator.DrawOnChunk(hit.point, drawRange, 0);
+                        terrainMesh.DrawOnChunk(hit.point, drawRange, 0);
                         ableToDig = false;
                         startCoroutineF = true;
                     }
@@ -184,7 +184,7 @@ public class PlayerMovement : MonoBehaviour
                 {
                     if (ableToDig)
                     {
-                        meshGenerator.DrawOnChunk(hit.point, drawRange, 1);
+                        terrainMesh.DrawOnChunk(hit.point, drawRange, 1);
                         NotifyTerrainChanged(hit.point, drawRange);
                         ableToDig = false;
                         startCoroutineF = true;

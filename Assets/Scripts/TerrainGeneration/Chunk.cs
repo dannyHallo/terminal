@@ -87,9 +87,9 @@ public class Chunk : MonoBehaviour
     {
         if (generateCollider)
         {
+            // force update
             meshCollider.sharedMesh = null;
             meshCollider.sharedMesh = mesh;
-            // force update
             meshCollider.enabled = false;
             meshCollider.enabled = true;
         }
