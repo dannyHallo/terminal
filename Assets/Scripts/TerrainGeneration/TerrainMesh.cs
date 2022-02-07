@@ -1,7 +1,10 @@
-﻿using System.Collections;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
+using Unity.Collections;
 using UnityEngine;
 using UnityEngine.Profiling;
+using Unity.Burst;
+using Unity.Jobs;
+using Unity.Collections.LowLevel.Unsafe;
 
 [ExecuteInEditMode]
 public class TerrainMesh : MonoBehaviour
@@ -49,13 +52,17 @@ public class TerrainMesh : MonoBehaviour
 
     float changeFactor = -0.6f;
     bool settingsUpdated;
-
+    bool boundedMapGenerated;
+    float loadTime;
     [System.Serializable]
     public struct LodSetup
     {
         public int numPointsPerAxisPreview;
         public int numPointsPerAxis;
-        public int viewDistance;
+        public int viewDistanceHori;
+        public int viewDistanceVert;
+        public int fixedDistanceHori;
+        public int fixedDistanceVert;
 
     }
 
@@ -63,9 +70,11 @@ public class TerrainMesh : MonoBehaviour
     {
         if (Application.isPlaying)
         {
+            boundedMapGenerated = false;
+            loadTime = 0;
             ReleaseBuffers();
-            if (fixedMapSize)
-                fixedMapSize = false;
+            // if (fixedMapSize)
+            //     fixedMapSize = false;
             InitVariableChunkStructures();
             // Destroy all chunks by searching all objects contains Chunk script
             var oldChunks = FindObjectsOfType<Chunk>();
@@ -88,20 +97,33 @@ public class TerrainMesh : MonoBehaviour
             RequestMeshUpdate();
             settingsUpdated = false;
         }
+        loadTime += Time.deltaTime;
+
     }
 
     void Run()
     {
         CreateBuffers();
 
-        if (fixedMapSize)
+        if (!Application.isPlaying)
         {
             InitChunks();
             UpdateAllChunks();
         }
-        else if (Application.isPlaying)
+        else
         {
-            InitVisibleChunks();
+            if (fixedMapSize)
+            {
+                if (!boundedMapGenerated)
+                {
+                    LoadBoundedChunks();
+
+                }
+            }
+            else
+            {
+                LoadVisibleChunks();
+            }
         }
 
         // Release buffers immediately in editor
@@ -124,7 +146,7 @@ public class TerrainMesh : MonoBehaviour
         existingChunkVolumeData = new Dictionary<Vector3Int, float[]>();
     }
 
-    void InitVisibleChunks()
+    void LoadVisibleChunks()
     {
         if (chunks == null)
             return;
@@ -137,56 +159,40 @@ public class TerrainMesh : MonoBehaviour
         // Indicates which chunk the viewer in in
         Vector3Int viewerCoord = new Vector3Int(Mathf.RoundToInt(ps.x), Mathf.RoundToInt(ps.y), Mathf.RoundToInt(ps.z));
         // All chunks, no matter lod
-        int maxChunksInView = Mathf.CeilToInt(lodSetup.viewDistance / boundsSize);
+        int maxChunksInViewHori = Mathf.CeilToInt(lodSetup.viewDistanceHori / boundsSize);
+        int maxChunksInViewVert = Mathf.CeilToInt(lodSetup.viewDistanceVert / boundsSize);
 
         // Kick chunks outside the range
         for (int i = chunks.Count - 1; i >= 0; i--)
         {
             Chunk chunk = chunks[i];
-            // Chunk coord -> World coord, returns the centre of the target chunk
-            Vector3 centre = CentreFromCoord(chunk.coord);
-            Vector3 viewerOffset = p - centre;
+            Vector3Int chunkCoord = chunk.coord;
 
-            // Vector3 from the centre of the player's chunk to the target chunk's centre
-            Vector3 o = new Vector3(Mathf.Abs(viewerOffset.x), Mathf.Abs(viewerOffset.y), Mathf.Abs(viewerOffset.z))
-             - Vector3.one * boundsSize / 2;
-            // Corresponding distance
-            float chunkDst = new Vector3(Mathf.Max(o.x, 0), Mathf.Max(o.y, 0), Mathf.Max(o.z, 0)).magnitude;
-
-
-            if ((chunkDst > lodSetup.viewDistance))
+            if (((Mathf.Pow(chunkCoord.x - viewerCoord.x, 2) +
+                Mathf.Pow(chunkCoord.z - viewerCoord.z, 2)) >
+                Mathf.Pow(maxChunksInViewHori, 2)))
             {
                 existingChunks.Remove(chunk.coord);
                 chunk.DestroyOrDisable();
                 chunks.RemoveAt(i);
             }
-
         }
-
-        Profiler.BeginSample("Loop Through All Chunks");
-        for (int x = -maxChunksInView; x <= maxChunksInView; x++)
+        for (int x = -maxChunksInViewHori; x <= maxChunksInViewHori; x++)
         {
-            for (int y = -maxChunksInView; y <= maxChunksInView; y++)
+            for (int y = -maxChunksInViewVert; y <= maxChunksInViewVert; y++)
             {
-                for (int z = -maxChunksInView; z <= maxChunksInView; z++)
+                for (int z = -maxChunksInViewHori; z <= maxChunksInViewHori; z++)
                 {
-                    if (((Mathf.Pow(x, 2) + Mathf.Pow(y, 2) + Mathf.Pow(z, 2)) >
-                        Mathf.Pow(maxChunksInView, 2)))
+                    if (((Mathf.Pow(x, 2) + Mathf.Pow(z, 2)) > Mathf.Pow(maxChunksInViewHori, 2)))
                         continue;
 
-                    Vector3Int coord = new Vector3Int(x, y, z) + viewerCoord;
+                    Vector3Int coord = new Vector3Int(x + viewerCoord.x, y, z + viewerCoord.z);
 
                     // Keep the chunk unchanged
                     if (existingChunks.ContainsKey(coord))
                         continue;
 
-                    // Vector3 centre = CentreFromCoord(coord);
-                    // Vector3 viewerOffset = p - centre;
-                    // Vector3 o = new Vector3(Mathf.Abs(viewerOffset.x), Mathf.Abs(viewerOffset.y), Mathf.Abs(viewerOffset.z)) - Vector3.one * boundsSize / 2;
-                    // float chunkDst = new Vector3(Mathf.Max(o.x, 0), Mathf.Max(o.y, 0), Mathf.Max(o.z, 0)).magnitude;
-
                     int numPoints = lodSetup.numPointsPerAxis * lodSetup.numPointsPerAxis * lodSetup.numPointsPerAxis;
-                    Bounds bounds = new Bounds(CentreFromCoord(coord), Vector3.one * boundsSize);
                     Chunk chunk = CreateChunk(coord);
                     float[] chunkVolumeData = new float[numPoints];
 
@@ -207,14 +213,70 @@ public class TerrainMesh : MonoBehaviour
                         additionalPointsBuffer.SetData(existingChunkVolumeData[coord]);
                         UpdateChunkMesh(chunk, additionalPointsBuffer);
                     }
-
                     additionalPointsBuffer.Release();
-                    break;
-
                 }
             }
         }
-        Profiler.EndSample();
+    }
+
+    void LoadBoundedChunks()
+    {
+        if (chunks == null)
+            return;
+
+        CreateChunkHolder();
+
+        // All chunks, no matter lod
+        int fixedChunksHori = Mathf.CeilToInt(lodSetup.fixedDistanceHori / boundsSize);
+        int fixedChunksVert = Mathf.CeilToInt(lodSetup.fixedDistanceVert / boundsSize);
+
+        int updatedChunks = 0;
+        for (int x = -fixedChunksHori; x <= fixedChunksHori; x++)
+        {
+            for (int y = -fixedChunksVert; y <= fixedChunksVert; y++)
+            {
+                for (int z = -fixedChunksHori; z <= fixedChunksHori; z++)
+                {
+                    // TODO:
+                    Vector3Int coord = new Vector3Int(x, y, z);
+
+                    // Keep the chunk unchanged
+                    if (existingChunks.ContainsKey(coord))
+                        continue;
+                    updatedChunks++;
+                    int numPoints = lodSetup.numPointsPerAxis * lodSetup.numPointsPerAxis * lodSetup.numPointsPerAxis;
+                    Chunk chunk = CreateChunk(coord);
+                    float[] chunkVolumeData = new float[numPoints];
+
+                    chunk.coord = coord;
+                    chunk.SetUp(mat, generateColliders);
+                    existingChunks.Add(coord, chunk);
+                    chunks.Add(chunk);
+
+                    additionalPointsBuffer = new ComputeBuffer(numPoints, sizeof(float));
+
+                    if (!existingChunkVolumeData.ContainsKey(coord))
+                    {
+                        additionalPointsBuffer.SetData(chunkVolumeData);
+                        UpdateChunkMesh(chunk, additionalPointsBuffer);
+                    }
+                    else
+                    {
+                        additionalPointsBuffer.SetData(existingChunkVolumeData[coord]);
+                        UpdateChunkMesh(chunk, additionalPointsBuffer);
+                    }
+                    additionalPointsBuffer.Release();
+
+                    break;
+                }
+            }
+        }
+        if (updatedChunks == 0)
+        {
+            boundedMapGenerated = true;
+            print(loadTime);
+        }
+
 
     }
 
@@ -515,19 +577,16 @@ public class TerrainMesh : MonoBehaviour
         // Gerenate individual noise value using compute shader， modifies pointsBuffer
         noiseDensity.Generate(pointsBuffer, additionalPointsBuffer, pointsStatus, numPointsPerAxis, boundsSize, worldBounds, centre, offset, pointSpacing, isoLevel);
         pointsStatus.GetData(pointStatusData);
-        // print(pointStatusData[0] + ", " + pointStatusData[1]);
         pointsStatus.Release();
 
+        // If all empty/ all full
         if (pointStatusData[0] == 0 || pointStatusData[1] == 0)
         {
             chunk.gameObject.SetActive(false);
             return;
         }
-        else
-        {
-            if (!chunk.gameObject.activeInHierarchy)
-                chunk.gameObject.SetActive(true);
-        }
+        else if (!chunk.gameObject.activeInHierarchy)
+            chunk.gameObject.SetActive(true);
 
         triangleBuffer.SetCounterValue(0);
         shader.SetBuffer(0, "points", pointsBuffer);
@@ -550,23 +609,24 @@ public class TerrainMesh : MonoBehaviour
         Mesh mesh = chunk.mesh;
         mesh.Clear();
 
-        var vertices = new Vector3[numTris * 3];
-        var meshTriangles = new int[numTris * 3];
+        Vector3[] vertices = new Vector3[numTris * 3];
 
-        for (int i = 0; i < numTris; i++)
+        int[] meshTriangles = new int[numTris * 3];
+
+        for (int j = 0; j < 3; j++)
         {
-            for (int j = 0; j < 3; j++)
+            for (int i = 0; i < numTris; i++)
             {
                 meshTriangles[i * 3 + j] = i * 3 + j;
                 vertices[i * 3 + j] = tris[i][j];
             }
         }
+
         mesh.vertices = vertices;
         mesh.triangles = meshTriangles;
 
         mesh.RecalculateNormals();
         chunk.UpdateColliders();
-
     }
 
     public void UpdateAllChunks()
@@ -691,6 +751,7 @@ public class TerrainMesh : MonoBehaviour
     // Create/get references to all chunks
     void InitChunks()
     {
+        // TODO:
         // Create a folder
         CreateChunkHolder();
         chunks = new List<Chunk>();
@@ -718,7 +779,7 @@ public class TerrainMesh : MonoBehaviour
                         }
                     }
 
-                    // Otherwise, create new chunk
+                    // Otherwise, create a new chunk
                     if (!chunkAlreadyExists)
                     {
                         var newChunk = CreateChunk(coord);

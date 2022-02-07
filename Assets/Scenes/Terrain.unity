@@ -449,7 +449,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 185543203}
   m_LocalRotation: {x: 0, y: 0.7071068, z: 0, w: 0.7071068}
-  m_LocalPosition: {x: 0, y: 283.39, z: 0}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 0.5, y: 0.5, z: 0.5}
   m_Children:
   - {fileID: 131373988}
@@ -811,20 +811,20 @@ MonoBehaviour:
   normalOffsetWeight: 8.9
   gradient:
     serializedVersion: 2
-    key0: {r: 0.5882353, g: 0.80784315, b: 0.70980394, a: 1}
-    key1: {r: 1, g: 0.9372549, b: 0.6784314, a: 1}
-    key2: {r: 1, g: 0.43529412, b: 0.41568628, a: 1}
-    key3: {r: 1, g: 0.8, b: 0.3647059, a: 1}
-    key4: {r: 0.5372549, g: 0.84705883, b: 0.6901961, a: 1}
-    key5: {r: 0.25882354, g: 0.54509807, b: 0.7921569, a: 1}
+    key0: {r: 0.5686275, g: 0.827451, b: 0.84705883, a: 1}
+    key1: {r: 0.7176471, g: 0.8745098, b: 0.827451, a: 1}
+    key2: {r: 1, g: 0.9254902, b: 0.72156864, a: 1}
+    key3: {r: 0.96862745, g: 0.7607843, b: 0.5921569, a: 1}
+    key4: {r: 0.96862745, g: 0.6509804, b: 0.69803923, a: 1}
+    key5: {r: 1, g: 0.9254902, b: 0.72156864, a: 1}
     key6: {r: 1, g: 1, b: 1, a: 0}
     key7: {r: 1, g: 1, b: 1, a: 0}
     ctime0: 13107
-    ctime1: 26214
-    ctime2: 39321
-    ctime3: 52428
+    ctime1: 25829
+    ctime2: 40285
+    ctime3: 52621
     ctime4: 65535
-    ctime5: 65535
+    ctime5: 52428
     ctime6: 65535
     ctime7: 65535
     atime0: 13107
@@ -839,9 +839,9 @@ MonoBehaviour:
     m_NumColorKeys: 5
     m_NumAlphaKeys: 5
   colorNum: 5
-  colorPalette: {fileID: 2800000, guid: e55a5514c0be0654a9992d5bd312d5c4, type: 3}
-  boundsY: 365.8
-  offsetY: -84.2
+  colorPalette: {fileID: 0}
+  boundsY: 943.6
+  offsetY: 300.56
 --- !u!4 &410678713
 Transform:
   m_ObjectHideFlags: 0
@@ -886,13 +886,13 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   seed: 1
-  numOctaves: 10
-  lacunarity: 1.26
-  persistence: 0.794
-  noiseScale: 0.047
-  noiseWeight: 86.88
+  numOctaves: 6
+  lacunarity: 1.431
+  persistence: 0.345
+  noiseScale: 0.0508
+  noiseWeight: 465.1
   closeEdges: 0
-  floorOffset: 1
+  floorOffset: -629.71
   weightMultiplier: 8
   hardFloorHeight: 1
   hardFloorWeight: 0
@@ -1371,12 +1371,15 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   noiseDensity: {fileID: 523467300}
   fixedMapSize: 1
-  numChunks: {x: 5, y: 5, z: 5}
+  numChunks: {x: 8, y: 5, z: 8}
   viewer: {fileID: 185543205}
   lodSetup:
-    numPointsPerAxisPreview: 28
+    numPointsPerAxisPreview: 16
     numPointsPerAxis: 40
-    viewDistance: 2000
+    viewDistanceHori: 2000
+    viewDistanceVert: 500
+    fixedDistanceHori: 3000
+    fixedDistanceVert: 500
   shader: {fileID: 7200000, guid: e6675a5747764487687871eed95a316b, type: 3}
   mat: {fileID: 2100000, guid: d93366c815783437abcf8032ab99990b, type: 2}
   isoLevel: 0
@@ -1704,7 +1707,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 2000863095}
   m_LocalRotation: {x: 0.12375999, y: -0.69619215, z: 0.12375999, w: 0.6961921}
-  m_LocalPosition: {x: 2816.2017, y: 1317.3188, z: 0}
+  m_LocalPosition: {x: 2816.2017, y: 1033.9288, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children:
   - {fileID: 1867833545}
