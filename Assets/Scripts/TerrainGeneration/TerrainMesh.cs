@@ -52,8 +52,9 @@ public class TerrainMesh : MonoBehaviour
 
     float changeFactor = -0.6f;
     bool settingsUpdated;
-    bool boundedMapGenerated;
+    [SerializeField] bool boundedMapGenerated;
     float loadTime;
+
     [System.Serializable]
     public struct LodSetup
     {
@@ -70,18 +71,20 @@ public class TerrainMesh : MonoBehaviour
     {
         if (Application.isPlaying)
         {
-            boundedMapGenerated = false;
             loadTime = 0;
             ReleaseBuffers();
-            // if (fixedMapSize)
-            //     fixedMapSize = false;
             InitVariableChunkStructures();
-            // Destroy all chunks by searching all objects contains Chunk script
-            var oldChunks = FindObjectsOfType<Chunk>();
-            for (int i = 0; i < oldChunks.Length; i++)
-            {
-                Destroy(oldChunks[i].gameObject);
-            }
+
+        }
+    }
+
+    void DestroyOldChunks()
+    {
+        // Destroy all chunks by searching all objects contains Chunk script
+        var oldChunks = FindObjectsOfType<Chunk>();
+        for (int i = 0; i < oldChunks.Length; i++)
+        {
+            Destroy(oldChunks[i].gameObject);
         }
     }
 
@@ -117,11 +120,12 @@ public class TerrainMesh : MonoBehaviour
                 if (!boundedMapGenerated)
                 {
                     LoadBoundedChunks();
-
                 }
             }
             else
             {
+                boundedMapGenerated = false;
+                DestroyOldChunks();
                 LoadVisibleChunks();
             }
         }
@@ -274,7 +278,7 @@ public class TerrainMesh : MonoBehaviour
         if (updatedChunks == 0)
         {
             boundedMapGenerated = true;
-            print(loadTime);
+            print("Loadtime: " + loadTime);
         }
 
 
@@ -644,6 +648,8 @@ public class TerrainMesh : MonoBehaviour
         {
             UpdateChunkMesh(chunk, additionalPointsBuffer);
         }
+        boundedMapGenerated = true;
+
         additionalPointsBuffer.Release();
     }
 
@@ -821,7 +827,12 @@ public class TerrainMesh : MonoBehaviour
     // Run every time settings in MeshGenerator changed
     void OnValidate()
     {
-        settingsUpdated = true;
+        if (!Application.isPlaying)
+        {
+            boundedMapGenerated = false;
+            settingsUpdated = true;
+        }
+
     }
 
     struct Triangle

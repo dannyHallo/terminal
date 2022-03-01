@@ -1,59 +1,46 @@
-// Some stupid rigidbody based movement by Dani
-
 using System;
 using UnityEngine;
 using System.Collections;
 using UnityEngine.UI;
+using Mirror;
 
 [RequireComponent(typeof(Rigidbody))]
 [RequireComponent(typeof(AudioSource))]
-public class PlayerMovement : MonoBehaviour
+[RequireComponent(typeof(CharacterController))]
+public class PlayerMovement : NetworkBehaviour
 {
     public String botName;
-    public float gravity = 10f;
-    public Scrollbar thrustIndicator;
     public TerrainMesh terrainMesh;
-    public Transform playerCamera;
-    public AtmosphereSettings atmosphereSettings;
+
+    public float walkingSpeed = 7.5f;
+    public float runningSpeed = 11.5f;
+    public float jumpSpeed = 8.0f;
+    public float gravity = 20.0f;
+    public Camera playerCamera;
+    public float lookSpeed = 2.0f;
+    public float lookYLimit = 45.0f;
+
+    CharacterController characterController;
+    Vector3 moveDirection = Vector3.zero;
+    float rotationY = 0;
+
+    [HideInInspector]
+    public bool canMove = true;
+
     bool ableToDig = true;
-    //Others
     Rigidbody rb;
-
-    //Rotation and look
-    float verticalRotation;
-    float mouseSensitivity = 50f;
-
-    //Movement
-    public float moveSpeed = 100;
-    public float maxSpeed = 4;
-
-    float distToGnd = 0.8f;
-    public bool grounded = false;
-    //Crouch & Slide
-    Vector3 playerScale;
 
     [Range(1, 10)]
     public int drawRange = 5;
-    public float thrustForce = 150;
     public Image screenShotMask;
     //Input
-    float x, y;
 
     // Flags
-    bool jumping,
-    startCoroutineF,
-    sprinting,
-    crouching,
-    readyToJump = true,
-    terraUpdate = false,
-    landed = false;
+    bool startCoroutineF,
+    terraUpdate = false;
 
     // Others
-    float oriMoveSpeed;
-    float oriMaxSpeed;
     public LayerMask playerMask;
-    float multiplier = 1f;
-    private float horiRotation;
 
     Coroutine c = null;
     public CapsuleCollider capsuleCollider;
@@ -61,25 +48,21 @@ public class PlayerMovement : MonoBehaviour
     AudioSource audioSource;
     public AudioClip Cam_35mm;
 
-    void Awake()
-    {
-        rb = GetComponent<Rigidbody>();
-        audioSource = GetComponent<AudioSource>();
-    }
-
     void Start()
     {
-        playerScale = transform.localScale;
+        rb = GetComponent<Rigidbody>();
+        audioSource = GetComponent<AudioSource>(); characterController = GetComponent<CharacterController>();
         Cursor.lockState = CursorLockMode.Locked;
         Cursor.visible = false;
+
         rb.constraints = RigidbodyConstraints.FreezeRotation;
         rb.useGravity = false;
         ableToDig = true;
-        transform.position = new Vector3(0, 1000f, 0);
+        // transform.position = new Vector3(0, 1000f, 0);
         // atmosphereSettings.timeOfDay = 0f;
 
-        oriMoveSpeed = moveSpeed;
-        oriMaxSpeed = maxSpeed;
+        if (!isLocalPlayer)
+            playerCamera.gameObject.SetActive(false);
     }
 
     // Land on planet initially
@@ -96,25 +79,26 @@ public class PlayerMovement : MonoBehaviour
         RaycastHit hit;
         if (Physics.Raycast(ray, out hit, rayLength, playerMask))
         {
-            transform.position = hit.point + new Vector3(0, 3f, 0);
-            landed = true;
+            transform.position = hit.point + new Vector3(0, 10f, 0);
         }
     }
 
     private void FixedUpdate()
     {
-        CheckRay();
+        // CheckRay();
     }
 
     private void Update()
     {
-        if (!landed)
-            TryToLand();
-        rb.AddForce(Vector3.down * gravity);
-        GroundCheck();
-        GetInput();
+        if (!isLocalPlayer)
+            return;
+        if (!terrainMesh)
+            terrainMesh = GameObject.Find("TerrainMesh").GetComponent<TerrainMesh>();
+        // if (!landed)
+        //     TryToLand();
+
+        CheckScreenShot();
         Movement();
-        Look();
         // move cam pos to socket
     }
 
@@ -208,90 +192,57 @@ public class PlayerMovement : MonoBehaviour
         c = StartCoroutine(DiggingCountdown());
     }
 
-    private void GetInput()
+    private void CheckScreenShot()
     {
         if (Input.GetKeyDown(KeyCode.F))
             StartCoroutine(TakePhoto());
 
-        x = Input.GetAxisRaw("Horizontal");
-        y = Input.GetAxisRaw("Vertical");
-        jumping = Input.GetButton("Jump");
-        crouching = Input.GetKey(KeyCode.LeftControl);
         if (Input.GetMouseButtonUp(0))
         {
             RestartCoroutine();
         }
-
-        //Crouching
-        if (Input.GetKeyDown(KeyCode.LeftControl))
-            StartCrouch();
-        if (Input.GetKeyUp(KeyCode.LeftControl))
-            StopCrouch();
-
-        //Sprinting
-        if (Input.GetKeyDown(KeyCode.LeftShift))
-            StartSprint();
-        if (Input.GetKeyUp(KeyCode.LeftShift))
-            StopSprint();
-    }
-
-    private void StartCrouch() { }
-
-    private void StopCrouch() { }
-
-    private void StartSprint()
-    {
-        moveSpeed *= 2f;
-        maxSpeed *= 2f;
-    }
-
-    private void StopSprint()
-    {
-        moveSpeed = oriMoveSpeed;
-        maxSpeed = oriMaxSpeed;
     }
 
     private void Movement()
     {
-        //Extra gravity
-        //rb.AddForce(Vector3.down * Time.deltaTime * garvity * 4f);
+        // We are grounded, so recalculate move direction based on axes
+        Vector3 forward = transform.TransformDirection(Vector3.forward);
+        Vector3 right = transform.TransformDirection(Vector3.right);
+        // Press Left Shift to run
+        bool isRunning = Input.GetKey(KeyCode.LeftShift);
+        float curSpeedX = canMove ? (isRunning ? runningSpeed : walkingSpeed) * Input.GetAxis("Vertical") : 0;
+        float curSpeedY = canMove ? (isRunning ? runningSpeed : walkingSpeed) * Input.GetAxis("Horizontal") : 0;
+        float movementDirectionY = moveDirection.y;
+        moveDirection = (forward * curSpeedX) + (right * curSpeedY);
 
-        //Find actual velocity relative to where player is looking
-        float speedMag = Vector2.SqrMagnitude(new Vector2(rb.velocity.x, rb.velocity.z));
-        // print(speedMag);
-        //Counteract sliding and sloppy movement
-        //CounterMovement(x, y, mag);
-
-        //If holding jump && ready to jump, then jump
-        if (jumping)
-            Jump();
-
-        //If sliding down a ramp, add force down so player stays grounded and also builds speed
-        if (crouching && grounded && readyToJump)
+        if (Input.GetButton("Jump") && canMove && characterController.isGrounded)
         {
-            rb.AddForce(-transform.up * Time.deltaTime * 3000);
-            return;
+            moveDirection.y = jumpSpeed;
+        }
+        else
+        {
+            moveDirection.y = movementDirectionY;
         }
 
-        // If speed is larger than maxspeed, cancel out the input so you don't go over max speed
-        // if (x != 0 || y != 0)
-        // {
-        //     if (speedMag > maxSpeed)
-        //     {
-        //         x = 0;
-        //         y = 0;
-        //     }
-        // }
-        // No input
-        if (grounded)
+        // Apply gravity. Gravity is multiplied by deltaTime twice (once here, and once below
+        // when the moveDirection is multiplied by deltaTime). This is because gravity should be applied
+        // as an acceleration (ms^-2)
+        if (!characterController.isGrounded)
         {
-            float yVelocity = rb.velocity.y;
-            rb.velocity = new Vector3(rb.velocity.x / 4, yVelocity, rb.velocity.z / 4);
+            moveDirection.y -= gravity * Time.deltaTime;
         }
 
-        //Apply forces to move player
-        rb.AddForce(transform.forward * y * moveSpeed * Time.deltaTime * 100 * multiplier);
-        rb.AddForce(transform.right * x * moveSpeed * Time.deltaTime * 100 * multiplier);
+        // Move the controller
+        characterController.Move(moveDirection * Time.deltaTime);
+
+        // Player and Camera rotation
+        if (canMove)
+        {
+            rotationY += -Input.GetAxis("Mouse Y") * lookSpeed;
+            rotationY = Mathf.Clamp(rotationY, -lookYLimit, lookYLimit);
+            playerCamera.transform.localRotation = Quaternion.Euler(rotationY, 0, 0);
+            transform.rotation *= Quaternion.Euler(0, Input.GetAxis("Mouse X") * lookSpeed, 0);
+        }
     }
 
     public void NotifyTerrainChanged(Vector3 point, float radius)
@@ -314,6 +265,7 @@ public class PlayerMovement : MonoBehaviour
             Vector3 b = transform.position + localUp * (capsuleCollider.height / 2 + capsuleCollider.radius + heightOffset);
             RaycastHit hitInfo;
 
+
             if (Physics.CapsuleCast(a, b, capsuleCollider.radius, -localUp, out hitInfo, heightOffset, playerMask))
             {
                 Vector3 hp = hitInfo.point;
@@ -327,40 +279,6 @@ public class PlayerMovement : MonoBehaviour
             }
             terraUpdate = false;
         }
-    }
-
-    private void Jump()
-    {
-        rb.AddForce(transform.up * thrustForce * 1f);
-    }
-
-    private void Look()
-    {
-        float mouseX = Input.GetAxis("Mouse X") * mouseSensitivity * Time.fixedDeltaTime;
-        float mouseY = Input.GetAxis("Mouse Y") * mouseSensitivity * Time.fixedDeltaTime;
-
-        //Find current look rotation
-        Vector3 rot = playerCamera.localRotation.eulerAngles;
-        //horiRotation = rot.y + mouseX;
-        horiRotation = mouseX;
-
-        //Rotate, and also make sure we dont over- or under-rotate.
-        verticalRotation -= mouseY;
-        verticalRotation = Mathf.Clamp(verticalRotation, -90f, 90f);
-
-        //Perform the rotations
-        playerCamera.localRotation = Quaternion.Euler(verticalRotation, horiRotation, 0);
-        // playerBody.localRotation = Quaternion.Euler(0, horiRotation, 0);
-        // transform.RotateAround(transform.position, transform.up, Time.deltaTime * 90f);
-        transform.Rotate(0, horiRotation, 0, Space.Self);
-    }
-
-    void GroundCheck()
-    {
-        if (Physics.Raycast(transform.position, -transform.up, distToGnd))
-            grounded = true;
-        else
-            grounded = false;
     }
 
     void OnDrawGizmos()

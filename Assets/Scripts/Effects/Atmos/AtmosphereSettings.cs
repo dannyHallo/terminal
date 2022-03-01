@@ -1,6 +1,4 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
+﻿using UnityEngine;
 using static UnityEngine.Mathf;
 
 // We can create setting assest in project folder
@@ -45,27 +43,23 @@ public class AtmosphereSettings : ScriptableObject
 
     float atmosphereRadius = 0;
     // RenderTexture opticalDepthTexture;
-    
+
     // [Header("Test Paras")]
     // public Vector4 testParams = new Vector4(7, 1.26f, 0.1f, 3);
 
     [Header("Update")]
     public bool settingsUpToDate;
 
-    ObjectControl objectControl;
-    
+    EnvironmentControl envControl;
+
     public void SetProperties(Material material)
     {
-        if(!objectControl){
-            objectControl = GameObject.Find("Bot1").GetComponent<ObjectControl>();
-        }
-
         if (!settingsUpToDate || Application.isPlaying)
         {
             atmosphereRadius = atmosHeight + planetRadius + bottomOffset;
             material.SetFloat("atmosphereRadius", atmosphereRadius);
             material.SetFloat("planetRadius", planetRadius + bottomOffset);
-            material.SetVector("planetCentre", objectControl.planetCentre);
+            material.SetVector("planetCentre", new Vector3(0, -300000, 0));
 
             // material.SetVector("params", testParams);
             material.SetInt("numInScatteringPoints", inScatteringPoints);
@@ -86,26 +80,9 @@ public class AtmosphereSettings : ScriptableObject
             material.SetFloat("ditherStrength", ditherStrength);
             material.SetTexture("_BlueNoise", blueNoise);
 
-            // PrecomputeOutScattering ();
-            // material.SetTexture ("_BakedOpticalDepth", opticalDepthTexture);
-
             settingsUpToDate = true;
         }
     }
-
-    // void PrecomputeOutScattering () {
-    // 	if (!settingsUpToDate || opticalDepthTexture == null || !opticalDepthTexture.IsCreated ()) {
-    // 		ComputeHelper.CreateRenderTexture (ref opticalDepthTexture, textureSize, FilterMode.Bilinear);
-    // 		opticalDepthCompute.SetTexture (0, "Result", opticalDepthTexture);
-    // 		opticalDepthCompute.SetInt ("textureSize", textureSize);
-    // 		opticalDepthCompute.SetInt ("numOutScatteringSteps", opticalDepthPoints);
-    // 		// opticalDepthCompute.SetFloat ("atmosphereRadius", (1 + atmosphereScale));
-    // 		opticalDepthCompute.SetFloat ("densityFalloff", densityFalloff);
-    // 		opticalDepthCompute.SetVector ("params", testParams);
-    // 		ComputeHelper.Run (opticalDepthCompute, textureSize, textureSize);
-    // 	}
-
-    // }
 
     void OnValidate()
     {

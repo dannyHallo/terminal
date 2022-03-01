@@ -1,18 +1,10 @@
-﻿using System.Collections;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using UnityEngine;
-
-/*
-	Responsible for rendering oceans and atmospheres as post processing effect
-*/
 
 [CreateAssetMenu(menuName = "PostProcessing/PlanetEffects")]
 public class PlanetEffects : PostProcessingEffect
 {
-
-    // public Shader oceanShader;
     public Shader atmosphereShader;
-    // public bool displayOceans = true;
     public AtmosphereSettings atmosphereSettings;
     EffectHolder effectHolder;
     List<float> sortDistances;

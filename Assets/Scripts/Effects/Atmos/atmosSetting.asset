@@ -25,8 +25,8 @@ MonoBehaviour:
   planetRadius: 300000
   bottomOffset: -3626
   atmosHeight: 10000
-  startTimeOfDay: 0.056
-  sunSpeed: 2
-  sunDistance: 3000
+  startTimeOfDay: 0.093
+  sunSpeed: 1
+  sunDistance: 100000
   allowTimeFlow: 1
   settingsUpToDate: 1
