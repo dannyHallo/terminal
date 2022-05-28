@@ -11,7 +11,8 @@ public class NoiseDensity : MonoBehaviour
     [Range(1, 20)] public int numOctaves = 4;
     [Range(1, 2)] public float lacunarity = 2;
     [Range(0, 1)] public float persistence = .5f;
-    [Range(0, 0.2f)] public float noiseScale = 1;
+    [Range(0, 1f)] public float noiseScale = 1;
+    [Range(0, 3f)] public float heightGredient = 1;
     public float noiseWeight = 1;
     public bool closeEdges;
     public float floorOffset = 1;
@@ -79,6 +80,7 @@ public class NoiseDensity : MonoBehaviour
         densityShader.SetFloat("weightMultiplier", weightMultiplier);
         densityShader.SetFloat("hardFloor", hardFloorHeight);
         densityShader.SetFloat("hardFloorWeight", hardFloorWeight);
+        densityShader.SetFloat("heightGredient", heightGredient);
         densityShader.SetVector("params", shaderParams);
 
         densityShader.SetBuffer(0, "points", pointsBuffer);

@@ -2,21 +2,23 @@ using System;
 using UnityEngine;
 using System.Collections;
 using UnityEngine.UI;
-using Mirror;
 
-[RequireComponent(typeof(Rigidbody))]
 [RequireComponent(typeof(AudioSource))]
+[RequireComponent(typeof(AudioListener))]
 [RequireComponent(typeof(CharacterController))]
-public class PlayerMovement : NetworkBehaviour
+public class PlayerMovement : MonoBehaviour
 {
     public String botName;
     public TerrainMesh terrainMesh;
+    public Image screenShotMask;
+
 
     public float walkingSpeed = 7.5f;
     public float runningSpeed = 11.5f;
     public float jumpSpeed = 8.0f;
     public float gravity = 20.0f;
     public Camera playerCamera;
+    public AudioListener audioListener;
     public float lookSpeed = 2.0f;
     public float lookYLimit = 45.0f;
 
@@ -28,16 +30,13 @@ public class PlayerMovement : NetworkBehaviour
     public bool canMove = true;
 
     bool ableToDig = true;
-    Rigidbody rb;
 
     [Range(1, 10)]
     public int drawRange = 5;
-    public Image screenShotMask;
     //Input
 
     // Flags
-    bool startCoroutineF,
-    terraUpdate = false;
+    bool startCoroutineF;
 
     // Others
     public LayerMask playerMask;
@@ -47,23 +46,24 @@ public class PlayerMovement : NetworkBehaviour
 
     AudioSource audioSource;
     public AudioClip Cam_35mm;
+    int JoystickHorizontal;
+    int JoystickVertical;
+    Vector2 joystickInputVector;
+    PlayerInputActions playerInputActions;
 
     void Start()
     {
-        rb = GetComponent<Rigidbody>();
-        audioSource = GetComponent<AudioSource>(); characterController = GetComponent<CharacterController>();
-        Cursor.lockState = CursorLockMode.Locked;
-        Cursor.visible = false;
+        audioSource = GetComponent<AudioSource>();
+        // audioListener = GetComponent<AudioListener>();
+        characterController = GetComponent<CharacterController>();
 
-        rb.constraints = RigidbodyConstraints.FreezeRotation;
-        rb.useGravity = false;
+        LockCursor();
         ableToDig = true;
-        // transform.position = new Vector3(0, 1000f, 0);
-        // atmosphereSettings.timeOfDay = 0f;
 
-        if (!isLocalPlayer)
-            playerCamera.gameObject.SetActive(false);
+        playerInputActions = new PlayerInputActions();
+        playerInputActions.Player.Enable();
     }
+
 
     // Land on planet initially
     void TryToLand()
@@ -90,16 +90,24 @@ public class PlayerMovement : NetworkBehaviour
 
     private void Update()
     {
-        if (!isLocalPlayer)
-            return;
         if (!terrainMesh)
             terrainMesh = GameObject.Find("TerrainMesh").GetComponent<TerrainMesh>();
-        // if (!landed)
-        //     TryToLand();
 
-        CheckScreenShot();
-        Movement();
-        // move cam pos to socket
+        if (Cursor.lockState == CursorLockMode.None)
+        {
+            if (PlayerWantsToLockCursor())
+                LockCursor();
+            Movement(false);
+        }
+        else if (Cursor.lockState == CursorLockMode.Locked)
+        {
+            if (PlayerWantsToUnlockCursor())
+                UnlockCursor();
+            Movement(true);
+            CheckRay();
+            CheckScreenShot();
+        }
+
     }
 
     IEnumerator DiggingCountdown()
@@ -112,8 +120,7 @@ public class PlayerMovement : NetworkBehaviour
     {
         String desktopPath = Environment.GetFolderPath(Environment.SpecialFolder.Desktop);
         String filename = desktopPath + "/" + botName.ToUpper() + "_" + UnityEngine.Random.Range(100, 1000).ToString() + ".png";
-        print(filename);
-        ScreenCapture.CaptureScreenshot(filename, 2);
+        ScreenCapture.CaptureScreenshot(filename, 1);
         yield return new WaitForSeconds(0.05f);
         audioSource.PlayOneShot(Cam_35mm);
         yield return new WaitForSeconds(0.05f);
@@ -203,34 +210,68 @@ public class PlayerMovement : NetworkBehaviour
         }
     }
 
-    private void Movement()
+    private bool PlayerWantsToLockCursor()
     {
+        return ((playerInputActions.Player.Return.ReadValue<float>() == 1) ||
+        (playerInputActions.Player.Movement.ReadValue<Vector2>() != new Vector2(0, 0)))
+         ? true : false;
+    }
+
+    private bool PlayerWantsToUnlockCursor()
+    {
+        return (playerInputActions.Player.Exit.ReadValue<float>() == 1)
+        ? true : false;
+    }
+
+    private void LockCursor()
+    {
+        Cursor.lockState = CursorLockMode.Locked;
+        Cursor.visible = false;
+    }
+
+    private void UnlockCursor()
+    {
+        Cursor.lockState = CursorLockMode.None;
+        Cursor.visible = true;
+    }
+
+    private void Movement(bool takeControl)
+    {
+        Vector2 inputVector = new Vector2(0, 0);
+        float xDrift = 0;
+        float yDrift = 0;
+        bool jumpPressed = false;
+        bool sprintPressed = false;
+
+        if (takeControl)
+        {
+            inputVector = playerInputActions.Player.Movement.ReadValue<Vector2>();
+            xDrift += Input.GetAxis("Mouse X");
+            xDrift += playerInputActions.Player.Rotation.ReadValue<Vector2>().x * 0.2f;
+            yDrift += -Input.GetAxis("Mouse Y");
+            sprintPressed = Input.GetKey(KeyCode.LeftShift);
+            jumpPressed = (playerInputActions.Player.Jump.ReadValue<float>() == 1) ? true : false;
+        }
+
         // We are grounded, so recalculate move direction based on axes
         Vector3 forward = transform.TransformDirection(Vector3.forward);
         Vector3 right = transform.TransformDirection(Vector3.right);
         // Press Left Shift to run
-        bool isRunning = Input.GetKey(KeyCode.LeftShift);
-        float curSpeedX = canMove ? (isRunning ? runningSpeed : walkingSpeed) * Input.GetAxis("Vertical") : 0;
-        float curSpeedY = canMove ? (isRunning ? runningSpeed : walkingSpeed) * Input.GetAxis("Horizontal") : 0;
+        float curSpeedX = canMove ? (sprintPressed ? runningSpeed : walkingSpeed) * inputVector.y : 0;
+        float curSpeedY = canMove ? (sprintPressed ? runningSpeed : walkingSpeed) * inputVector.x : 0;
         float movementDirectionY = moveDirection.y;
         moveDirection = (forward * curSpeedX) + (right * curSpeedY);
 
-        if (Input.GetButton("Jump") && canMove && characterController.isGrounded)
-        {
+        if (jumpPressed && canMove && characterController.isGrounded)
             moveDirection.y = jumpSpeed;
-        }
         else
-        {
             moveDirection.y = movementDirectionY;
-        }
 
         // Apply gravity. Gravity is multiplied by deltaTime twice (once here, and once below
         // when the moveDirection is multiplied by deltaTime). This is because gravity should be applied
         // as an acceleration (ms^-2)
         if (!characterController.isGrounded)
-        {
             moveDirection.y -= gravity * Time.deltaTime;
-        }
 
         // Move the controller
         characterController.Move(moveDirection * Time.deltaTime);
@@ -238,10 +279,10 @@ public class PlayerMovement : NetworkBehaviour
         // Player and Camera rotation
         if (canMove)
         {
-            rotationY += -Input.GetAxis("Mouse Y") * lookSpeed;
+            rotationY += yDrift * lookSpeed;
             rotationY = Mathf.Clamp(rotationY, -lookYLimit, lookYLimit);
             playerCamera.transform.localRotation = Quaternion.Euler(rotationY, 0, 0);
-            transform.rotation *= Quaternion.Euler(0, Input.GetAxis("Mouse X") * lookSpeed, 0);
+            transform.rotation *= Quaternion.Euler(0, xDrift * lookSpeed, 0);
         }
     }
 
@@ -250,34 +291,7 @@ public class PlayerMovement : NetworkBehaviour
         float dstFromCam = (point - transform.position).magnitude;
         if (dstFromCam < radius)
         {
-            terraUpdate = true;
-        }
-    }
-
-    private void LateUpdate()
-    {
-        if (terraUpdate)
-        {
-            float heightOffset = 5f;
-            // Normalized direction
-            Vector3 localUp = transform.up;
-            Vector3 a = transform.position - localUp * (capsuleCollider.height / 2 + capsuleCollider.radius - heightOffset);
-            Vector3 b = transform.position + localUp * (capsuleCollider.height / 2 + capsuleCollider.radius + heightOffset);
-            RaycastHit hitInfo;
-
-
-            if (Physics.CapsuleCast(a, b, capsuleCollider.radius, -localUp, out hitInfo, heightOffset, playerMask))
-            {
-                Vector3 hp = hitInfo.point;
-                Vector3 newPos = hp;
-                float deltaY = Vector3.Dot(transform.up, (newPos - transform.position));
-                // if (deltaY > 0.01f)
-                {
-                    transform.position = newPos;
-                    // grounded = true;
-                }
-            }
-            terraUpdate = false;
+            // terraUpdate = true;
         }
     }
 

@@ -1,15 +1,9 @@
 ﻿using System.Collections.Generic;
-using Unity.Collections;
 using UnityEngine;
-using UnityEngine.Profiling;
-using Unity.Burst;
-using Unity.Jobs;
-using Unity.Collections.LowLevel.Unsafe;
 
 [ExecuteInEditMode]
 public class TerrainMesh : MonoBehaviour
 {
-
     const int threadGroupSize = 8;
 
     [Header("General Settings")]
@@ -26,22 +20,22 @@ public class TerrainMesh : MonoBehaviour
     public ComputeShader shader;
     public Material mat;
 
-
     [Header("Voxel Settings")]
     public float isoLevel;
     public float boundsSize = 20;
     Vector3 offset = Vector3.zero;
 
     // [Header("Gizmos")]
-    Color boundsGizmoCol = Color.white;
+    private Color boundsGizmoCol = Color.white;
 
-    bool showBoundsGizmo = true;
-    bool generateColliders = true;
+    private bool showBoundsGizmo = true;
+    private bool generateColliders = true;
+    private string chunkHolderName = "ChunkHolder";
 
     GameObject chunkHolder;
-    public string chunkHolderName = "ChunkHolder";
     List<Chunk> chunks;
     Dictionary<Vector3Int, Chunk> existingChunks;
+    List<Vector3Int> chunkCoordsNeededToBeRendered;
     Dictionary<Vector3Int, float[]> existingChunkVolumeData;
     Queue<Chunk> recycleableChunks;
 
@@ -52,7 +46,15 @@ public class TerrainMesh : MonoBehaviour
 
     float changeFactor = -0.6f;
     bool settingsUpdated;
-    [SerializeField] bool boundedMapGenerated;
+    bool boundedMapGenerated = false;
+
+    public int maxChunksInViewHori;
+    public int maxChunksInViewVert;
+    public int maxChunksInViewHoriDisappear;
+    public int maxChunksInViewVertDisappear;
+    public int maxChunksInViewHoriPreload;
+    public int maxChunksInViewVertPreload;
+
     float loadTime;
 
     [System.Serializable]
@@ -64,7 +66,6 @@ public class TerrainMesh : MonoBehaviour
         public int viewDistanceVert;
         public int fixedDistanceHori;
         public int fixedDistanceVert;
-
     }
 
     void Awake()
@@ -74,7 +75,8 @@ public class TerrainMesh : MonoBehaviour
             loadTime = 0;
             ReleaseBuffers();
             InitVariableChunkStructures();
-
+            PrecalculateChunkBounds();
+            DestroyOldChunks();
         }
     }
 
@@ -92,8 +94,7 @@ public class TerrainMesh : MonoBehaviour
     {
         // Playing update
         if (Application.isPlaying)
-            Run();
-
+            RuntimeUpdatePerFrame();
         // Editor update
         else if (settingsUpdated)
         {
@@ -101,93 +102,137 @@ public class TerrainMesh : MonoBehaviour
             settingsUpdated = false;
         }
         loadTime += Time.deltaTime;
-
     }
 
-    void Run()
+    private void RuntimeUpdatePerFrame()
     {
         CreateBuffers();
 
-        if (!Application.isPlaying)
+        if (fixedMapSize && !boundedMapGenerated)
         {
-            InitChunks();
-            UpdateAllChunks();
-        }
-        else
-        {
-            if (fixedMapSize)
-            {
-                if (!boundedMapGenerated)
-                {
-                    LoadBoundedChunks();
-                }
-            }
-            else
-            {
-                boundedMapGenerated = false;
-                DestroyOldChunks();
-                LoadVisibleChunks();
-            }
+            LoadBoundedChunks();
+            return;
         }
 
-        // Release buffers immediately in editor
-        if (!Application.isPlaying)
+        if (!fixedMapSize)
         {
-            ReleaseBuffers();
+            UpdateSurroundingChunks();
+            LoadPreloadChunks();
+            return;
         }
     }
 
     public void RequestMeshUpdate()
     {
-        Run();
+        CreateBuffers();
+
+        InitChunks();
+        UpdateAllChunks();
+
+        // Release buffers immediately in editor
+        ReleaseBuffers();
     }
 
     void InitVariableChunkStructures()
     {
         recycleableChunks = new Queue<Chunk>();
         chunks = new List<Chunk>();
+        chunkCoordsNeededToBeRendered = new List<Vector3Int>();
         existingChunks = new Dictionary<Vector3Int, Chunk>();
         existingChunkVolumeData = new Dictionary<Vector3Int, float[]>();
     }
 
-    void LoadVisibleChunks()
+    /// <returns>The chunk the viewer is inside</returns>
+    private Vector3Int GetViewerCoord()
     {
-        if (chunks == null)
-            return;
-
-        CreateChunkHolder();
-
         Vector3 p = viewer.position;
         Vector3 ps = p / boundsSize;
 
         // Indicates which chunk the viewer in in
-        Vector3Int viewerCoord = new Vector3Int(Mathf.RoundToInt(ps.x), Mathf.RoundToInt(ps.y), Mathf.RoundToInt(ps.z));
-        // All chunks, no matter lod
-        int maxChunksInViewHori = Mathf.CeilToInt(lodSetup.viewDistanceHori / boundsSize);
-        int maxChunksInViewVert = Mathf.CeilToInt(lodSetup.viewDistanceVert / boundsSize);
+        Vector3Int viewerCoord = new Vector3Int(
+            Mathf.RoundToInt(ps.x),
+            Mathf.RoundToInt(ps.y),
+            Mathf.RoundToInt(ps.z)
+        );
 
-        // Kick chunks outside the range
+        return viewerCoord;
+    }
+
+    private void PrecalculateChunkBounds()
+    {
+        maxChunksInViewHori = Mathf.CeilToInt(lodSetup.viewDistanceHori / boundsSize);
+        maxChunksInViewVert = Mathf.CeilToInt(lodSetup.viewDistanceVert / boundsSize);
+
+        maxChunksInViewHoriDisappear = Mathf.CeilToInt(lodSetup.viewDistanceHori * 3f / boundsSize);
+        maxChunksInViewVertDisappear = Mathf.CeilToInt(lodSetup.viewDistanceVert * 3f / boundsSize);
+
+        maxChunksInViewHoriPreload = Mathf.CeilToInt(lodSetup.viewDistanceHori * 2f / boundsSize);
+        maxChunksInViewVertPreload = maxChunksInViewVert;
+    }
+
+    /// <summary>
+    /// Cleans inworld chunks and chunks in preload list if out of bound
+    /// Loads visible chunks and put its surroundings into preload list.
+    /// </summary>
+    void UpdateSurroundingChunks()
+    {
+        if (chunks == null)
+            return;
+
+        CreateChunkHolderIfNeeded();
+
+        Vector3Int viewerCoord = GetViewerCoord();
+
+        // Kick existing chunks out of range
         for (int i = chunks.Count - 1; i >= 0; i--)
         {
             Chunk chunk = chunks[i];
             Vector3Int chunkCoord = chunk.coord;
 
-            if (((Mathf.Pow(chunkCoord.x - viewerCoord.x, 2) +
-                Mathf.Pow(chunkCoord.z - viewerCoord.z, 2)) >
-                Mathf.Pow(maxChunksInViewHori, 2)))
+            if (
+                (
+                    Mathf.Pow(chunkCoord.x - viewerCoord.x, 2)
+                    + Mathf.Pow(chunkCoord.z - viewerCoord.z, 2)
+                ) > Mathf.Pow(maxChunksInViewHoriDisappear, 2)
+            )
             {
                 existingChunks.Remove(chunk.coord);
                 chunk.DestroyOrDisable();
                 chunks.RemoveAt(i);
             }
         }
-        for (int x = -maxChunksInViewHori; x <= maxChunksInViewHori; x++)
+
+        // Kick out-of-bound chunks from preloadig list
+        for (int i = chunkCoordsNeededToBeRendered.Count - 1; i >= 0; i--)
         {
-            for (int y = -maxChunksInViewVert; y <= maxChunksInViewVert; y++)
+            Vector3Int currentCoord = chunkCoordsNeededToBeRendered[i];
+            if (
+                (
+                    Mathf.Pow(currentCoord.x - viewerCoord.x, 2)
+                    + Mathf.Pow(currentCoord.z - viewerCoord.z, 2)
+                ) > Mathf.Pow(maxChunksInViewHoriPreload, 2)
+            )
             {
-                for (int z = -maxChunksInViewHori; z <= maxChunksInViewHori; z++)
+                chunkCoordsNeededToBeRendered.Remove(currentCoord);
+            }
+        }
+
+        int updatedChunkNum = 0;
+
+        // Loop through all surrounding chunks, create them directly in this frame
+        // if they are too close to player, or add them to the preview list if not
+        for (int x = -maxChunksInViewHoriPreload; x <= maxChunksInViewHoriPreload; x++)
+        {
+            for (int y = -maxChunksInViewVertPreload; y <= maxChunksInViewVertPreload; y++)
+            {
+                for (int z = -maxChunksInViewHoriPreload; z <= maxChunksInViewHoriPreload; z++)
                 {
-                    if (((Mathf.Pow(x, 2) + Mathf.Pow(z, 2)) > Mathf.Pow(maxChunksInViewHori, 2)))
+                    if (
+                        (
+                            (Mathf.Pow(x, 2) + Mathf.Pow(z, 2))
+                            > Mathf.Pow(maxChunksInViewHoriPreload, 2)
+                        )
+                    )
                         continue;
 
                     Vector3Int coord = new Vector3Int(x + viewerCoord.x, y, z + viewerCoord.z);
@@ -196,39 +241,101 @@ public class TerrainMesh : MonoBehaviour
                     if (existingChunks.ContainsKey(coord))
                         continue;
 
-                    int numPoints = lodSetup.numPointsPerAxis * lodSetup.numPointsPerAxis * lodSetup.numPointsPerAxis;
-                    Chunk chunk = CreateChunk(coord);
-                    float[] chunkVolumeData = new float[numPoints];
-
-                    chunk.coord = coord;
-                    chunk.SetUp(mat, generateColliders);
-                    existingChunks.Add(coord, chunk);
-                    chunks.Add(chunk);
-
-                    additionalPointsBuffer = new ComputeBuffer(numPoints, sizeof(float));
-
-                    if (!existingChunkVolumeData.ContainsKey(coord))
+                    // Add this coord to preload zone
+                    if (
+                        Mathf.Abs(x) > maxChunksInViewHori
+                        || Mathf.Abs(y) > maxChunksInViewVert
+                        || Mathf.Abs(z) > maxChunksInViewHori
+                    )
                     {
-                        additionalPointsBuffer.SetData(chunkVolumeData);
-                        UpdateChunkMesh(chunk, additionalPointsBuffer);
+                        if (chunkCoordsNeededToBeRendered.Contains(coord))
+                            continue;
+                        if (existingChunks.ContainsKey(coord))
+                            continue;
+
+                        chunkCoordsNeededToBeRendered.Add(coord);
+                        // print("Added to preload: " + coord);
+                        continue;
                     }
-                    else
-                    {
-                        additionalPointsBuffer.SetData(existingChunkVolumeData[coord]);
-                        UpdateChunkMesh(chunk, additionalPointsBuffer);
-                    }
-                    additionalPointsBuffer.Release();
+                    // print("Loaded directly: " + coord);
+
+                    updatedChunkNum += RenderChunk(coord, 0);
                 }
             }
         }
+        if (updatedChunkNum > 0)
+        {
+            print("We updated " + updatedChunkNum + " chunks in this frame");
+        }
     }
 
-    void LoadBoundedChunks()
+    /// <param name="coord"></param>
+    /// <returns>The chunk is worth render (1) or not (0)</returns>
+    private int RenderChunk(Vector3Int coord, int i)
+    {
+        if (existingChunks.ContainsKey(coord))
+        {
+            print("Try to render " + coord + " but it is already exist! " + i);
+            return 0;
+        }
+
+        int renderedChunks = 0;
+
+        int numPoints =
+            lodSetup.numPointsPerAxis * lodSetup.numPointsPerAxis * lodSetup.numPointsPerAxis;
+        float[] chunkVolumeData = new float[numPoints];
+
+        Chunk chunk = CreateChunk(coord);
+
+        chunk.coord = coord;
+        chunk.SetUp(mat, generateColliders);
+        existingChunks.Add(coord, chunk);
+        chunks.Add(chunk);
+
+        additionalPointsBuffer = new ComputeBuffer(numPoints, sizeof(float));
+
+        if (!existingChunkVolumeData.ContainsKey(coord))
+        {
+            additionalPointsBuffer.SetData(chunkVolumeData);
+            renderedChunks += UpdateChunkMesh(chunk, additionalPointsBuffer);
+        }
+        else
+        {
+            additionalPointsBuffer.SetData(existingChunkVolumeData[coord]);
+            renderedChunks += UpdateChunkMesh(chunk, additionalPointsBuffer);
+        }
+        additionalPointsBuffer.Release();
+
+        return renderedChunks;
+    }
+
+    // TODO: Generate strategy
+    private void LoadPreloadChunks()
+    {
+        Vector3Int viewerCoord = GetViewerCoord();
+
+        if (chunkCoordsNeededToBeRendered.Count == 0)
+            return;
+
+        Vector3Int nearestCoord = chunkCoordsNeededToBeRendered[0];
+
+        // for (int c = 1; c < chunkCoordsNeededToBeRendered.Count; c++){
+        //     if()
+        // }
+        int k = RenderChunk(nearestCoord, 1);
+        if (k != 0)
+        {
+            print("Successfully load a preload chunk!");
+        }
+        chunkCoordsNeededToBeRendered.RemoveAt(0);
+    }
+
+    private void LoadBoundedChunks()
     {
         if (chunks == null)
             return;
 
-        CreateChunkHolder();
+        CreateChunkHolderIfNeeded();
 
         // All chunks, no matter lod
         int fixedChunksHori = Mathf.CeilToInt(lodSetup.fixedDistanceHori / boundsSize);
@@ -241,14 +348,16 @@ public class TerrainMesh : MonoBehaviour
             {
                 for (int z = -fixedChunksHori; z <= fixedChunksHori; z++)
                 {
-                    // TODO:
                     Vector3Int coord = new Vector3Int(x, y, z);
 
                     // Keep the chunk unchanged
                     if (existingChunks.ContainsKey(coord))
                         continue;
                     updatedChunks++;
-                    int numPoints = lodSetup.numPointsPerAxis * lodSetup.numPointsPerAxis * lodSetup.numPointsPerAxis;
+                    int numPoints =
+                        lodSetup.numPointsPerAxis
+                        * lodSetup.numPointsPerAxis
+                        * lodSetup.numPointsPerAxis;
                     Chunk chunk = CreateChunk(coord);
                     float[] chunkVolumeData = new float[numPoints];
 
@@ -280,8 +389,6 @@ public class TerrainMesh : MonoBehaviour
             boundedMapGenerated = true;
             print("Loadtime: " + loadTime);
         }
-
-
     }
 
     void ChangeVolumeData(Vector3Int chunkCoord, int id, float rangeFactor)
@@ -297,9 +404,10 @@ public class TerrainMesh : MonoBehaviour
     }
 
     public void DrawOnChunk(
-        Vector3 hitPoint,   // The directional hit piont
-        int range,          // Affact range
-        int drawType)       // 0: dig, 1: add
+        Vector3 hitPoint, // The directional hit piont
+        int range, // Affact range
+        int drawType
+    ) // 0: dig, 1: add
     {
         if (drawType == 0)
         {
@@ -314,7 +422,11 @@ public class TerrainMesh : MonoBehaviour
         List<Vector3Int> chunksNeedToBeUpdated = new List<Vector3Int>();
         int numPoints = numPointsPerAxis * numPointsPerAxis * numPointsPerAxis;
         Vector3 ps = hitPoint / boundsSize;
-        Vector3Int originalHittingCoord = new Vector3Int(Mathf.RoundToInt(ps.x), Mathf.RoundToInt(ps.y), Mathf.RoundToInt(ps.z));
+        Vector3Int originalHittingCoord = new Vector3Int(
+            Mathf.RoundToInt(ps.x),
+            Mathf.RoundToInt(ps.y),
+            Mathf.RoundToInt(ps.z)
+        );
         Vector3 centre = CentreFromCoord(originalHittingCoord);
         float pointSpacing = boundsSize / (numPointsPerAxis - 1);
         // The exact chunk the player is drawing at
@@ -324,7 +436,8 @@ public class TerrainMesh : MonoBehaviour
         Vector3 IdVector = new Vector3(
             ((hitPoint - centre).x + boundsSize / 2) / pointSpacing,
             ((hitPoint - centre).y + boundsSize / 2) / pointSpacing,
-            ((hitPoint - centre).z + boundsSize / 2) / pointSpacing);
+            ((hitPoint - centre).z + boundsSize / 2) / pointSpacing
+        );
         //print("originalHittingCoord: " + originalHittingCoord);
         // print("IdVector: " + IdVector);
         // Create a cube region of vectors
@@ -337,17 +450,33 @@ public class TerrainMesh : MonoBehaviour
                     Vector3 currentVector = new Vector3(
                         ((IdVector.x + x) + (numPointsPerAxis - 1)) % (numPointsPerAxis - 1),
                         ((IdVector.y + y) + (numPointsPerAxis - 1)) % (numPointsPerAxis - 1),
-                        ((IdVector.z + z) + (numPointsPerAxis - 1)) % (numPointsPerAxis - 1));
+                        ((IdVector.z + z) + (numPointsPerAxis - 1)) % (numPointsPerAxis - 1)
+                    );
 
                     Vector3Int chunkOffsetVector = new Vector3Int(
-                        (int)Mathf.Floor(((IdVector.x + x) + (numPointsPerAxis - 1)) / (numPointsPerAxis - 1)) - 1,
-                        (int)Mathf.Floor(((IdVector.y + y) + (numPointsPerAxis - 1)) / (numPointsPerAxis - 1)) - 1,
-                        (int)Mathf.Floor(((IdVector.z + z) + (numPointsPerAxis - 1)) / (numPointsPerAxis - 1)) - 1);
+                        (int)
+                            Mathf.Floor(
+                                ((IdVector.x + x) + (numPointsPerAxis - 1)) / (numPointsPerAxis - 1)
+                            ) - 1,
+                        (int)
+                            Mathf.Floor(
+                                ((IdVector.y + y) + (numPointsPerAxis - 1)) / (numPointsPerAxis - 1)
+                            ) - 1,
+                        (int)
+                            Mathf.Floor(
+                                ((IdVector.z + z) + (numPointsPerAxis - 1)) / (numPointsPerAxis - 1)
+                            ) - 1
+                    );
 
-                    float rangeFactor = range - ((currentVector + chunkOffsetVector * (numPointsPerAxis - 1)) - IdVector).magnitude;
+                    float rangeFactor =
+                        range
+                        - (
+                            (currentVector + chunkOffsetVector * (numPointsPerAxis - 1)) - IdVector
+                        ).magnitude;
                     if (rangeFactor >= 0)
                     {
-                        Vector3Int currentProcessingCoord = originalHittingCoord + chunkOffsetVector;
+                        Vector3Int currentProcessingCoord =
+                            originalHittingCoord + chunkOffsetVector;
 
                         // Add chunk in update list
                         if (!chunksNeedToBeUpdated.Contains(currentProcessingCoord))
@@ -358,181 +487,386 @@ public class TerrainMesh : MonoBehaviour
                         Vector3Int currentVectorRoundToInt = new Vector3Int(
                             Mathf.RoundToInt(currentVector.x),
                             Mathf.RoundToInt(currentVector.y),
-                            Mathf.RoundToInt(currentVector.z));
+                            Mathf.RoundToInt(currentVector.z)
+                        );
 
                         int currentId = PosToIndex(currentVectorRoundToInt);
 
                         // On 8 vertexs of a cube
-                        if (currentVectorRoundToInt.x == 0
-                        && currentVectorRoundToInt.y == 0
-                        && currentVectorRoundToInt.z == 0)
+                        if (
+                            currentVectorRoundToInt.x == 0
+                            && currentVectorRoundToInt.y == 0
+                            && currentVectorRoundToInt.z == 0
+                        )
                         {
-                            int id = PosToIndex(new Vector3(numPointsPerAxis - 1, numPointsPerAxis - 1, numPointsPerAxis - 1));
-                            ChangeVolumeData(currentProcessingCoord + new Vector3Int(-1, -1, -1), id, rangeFactor);
+                            int id = PosToIndex(
+                                new Vector3(
+                                    numPointsPerAxis - 1,
+                                    numPointsPerAxis - 1,
+                                    numPointsPerAxis - 1
+                                )
+                            );
+                            ChangeVolumeData(
+                                currentProcessingCoord + new Vector3Int(-1, -1, -1),
+                                id,
+                                rangeFactor
+                            );
                         }
-                        if (currentVectorRoundToInt.x == numPointsPerAxis - 1
-                        && currentVectorRoundToInt.y == 0
-                        && currentVectorRoundToInt.z == 0)
+                        if (
+                            currentVectorRoundToInt.x == numPointsPerAxis - 1
+                            && currentVectorRoundToInt.y == 0
+                            && currentVectorRoundToInt.z == 0
+                        )
                         {
-                            int id = PosToIndex(new Vector3(0, numPointsPerAxis - 1, numPointsPerAxis - 1));
-                            ChangeVolumeData(currentProcessingCoord + new Vector3Int(1, -1, -1), id, rangeFactor);
+                            int id = PosToIndex(
+                                new Vector3(0, numPointsPerAxis - 1, numPointsPerAxis - 1)
+                            );
+                            ChangeVolumeData(
+                                currentProcessingCoord + new Vector3Int(1, -1, -1),
+                                id,
+                                rangeFactor
+                            );
                         }
-                        if (currentVectorRoundToInt.x == 0
-                        && currentVectorRoundToInt.y == numPointsPerAxis - 1
-                        && currentVectorRoundToInt.z == 0)
+                        if (
+                            currentVectorRoundToInt.x == 0
+                            && currentVectorRoundToInt.y == numPointsPerAxis - 1
+                            && currentVectorRoundToInt.z == 0
+                        )
                         {
-                            int id = PosToIndex(new Vector3(numPointsPerAxis - 1, 0, numPointsPerAxis - 1));
-                            ChangeVolumeData(currentProcessingCoord + new Vector3Int(-1, 1, -1), id, rangeFactor);
+                            int id = PosToIndex(
+                                new Vector3(numPointsPerAxis - 1, 0, numPointsPerAxis - 1)
+                            );
+                            ChangeVolumeData(
+                                currentProcessingCoord + new Vector3Int(-1, 1, -1),
+                                id,
+                                rangeFactor
+                            );
                         }
-                        if (currentVectorRoundToInt.x == 0
-                        && currentVectorRoundToInt.y == 0
-                        && currentVectorRoundToInt.z == numPointsPerAxis - 1)
+                        if (
+                            currentVectorRoundToInt.x == 0
+                            && currentVectorRoundToInt.y == 0
+                            && currentVectorRoundToInt.z == numPointsPerAxis - 1
+                        )
                         {
-                            int id = PosToIndex(new Vector3(numPointsPerAxis - 1, numPointsPerAxis - 1, 0));
-                            ChangeVolumeData(currentProcessingCoord + new Vector3Int(-1, -1, 1), id, rangeFactor);
+                            int id = PosToIndex(
+                                new Vector3(numPointsPerAxis - 1, numPointsPerAxis - 1, 0)
+                            );
+                            ChangeVolumeData(
+                                currentProcessingCoord + new Vector3Int(-1, -1, 1),
+                                id,
+                                rangeFactor
+                            );
                         }
-                        if (currentVectorRoundToInt.x == numPointsPerAxis - 1
-                        && currentVectorRoundToInt.y == numPointsPerAxis - 1
-                        && currentVectorRoundToInt.z == 0)
+                        if (
+                            currentVectorRoundToInt.x == numPointsPerAxis - 1
+                            && currentVectorRoundToInt.y == numPointsPerAxis - 1
+                            && currentVectorRoundToInt.z == 0
+                        )
                         {
                             int id = PosToIndex(new Vector3(0, 0, numPointsPerAxis - 1));
-                            ChangeVolumeData(currentProcessingCoord + new Vector3Int(1, 1, -1), id, rangeFactor);
+                            ChangeVolumeData(
+                                currentProcessingCoord + new Vector3Int(1, 1, -1),
+                                id,
+                                rangeFactor
+                            );
                         }
-                        if (currentVectorRoundToInt.x == numPointsPerAxis - 1
-                        && currentVectorRoundToInt.y == 0
-                        && currentVectorRoundToInt.z == numPointsPerAxis - 1)
+                        if (
+                            currentVectorRoundToInt.x == numPointsPerAxis - 1
+                            && currentVectorRoundToInt.y == 0
+                            && currentVectorRoundToInt.z == numPointsPerAxis - 1
+                        )
                         {
                             int id = PosToIndex(new Vector3(0, numPointsPerAxis - 1, 0));
-                            ChangeVolumeData(currentProcessingCoord + new Vector3Int(1, -1, 1), id, rangeFactor);
+                            ChangeVolumeData(
+                                currentProcessingCoord + new Vector3Int(1, -1, 1),
+                                id,
+                                rangeFactor
+                            );
                         }
-                        if (currentVectorRoundToInt.x == 0
-                        && currentVectorRoundToInt.y == numPointsPerAxis - 1
-                        && currentVectorRoundToInt.z == numPointsPerAxis - 1)
+                        if (
+                            currentVectorRoundToInt.x == 0
+                            && currentVectorRoundToInt.y == numPointsPerAxis - 1
+                            && currentVectorRoundToInt.z == numPointsPerAxis - 1
+                        )
                         {
                             int id = PosToIndex(new Vector3(numPointsPerAxis - 1, 0, 0));
-                            ChangeVolumeData(currentProcessingCoord + new Vector3Int(-1, 1, 1), id, rangeFactor);
+                            ChangeVolumeData(
+                                currentProcessingCoord + new Vector3Int(-1, 1, 1),
+                                id,
+                                rangeFactor
+                            );
                         }
-                        if (currentVectorRoundToInt.x == numPointsPerAxis - 1
-                        && currentVectorRoundToInt.y == numPointsPerAxis - 1
-                        && currentVectorRoundToInt.z == numPointsPerAxis - 1)
+                        if (
+                            currentVectorRoundToInt.x == numPointsPerAxis - 1
+                            && currentVectorRoundToInt.y == numPointsPerAxis - 1
+                            && currentVectorRoundToInt.z == numPointsPerAxis - 1
+                        )
                         {
                             int id = PosToIndex(new Vector3(0, 0, 0));
-                            ChangeVolumeData(currentProcessingCoord + new Vector3Int(1, 1, 1), id, rangeFactor);
+                            ChangeVolumeData(
+                                currentProcessingCoord + new Vector3Int(1, 1, 1),
+                                id,
+                                rangeFactor
+                            );
                         }
 
                         // On 12 edges of a cube
-                        if (currentVectorRoundToInt.y == 0
-                        && currentVectorRoundToInt.z == 0)
+                        if (currentVectorRoundToInt.y == 0 && currentVectorRoundToInt.z == 0)
                         {
-                            int id = PosToIndex(new Vector3(currentVectorRoundToInt.x, numPointsPerAxis - 1, numPointsPerAxis - 1));
-                            ChangeVolumeData(currentProcessingCoord + new Vector3Int(0, -1, -1), id, rangeFactor);
+                            int id = PosToIndex(
+                                new Vector3(
+                                    currentVectorRoundToInt.x,
+                                    numPointsPerAxis - 1,
+                                    numPointsPerAxis - 1
+                                )
+                            );
+                            ChangeVolumeData(
+                                currentProcessingCoord + new Vector3Int(0, -1, -1),
+                                id,
+                                rangeFactor
+                            );
                         }
-                        if (currentVectorRoundToInt.y == 0
-                        && currentVectorRoundToInt.z == numPointsPerAxis - 1)
+                        if (
+                            currentVectorRoundToInt.y == 0
+                            && currentVectorRoundToInt.z == numPointsPerAxis - 1
+                        )
                         {
-                            int id = PosToIndex(new Vector3(currentVectorRoundToInt.x, numPointsPerAxis - 1, 0));
-                            ChangeVolumeData(currentProcessingCoord + new Vector3Int(0, -1, 1), id, rangeFactor);
+                            int id = PosToIndex(
+                                new Vector3(currentVectorRoundToInt.x, numPointsPerAxis - 1, 0)
+                            );
+                            ChangeVolumeData(
+                                currentProcessingCoord + new Vector3Int(0, -1, 1),
+                                id,
+                                rangeFactor
+                            );
                         }
-                        if (currentVectorRoundToInt.y == numPointsPerAxis - 1
-                        && currentVectorRoundToInt.z == 0)
+                        if (
+                            currentVectorRoundToInt.y == numPointsPerAxis - 1
+                            && currentVectorRoundToInt.z == 0
+                        )
                         {
-                            int id = PosToIndex(new Vector3(currentVectorRoundToInt.x, 0, numPointsPerAxis - 1));
-                            ChangeVolumeData(currentProcessingCoord + new Vector3Int(0, 1, -1), id, rangeFactor);
+                            int id = PosToIndex(
+                                new Vector3(currentVectorRoundToInt.x, 0, numPointsPerAxis - 1)
+                            );
+                            ChangeVolumeData(
+                                currentProcessingCoord + new Vector3Int(0, 1, -1),
+                                id,
+                                rangeFactor
+                            );
                         }
-                        if (currentVectorRoundToInt.y == numPointsPerAxis - 1
-                        && currentVectorRoundToInt.z == numPointsPerAxis - 1)
+                        if (
+                            currentVectorRoundToInt.y == numPointsPerAxis - 1
+                            && currentVectorRoundToInt.z == numPointsPerAxis - 1
+                        )
                         {
                             int id = PosToIndex(new Vector3(currentVectorRoundToInt.x, 0, 0));
-                            ChangeVolumeData(currentProcessingCoord + new Vector3Int(0, 1, 1), id, rangeFactor);
+                            ChangeVolumeData(
+                                currentProcessingCoord + new Vector3Int(0, 1, 1),
+                                id,
+                                rangeFactor
+                            );
                         }
 
-                        if (currentVectorRoundToInt.x == 0
-                        && currentVectorRoundToInt.y == 0)
+                        if (currentVectorRoundToInt.x == 0 && currentVectorRoundToInt.y == 0)
                         {
-                            int id = PosToIndex(new Vector3(numPointsPerAxis - 1, numPointsPerAxis - 1, currentVectorRoundToInt.z));
-                            ChangeVolumeData(currentProcessingCoord + new Vector3Int(-1, -1, 0), id, rangeFactor);
+                            int id = PosToIndex(
+                                new Vector3(
+                                    numPointsPerAxis - 1,
+                                    numPointsPerAxis - 1,
+                                    currentVectorRoundToInt.z
+                                )
+                            );
+                            ChangeVolumeData(
+                                currentProcessingCoord + new Vector3Int(-1, -1, 0),
+                                id,
+                                rangeFactor
+                            );
                         }
-                        if (currentVectorRoundToInt.x == 0
-                        && currentVectorRoundToInt.y == numPointsPerAxis - 1)
+                        if (
+                            currentVectorRoundToInt.x == 0
+                            && currentVectorRoundToInt.y == numPointsPerAxis - 1
+                        )
                         {
-                            int id = PosToIndex(new Vector3(numPointsPerAxis - 1, 0, currentVectorRoundToInt.z));
-                            ChangeVolumeData(currentProcessingCoord + new Vector3Int(-1, 1, 0), id, rangeFactor);
+                            int id = PosToIndex(
+                                new Vector3(numPointsPerAxis - 1, 0, currentVectorRoundToInt.z)
+                            );
+                            ChangeVolumeData(
+                                currentProcessingCoord + new Vector3Int(-1, 1, 0),
+                                id,
+                                rangeFactor
+                            );
                         }
-                        if (currentVectorRoundToInt.x == numPointsPerAxis - 1
-                        && currentVectorRoundToInt.y == 0)
+                        if (
+                            currentVectorRoundToInt.x == numPointsPerAxis - 1
+                            && currentVectorRoundToInt.y == 0
+                        )
                         {
-                            int id = PosToIndex(new Vector3(0, numPointsPerAxis - 1, currentVectorRoundToInt.z));
-                            ChangeVolumeData(currentProcessingCoord + new Vector3Int(1, -1, 0), id, rangeFactor);
+                            int id = PosToIndex(
+                                new Vector3(0, numPointsPerAxis - 1, currentVectorRoundToInt.z)
+                            );
+                            ChangeVolumeData(
+                                currentProcessingCoord + new Vector3Int(1, -1, 0),
+                                id,
+                                rangeFactor
+                            );
                         }
-                        if (currentVectorRoundToInt.x == numPointsPerAxis - 1
-                        && currentVectorRoundToInt.y == numPointsPerAxis - 1)
+                        if (
+                            currentVectorRoundToInt.x == numPointsPerAxis - 1
+                            && currentVectorRoundToInt.y == numPointsPerAxis - 1
+                        )
                         {
                             int id = PosToIndex(new Vector3(0, 0, currentVectorRoundToInt.z));
-                            ChangeVolumeData(currentProcessingCoord + new Vector3Int(1, 1, 0), id, rangeFactor);
+                            ChangeVolumeData(
+                                currentProcessingCoord + new Vector3Int(1, 1, 0),
+                                id,
+                                rangeFactor
+                            );
                         }
 
-                        if (currentVectorRoundToInt.x == 0
-                        && currentVectorRoundToInt.z == 0)
+                        if (currentVectorRoundToInt.x == 0 && currentVectorRoundToInt.z == 0)
                         {
-                            int id = PosToIndex(new Vector3(numPointsPerAxis - 1, currentVectorRoundToInt.y, numPointsPerAxis - 1));
-                            ChangeVolumeData(currentProcessingCoord + new Vector3Int(-1, 0, -1), id, rangeFactor);
+                            int id = PosToIndex(
+                                new Vector3(
+                                    numPointsPerAxis - 1,
+                                    currentVectorRoundToInt.y,
+                                    numPointsPerAxis - 1
+                                )
+                            );
+                            ChangeVolumeData(
+                                currentProcessingCoord + new Vector3Int(-1, 0, -1),
+                                id,
+                                rangeFactor
+                            );
                         }
-                        if (currentVectorRoundToInt.x == 0
-                        && currentVectorRoundToInt.z == numPointsPerAxis - 1)
+                        if (
+                            currentVectorRoundToInt.x == 0
+                            && currentVectorRoundToInt.z == numPointsPerAxis - 1
+                        )
                         {
-                            int id = PosToIndex(new Vector3(numPointsPerAxis - 1, currentVectorRoundToInt.y, 0));
-                            ChangeVolumeData(currentProcessingCoord + new Vector3Int(-1, 0, 1), id, rangeFactor);
+                            int id = PosToIndex(
+                                new Vector3(numPointsPerAxis - 1, currentVectorRoundToInt.y, 0)
+                            );
+                            ChangeVolumeData(
+                                currentProcessingCoord + new Vector3Int(-1, 0, 1),
+                                id,
+                                rangeFactor
+                            );
                         }
-                        if (currentVectorRoundToInt.x == numPointsPerAxis - 1
-                        && currentVectorRoundToInt.z == 0)
+                        if (
+                            currentVectorRoundToInt.x == numPointsPerAxis - 1
+                            && currentVectorRoundToInt.z == 0
+                        )
                         {
-                            int id = PosToIndex(new Vector3(0, currentVectorRoundToInt.y, numPointsPerAxis - 1));
-                            ChangeVolumeData(currentProcessingCoord + new Vector3Int(1, 0, -1), id, rangeFactor);
+                            int id = PosToIndex(
+                                new Vector3(0, currentVectorRoundToInt.y, numPointsPerAxis - 1)
+                            );
+                            ChangeVolumeData(
+                                currentProcessingCoord + new Vector3Int(1, 0, -1),
+                                id,
+                                rangeFactor
+                            );
                         }
-                        if (currentVectorRoundToInt.x == numPointsPerAxis - 1
-                        && currentVectorRoundToInt.z == numPointsPerAxis - 1)
+                        if (
+                            currentVectorRoundToInt.x == numPointsPerAxis - 1
+                            && currentVectorRoundToInt.z == numPointsPerAxis - 1
+                        )
                         {
                             int id = PosToIndex(new Vector3(0, currentVectorRoundToInt.y, 0));
-                            ChangeVolumeData(currentProcessingCoord + new Vector3Int(1, 0, 1), id, rangeFactor);
+                            ChangeVolumeData(
+                                currentProcessingCoord + new Vector3Int(1, 0, 1),
+                                id,
+                                rangeFactor
+                            );
                         }
 
                         // On 6 faces of a cube
                         if (currentVectorRoundToInt.x == 0)
                         {
-                            int id = PosToIndex(new Vector3(numPointsPerAxis - 1, currentVectorRoundToInt.y, currentVectorRoundToInt.z));
-                            ChangeVolumeData(currentProcessingCoord + new Vector3Int(-1, 0, 0), id, rangeFactor);
+                            int id = PosToIndex(
+                                new Vector3(
+                                    numPointsPerAxis - 1,
+                                    currentVectorRoundToInt.y,
+                                    currentVectorRoundToInt.z
+                                )
+                            );
+                            ChangeVolumeData(
+                                currentProcessingCoord + new Vector3Int(-1, 0, 0),
+                                id,
+                                rangeFactor
+                            );
                         }
                         if (currentVectorRoundToInt.x == numPointsPerAxis - 1)
                         {
-                            int id = PosToIndex(new Vector3(0, currentVectorRoundToInt.y, currentVectorRoundToInt.z));
-                            ChangeVolumeData(currentProcessingCoord + new Vector3Int(1, 0, 0), id, rangeFactor);
+                            int id = PosToIndex(
+                                new Vector3(0, currentVectorRoundToInt.y, currentVectorRoundToInt.z)
+                            );
+                            ChangeVolumeData(
+                                currentProcessingCoord + new Vector3Int(1, 0, 0),
+                                id,
+                                rangeFactor
+                            );
                         }
                         if (currentVectorRoundToInt.z == 0)
                         {
-                            int id = PosToIndex(new Vector3(currentVectorRoundToInt.x, currentVectorRoundToInt.y, numPointsPerAxis - 1));
-                            ChangeVolumeData(currentProcessingCoord + new Vector3Int(0, 0, -1), id, rangeFactor);
+                            int id = PosToIndex(
+                                new Vector3(
+                                    currentVectorRoundToInt.x,
+                                    currentVectorRoundToInt.y,
+                                    numPointsPerAxis - 1
+                                )
+                            );
+                            ChangeVolumeData(
+                                currentProcessingCoord + new Vector3Int(0, 0, -1),
+                                id,
+                                rangeFactor
+                            );
                         }
                         if (currentVectorRoundToInt.z == numPointsPerAxis - 1)
                         {
-                            int id = PosToIndex(new Vector3(currentVectorRoundToInt.x, currentVectorRoundToInt.y, 0));
-                            ChangeVolumeData(currentProcessingCoord + new Vector3Int(0, 0, 1), id, rangeFactor);
+                            int id = PosToIndex(
+                                new Vector3(currentVectorRoundToInt.x, currentVectorRoundToInt.y, 0)
+                            );
+                            ChangeVolumeData(
+                                currentProcessingCoord + new Vector3Int(0, 0, 1),
+                                id,
+                                rangeFactor
+                            );
                         }
                         if (currentVectorRoundToInt.y == 0)
                         {
-                            int id = PosToIndex(new Vector3(currentVectorRoundToInt.x, numPointsPerAxis - 1, currentVectorRoundToInt.z));
-                            ChangeVolumeData(currentProcessingCoord + new Vector3Int(0, -1, 0), id, rangeFactor);
+                            int id = PosToIndex(
+                                new Vector3(
+                                    currentVectorRoundToInt.x,
+                                    numPointsPerAxis - 1,
+                                    currentVectorRoundToInt.z
+                                )
+                            );
+                            ChangeVolumeData(
+                                currentProcessingCoord + new Vector3Int(0, -1, 0),
+                                id,
+                                rangeFactor
+                            );
                         }
                         if (currentVectorRoundToInt.y == numPointsPerAxis - 1)
                         {
-                            int id = PosToIndex(new Vector3(currentVectorRoundToInt.x, 0, currentVectorRoundToInt.z));
-                            ChangeVolumeData(currentProcessingCoord + new Vector3Int(0, 1, 0), id, rangeFactor);
+                            int id = PosToIndex(
+                                new Vector3(currentVectorRoundToInt.x, 0, currentVectorRoundToInt.z)
+                            );
+                            ChangeVolumeData(
+                                currentProcessingCoord + new Vector3Int(0, 1, 0),
+                                id,
+                                rangeFactor
+                            );
                         }
                         ChangeVolumeData(currentProcessingCoord, currentId, rangeFactor);
                     }
                 }
             }
         }
-        additionalPointsBuffer = new ComputeBuffer(numPointsPerAxis * numPointsPerAxis * numPointsPerAxis, sizeof(float));
+        additionalPointsBuffer = new ComputeBuffer(
+            numPointsPerAxis * numPointsPerAxis * numPointsPerAxis,
+            sizeof(float)
+        );
 
         // Mesh will be updated more than once if chunk edge is met
         for (int i = 0; i < chunksNeedToBeUpdated.Count; i++)
@@ -541,19 +875,15 @@ public class TerrainMesh : MonoBehaviour
             UpdateChunkMesh(existingChunks[chunksNeedToBeUpdated[i]], additionalPointsBuffer);
         }
         additionalPointsBuffer.Release();
-
-
     }
 
-
-    public bool IsVisibleFrom(Bounds bounds, Camera camera)
-    {
-        Plane[] planes = GeometryUtility.CalculateFrustumPlanes(camera);
-        bool visiableFromCam = GeometryUtility.TestPlanesAABB(planes, bounds);
-        return visiableFromCam;
-    }
-
-    public void UpdateChunkMesh(Chunk chunk, ComputeBuffer additionalPointsBuffer)
+    /// <summary>
+    /// Update chunk mesh by the chunk's position
+    /// </summary>
+    /// <param name="chunk"></param>
+    /// <param name="additionalPointsBuffer"></param>
+    /// <returns>0: Inactive chunk, 1: Active chunk</returns>
+    public int UpdateChunkMesh(Chunk chunk, ComputeBuffer additionalPointsBuffer)
     {
         int numPointsPerAxis = 0;
         if (Application.isPlaying)
@@ -579,7 +909,18 @@ public class TerrainMesh : MonoBehaviour
         pointsStatus.SetData(pointStatusData);
 
         // Gerenate individual noise value using compute shader， modifies pointsBuffer
-        noiseDensity.Generate(pointsBuffer, additionalPointsBuffer, pointsStatus, numPointsPerAxis, boundsSize, worldBounds, centre, offset, pointSpacing, isoLevel);
+        noiseDensity.Generate(
+            pointsBuffer,
+            additionalPointsBuffer,
+            pointsStatus,
+            numPointsPerAxis,
+            boundsSize,
+            worldBounds,
+            centre,
+            offset,
+            pointSpacing,
+            isoLevel
+        );
         pointsStatus.GetData(pointStatusData);
         pointsStatus.Release();
 
@@ -587,7 +928,7 @@ public class TerrainMesh : MonoBehaviour
         if (pointStatusData[0] == 0 || pointStatusData[1] == 0)
         {
             chunk.gameObject.SetActive(false);
-            return;
+            return 0;
         }
         else if (!chunk.gameObject.activeInHierarchy)
             chunk.gameObject.SetActive(true);
@@ -631,25 +972,31 @@ public class TerrainMesh : MonoBehaviour
 
         mesh.RecalculateNormals();
         chunk.UpdateColliders();
+
+        return 1;
     }
 
     public void UpdateAllChunks()
     {
         additionalPointsBuffer = new ComputeBuffer(
-            lodSetup.numPointsPerAxisPreview *
-            lodSetup.numPointsPerAxisPreview *
-            lodSetup.numPointsPerAxisPreview, sizeof(float));
-        additionalPointsBuffer.SetData(new float[
-            lodSetup.numPointsPerAxisPreview *
-            lodSetup.numPointsPerAxisPreview *
-            lodSetup.numPointsPerAxisPreview]);
+            lodSetup.numPointsPerAxisPreview
+                * lodSetup.numPointsPerAxisPreview
+                * lodSetup.numPointsPerAxisPreview,
+            sizeof(float)
+        );
+        additionalPointsBuffer.SetData(
+            new float[
+                lodSetup.numPointsPerAxisPreview
+                    * lodSetup.numPointsPerAxisPreview
+                    * lodSetup.numPointsPerAxisPreview
+            ]
+        );
+
         // Create mesh for each chunk
         foreach (Chunk chunk in chunks)
         {
             UpdateChunkMesh(chunk, additionalPointsBuffer);
         }
-        boundedMapGenerated = true;
-
         additionalPointsBuffer.Release();
     }
 
@@ -668,18 +1015,19 @@ public class TerrainMesh : MonoBehaviour
         int numVoxels;
         int maxTriangleCount;
 
-
         if (!Application.isPlaying || triangleBuffer == null)
         {
             // print("Creating buffers");
             if (Application.isPlaying)
                 ReleaseBuffers();
 
-            numVoxelsPerAxis = Application.isPlaying ?
-            lodSetup.numPointsPerAxis - 1 : lodSetup.numPointsPerAxisPreview - 1;
+            numVoxelsPerAxis = Application.isPlaying
+                ? lodSetup.numPointsPerAxis - 1
+                : lodSetup.numPointsPerAxisPreview - 1;
 
-            numPoints = Application.isPlaying ?
-            (int)Mathf.Pow(lodSetup.numPointsPerAxis, 3) : (int)Mathf.Pow(lodSetup.numPointsPerAxis, 3);
+            numPoints = Application.isPlaying
+                ? (int)Mathf.Pow(lodSetup.numPointsPerAxis, 3)
+                : (int)Mathf.Pow(lodSetup.numPointsPerAxis, 3);
             // Voxels(mini cubes) in a volume
             numVoxels = numVoxelsPerAxis * numVoxelsPerAxis * numVoxelsPerAxis;
             // Max triangles to be create per voxel is 5
@@ -687,7 +1035,11 @@ public class TerrainMesh : MonoBehaviour
 
             // ComputeBuffer(Num of elements, size per element, type of the buffer)
             // 3 points, x, y, z, stored in float
-            triangleBuffer = new ComputeBuffer(maxTriangleCount, sizeof(float) * 3 * 3, ComputeBufferType.Append);
+            triangleBuffer = new ComputeBuffer(
+                maxTriangleCount,
+                sizeof(float) * 3 * 3,
+                ComputeBufferType.Append
+            );
             // stores x, y, z, volumeValue
             pointsBuffer = new ComputeBuffer(numPoints, sizeof(float) * 4);
             // A int to store total count of triangles
@@ -709,8 +1061,6 @@ public class TerrainMesh : MonoBehaviour
         }
     }
 
-
-
     Vector3 CentreFromCoord(Vector3Int coord)
     {
         // Centre entire map at origin
@@ -723,12 +1073,11 @@ public class TerrainMesh : MonoBehaviour
         return new Vector3(coord.x, coord.y, coord.z) * boundsSize;
     }
 
-    void CreateChunkHolder()
+    void CreateChunkHolderIfNeeded()
     {
         // Create/find mesh holder object for organizing chunks under in the hierarchy
         if (chunkHolder == null)
         {
-
             if (GameObject.Find(chunkHolderName))
             {
                 chunkHolder = GameObject.Find(chunkHolderName);
@@ -757,12 +1106,16 @@ public class TerrainMesh : MonoBehaviour
     // Create/get references to all chunks
     void InitChunks()
     {
-        // TODO:
         // Create a folder
-        CreateChunkHolder();
-        chunks = new List<Chunk>();
+        CreateChunkHolderIfNeeded();
+
+        if (chunks != null)
+            chunks.Clear();
+        else
+            chunks = new List<Chunk>();
+
         List<Chunk> oldChunks = FindChunkInChildWithTag(chunkHolder);
-        //List<Chunk> oldChunks = new List<Chunk>(FindObjectsOfType<Chunk>());
+
         // Go through all coords and create a chunk there if one doesn't already exist
         for (int x = 0; x < numChunks.x; x++)
         {
@@ -798,7 +1151,7 @@ public class TerrainMesh : MonoBehaviour
             }
         }
 
-        // Delete all unused chunks
+        // Delete all unused old chunks
         for (int i = 0; i < oldChunks.Count; i++)
         {
             oldChunks[i].DestroyOrDisable();
@@ -820,8 +1173,9 @@ public class TerrainMesh : MonoBehaviour
         int y = Mathf.RoundToInt(pos.y);
         int z = Mathf.RoundToInt(pos.z);
 
-        return z * lodSetup.numPointsPerAxis * lodSetup.numPointsPerAxis + y * lodSetup.numPointsPerAxis + x;
-
+        return z * lodSetup.numPointsPerAxis * lodSetup.numPointsPerAxis
+            + y * lodSetup.numPointsPerAxis
+            + x;
     }
 
     // Run every time settings in MeshGenerator changed
@@ -829,10 +1183,9 @@ public class TerrainMesh : MonoBehaviour
     {
         if (!Application.isPlaying)
         {
-            boundedMapGenerated = false;
+            // boundedMapGenerated = false;
             settingsUpdated = true;
         }
-
     }
 
     struct Triangle
@@ -865,7 +1218,8 @@ public class TerrainMesh : MonoBehaviour
         {
             Gizmos.color = boundsGizmoCol;
 
-            List<Chunk> chunks = (this.chunks == null) ? new List<Chunk>(FindObjectsOfType<Chunk>()) : this.chunks;
+            List<Chunk> chunks =
+                (this.chunks == null) ? new List<Chunk>(FindObjectsOfType<Chunk>()) : this.chunks;
             foreach (var chunk in chunks)
             {
                 Bounds bounds = new Bounds(CentreFromCoord(chunk.coord), Vector3.one * boundsSize);
@@ -874,5 +1228,4 @@ public class TerrainMesh : MonoBehaviour
             }
         }
     }
-
 }

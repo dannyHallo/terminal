@@ -227,6 +227,12 @@
       },
       "url": "https://packages.unity.cn"
     },
+    "jp.keijiro.noiseshader": {
+      "version": "file:jp.keijiro.noiseshader",
+      "depth": 0,
+      "source": "embedded",
+      "dependencies": {}
+    },
     "com.unity.modules.ai": {
       "version": "1.0.0",
       "depth": 0,
