@@ -208,7 +208,7 @@ Shader "Hidden/Atmosphere"
 			#pragma fragment frag
 
 			#include "UnityCG.cginc"
-			#include "../Includes/Math.cginc"
+			#include "Assets/Scripts/Includes/Math.cginc"
 			//
 
 			struct appdata {

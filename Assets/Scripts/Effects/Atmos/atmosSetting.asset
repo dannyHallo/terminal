@@ -20,7 +20,7 @@ MonoBehaviour:
   wavelengths: {x: 700, y: 610, z: 440}
   densityFalloff: 1
   scatteringStrength: 82.4
-  scatteringIntensity: 1.55
+  scatteringIntensity: 1.19
   totalIntensity: 0.66
   planetRadius: 300000
   bottomOffset: -3626

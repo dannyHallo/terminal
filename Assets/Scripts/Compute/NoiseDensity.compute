@@ -1,9 +1,9 @@
 ﻿// The function name
 #pragma kernel Density
-
-#include "/Includes/Density.compute"
 #include "/Includes/Noise.compute"
-#include "Packages/jp.keijiro.noiseshader/Shader/ClassicNoise3D.hlsl"
+#include "/Includes/Density.compute"
+
+// #include "Packages/jp.keijiro.noiseshader/Shader/ClassicNoise3D.hlsl"
 
 // Noise settings
 StructuredBuffer<float3> offsets;
@@ -51,6 +51,7 @@ void Density (int3 id : SV_DispatchThreadID)
     for (int j = 0; j < octaves; j++) {
         // 0-1
         float n = snoise((pos+offsetNoise) * frequency + offsets[j]);
+
         float v = 0;
         // v = abs(n);
         v = n;
@@ -64,9 +65,12 @@ void Density (int3 id : SV_DispatchThreadID)
     }
 
     noise = abs(2 * noise - 1);
-    
+
+    float ditherNoise = snoise((pos+offsetNoise) * frequency * 10 + offsets[j]) * 3;
+
     // The higher the position is, the less likely it is gonna appear.
-    float finalVal = -pos.y * heightGredient + floorOffset + noise * noiseWeight + (pos.y%params.x) * params.y;
+    float finalVal = -pos.y * heightGredient + floorOffset + ditherNoise + 
+    noise * noiseWeight + (pos.y%params.x) * params.y;
 
     if (pos.y < hardFloor) {
         finalVal += hardFloorWeight;

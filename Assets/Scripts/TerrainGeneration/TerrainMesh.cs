@@ -117,7 +117,6 @@ public class TerrainMesh : MonoBehaviour
         if (!fixedMapSize)
         {
             UpdateSurroundingChunks();
-            LoadPreloadChunks();
             return;
         }
     }
@@ -163,16 +162,19 @@ public class TerrainMesh : MonoBehaviour
         maxChunksInViewHori = Mathf.CeilToInt(lodSetup.viewDistanceHori / boundsSize);
         maxChunksInViewVert = Mathf.CeilToInt(lodSetup.viewDistanceVert / boundsSize);
 
-        maxChunksInViewHoriDisappear = Mathf.CeilToInt(lodSetup.viewDistanceHori * 3f / boundsSize);
-        maxChunksInViewVertDisappear = Mathf.CeilToInt(lodSetup.viewDistanceVert * 3f / boundsSize);
+        maxChunksInViewHoriDisappear = Mathf.CeilToInt(
+            lodSetup.viewDistanceHori * 3.5f / boundsSize
+        );
+        maxChunksInViewVertDisappear = Mathf.CeilToInt(
+            lodSetup.viewDistanceVert * 3.5f / boundsSize
+        );
 
-        maxChunksInViewHoriPreload = Mathf.CeilToInt(lodSetup.viewDistanceHori * 2f / boundsSize);
+        maxChunksInViewHoriPreload = Mathf.CeilToInt(lodSetup.viewDistanceHori * 2.5f / boundsSize);
         maxChunksInViewVertPreload = maxChunksInViewVert;
     }
 
     /// <summary>
-    /// Cleans inworld chunks and chunks in preload list if out of bound
-    /// Loads visible chunks and put its surroundings into preload list.
+    /// Load one unloaded chunk, searching from centre
     /// </summary>
     void UpdateSurroundingChunks()
     {
@@ -219,50 +221,35 @@ public class TerrainMesh : MonoBehaviour
 
         int updatedChunkNum = 0;
 
-        // Loop through all surrounding chunks, create them directly in this frame
-        // if they are too close to player, or add them to the preview list if not
-        for (int x = -maxChunksInViewHoriPreload; x <= maxChunksInViewHoriPreload; x++)
+        for (int xzBound = 0; xzBound <= maxChunksInViewHoriPreload; xzBound++)
         {
-            for (int y = -maxChunksInViewVertPreload; y <= maxChunksInViewVertPreload; y++)
+            for (int yBound = 0; yBound <= maxChunksInViewVertPreload; yBound++)
             {
-                for (int z = -maxChunksInViewHoriPreload; z <= maxChunksInViewHoriPreload; z++)
+                for (int x = -xzBound; x <= xzBound; x++)
                 {
-                    if (
-                        (
-                            (Mathf.Pow(x, 2) + Mathf.Pow(z, 2))
-                            > Mathf.Pow(maxChunksInViewHoriPreload, 2)
-                        )
-                    )
-                        continue;
-
-                    Vector3Int coord = new Vector3Int(x + viewerCoord.x, y, z + viewerCoord.z);
-
-                    // Keep the chunk unchanged
-                    if (existingChunks.ContainsKey(coord))
-                        continue;
-
-                    // Add this coord to preload zone
-                    if (
-                        Mathf.Abs(x) > maxChunksInViewHori
-                        || Mathf.Abs(y) > maxChunksInViewVert
-                        || Mathf.Abs(z) > maxChunksInViewHori
-                    )
+                    for (int y = -yBound; y <= yBound; y++)
                     {
-                        if (chunkCoordsNeededToBeRendered.Contains(coord))
-                            continue;
-                        if (existingChunks.ContainsKey(coord))
-                            continue;
+                        for (int z = -xzBound; z <= xzBound; z++)
+                        {
+                            Vector3Int coord = new Vector3Int(
+                                x + viewerCoord.x,
+                                y,
+                                z + viewerCoord.z
+                            );
 
-                        chunkCoordsNeededToBeRendered.Add(coord);
-                        // print("Added to preload: " + coord);
-                        continue;
+                            // Keep the chunk unchanged
+                            if (existingChunks.ContainsKey(coord))
+                                continue;
+
+                            updatedChunkNum += RenderChunk(coord, 0);
+                            goto renderedOnce;
+                        }
                     }
-                    // print("Loaded directly: " + coord);
-
-                    updatedChunkNum += RenderChunk(coord, 0);
                 }
             }
         }
+        renderedOnce:
+
         if (updatedChunkNum > 0)
         {
             print("We updated " + updatedChunkNum + " chunks in this frame");
@@ -275,7 +262,7 @@ public class TerrainMesh : MonoBehaviour
     {
         if (existingChunks.ContainsKey(coord))
         {
-            print("Try to render " + coord + " but it is already exist! " + i);
+            // print("Try to render " + coord + " but it is already exist! " + i);
             return 0;
         }
 
@@ -307,27 +294,6 @@ public class TerrainMesh : MonoBehaviour
         additionalPointsBuffer.Release();
 
         return renderedChunks;
-    }
-
-    // TODO: Generate strategy
-    private void LoadPreloadChunks()
-    {
-        Vector3Int viewerCoord = GetViewerCoord();
-
-        if (chunkCoordsNeededToBeRendered.Count == 0)
-            return;
-
-        Vector3Int nearestCoord = chunkCoordsNeededToBeRendered[0];
-
-        // for (int c = 1; c < chunkCoordsNeededToBeRendered.Count; c++){
-        //     if()
-        // }
-        int k = RenderChunk(nearestCoord, 1);
-        if (k != 0)
-        {
-            print("Successfully load a preload chunk!");
-        }
-        chunkCoordsNeededToBeRendered.RemoveAt(0);
     }
 
     private void LoadBoundedChunks()

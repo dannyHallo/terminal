@@ -508,23 +508,23 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   mat: {fileID: 2100000, guid: d93366c815783437abcf8032ab99990b, type: 2}
-  normalOffsetWeight: 8.9
+  normalOffsetWeight: -32.1
   gradient:
     serializedVersion: 2
-    key0: {r: 0.995283, g: 1, b: 0.9985849, a: 1}
-    key1: {r: 0.6602512, g: 0.8028354, b: 0.63211906, a: 1}
-    key2: {r: 0.16891366, g: 0.51368564, b: 0.09468222, a: 1}
-    key3: {r: 0.08235294, g: 0.4627451, b: 0, a: 1}
-    key4: {r: 0.36087385, g: 0.556407, b: 0.18609141, a: 1}
-    key5: {r: 0.96862745, g: 0.7607843, b: 0.5921569, a: 1}
-    key6: {r: 0.2735849, g: 0.14324492, b: 0.14324492, a: 0}
+    key0: {r: 0.26415092, g: 0.26415092, b: 0.26415092, a: 1}
+    key1: {r: 1, g: 1, b: 1, a: 1}
+    key2: {r: 0.08235294, g: 0.4627451, b: 0, a: 1}
+    key3: {r: 0.2562327, g: 0.4056604, b: 0.08993414, a: 1}
+    key4: {r: 0.8369613, g: 0.9528302, b: 0.39101997, a: 1}
+    key5: {r: 0.6602512, g: 0.8028354, b: 0.63211906, a: 1}
+    key6: {r: 0.6602512, g: 0.8028354, b: 0.63211906, a: 0}
     key7: {r: 0.2735849, g: 0.14324492, b: 0.14324492, a: 0}
-    ctime0: 386
-    ctime1: 2891
-    ctime2: 11758
-    ctime3: 25829
-    ctime4: 33924
-    ctime5: 40670
+    ctime0: 6746
+    ctime1: 11180
+    ctime2: 15998
+    ctime3: 21974
+    ctime4: 42020
+    ctime5: 65535
     ctime6: 65535
     ctime7: 65535
     atime0: 13107
@@ -536,12 +536,12 @@ MonoBehaviour:
     atime6: 0
     atime7: 0
     m_Mode: 0
-    m_NumColorKeys: 7
+    m_NumColorKeys: 6
     m_NumAlphaKeys: 5
   colorNum: 5
   colorPalette: {fileID: 0}
   boundsY: -2654.24
-  offsetY: -121
+  offsetY: 180
 --- !u!4 &410678713
 Transform:
   m_ObjectHideFlags: 0
@@ -593,7 +593,7 @@ MonoBehaviour:
   heightGredient: 2.27
   noiseWeight: 2500
   closeEdges: 0
-  floorOffset: -73.3
+  floorOffset: -850
   weightMultiplier: -2.3
   hardFloorHeight: 1
   hardFloorWeight: 0
@@ -1343,11 +1343,11 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   noiseDensity: {fileID: 523467300}
   fixedMapSize: 0
-  numChunks: {x: 4, y: 2, z: 4}
+  numChunks: {x: 4, y: 1, z: 4}
   viewer: {fileID: 939415163}
   lodSetup:
-    numPointsPerAxisPreview: 32
-    numPointsPerAxis: 32
+    numPointsPerAxisPreview: 40
+    numPointsPerAxis: 40
     viewDistanceHori: 1000
     viewDistanceVert: 1000
     fixedDistanceHori: 5

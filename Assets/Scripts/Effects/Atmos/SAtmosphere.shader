@@ -16,8 +16,8 @@ Shader "Hidden/SAtmosphere"
 			#pragma fragment frag
 
 			#include "UnityCG.cginc"
-			#include "../Includes/Math.cginc"
-			//
+			#include "Assets/Scripts/Includes/Math.cginc"
+			
 
 			struct appdata {
 				float4 vertex : POSITION;
