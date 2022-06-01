@@ -4,22 +4,39 @@ using UnityEngine;
 
 public class NoiseDensity : MonoBehaviour
 {
-
     [Header("Noise")]
     public int seed;
 
-    [Range(1, 20)] public int numOctaves = 4;
-    [Range(1, 2)] public float lacunarity = 2;
-    [Range(0, 1)] public float persistence = .5f;
-    [Range(0, 1f)] public float noiseScale = 1;
-    [Range(0, 3f)] public float heightGredient = 1;
+    [Range(0, 1)]
+    public float DragMeToUpdate;
+
+    [Range(1, 20)]
+    public int numOctaves = 4;
+
+    [Range(1, 2)]
+    public float lacunarity = 2;
+
+    [Range(0, 1)]
+    public float persistence = .5f;
+
+    [Range(0, 0.04f)]
+    public float noiseScale = 0.1f;
+
+    [Range(0, 3f)]
+    public float heightGredient = 1;
+
+    [Range(0, 3f)]
+    public float multiFractalWeight = 1;
+
     public float noiseWeight = 1;
     public bool closeEdges;
-    public float floorOffset = 1;
-    public float weightMultiplier = 1;
+    public bool b1;
+    public bool b2;
+    public float f1;
+    public float f2;
+    public float f3;
 
-    public float hardFloorHeight;
-    public float hardFloorWeight;
+    public float floorOffset = 1;
 
     public Vector4 shaderParams;
 
@@ -38,7 +55,18 @@ public class NoiseDensity : MonoBehaviour
         }
     }
 
-    public void Generate(ComputeBuffer pointsBuffer, ComputeBuffer additionalPointsBuffer, ComputeBuffer pointsStatus, int numPointsPerAxis, float boundsSize, Vector3 worldBounds, Vector3 centre, Vector3 offset, float spacing, float isoLevel)
+    public void Generate(
+        ComputeBuffer pointsBuffer,
+        ComputeBuffer additionalPointsBuffer,
+        ComputeBuffer pointsStatus,
+        int numPointsPerAxis,
+        float boundsSize,
+        Vector3 worldBounds,
+        Vector3 centre,
+        Vector3 offset,
+        float spacing,
+        float isoLevel
+    )
     {
         int numPoints = numPointsPerAxis * numPointsPerAxis * numPointsPerAxis;
         int numThreadsPerAxis = Mathf.CeilToInt(numPointsPerAxis / (float)threadGroupSize);
@@ -58,7 +86,12 @@ public class NoiseDensity : MonoBehaviour
         for (int i = 0; i < numOctaves; i++)
         {
             // What does it mean ( * 2 - 1 )?
-            offsets[i] = new Vector3((float)prng.NextDouble() * 2 - 1, (float)prng.NextDouble() * 2 - 1, (float)prng.NextDouble() * 2 - 1) * offsetRange;
+            offsets[i] =
+                new Vector3(
+                    (float)prng.NextDouble() * 2 - 1,
+                    (float)prng.NextDouble() * 2 - 1,
+                    (float)prng.NextDouble() * 2 - 1
+                ) * offsetRange;
         }
 
         // Sets offset buffer
@@ -75,12 +108,15 @@ public class NoiseDensity : MonoBehaviour
         densityShader.SetFloat("noiseScale", noiseScale);
         densityShader.SetFloat("noiseWeight", noiseWeight);
         densityShader.SetBool("closeEdges", closeEdges);
+        densityShader.SetBool("b1", b1);
+        densityShader.SetBool("b2", b2);
+        densityShader.SetFloat("f1", f1);
+        densityShader.SetFloat("f2", f2);
+        densityShader.SetFloat("f3", f3);
         densityShader.SetBuffer(0, "offsets", offsetsBuffer);
         densityShader.SetFloat("floorOffset", floorOffset);
-        densityShader.SetFloat("weightMultiplier", weightMultiplier);
-        densityShader.SetFloat("hardFloor", hardFloorHeight);
-        densityShader.SetFloat("hardFloorWeight", hardFloorWeight);
         densityShader.SetFloat("heightGredient", heightGredient);
+        densityShader.SetFloat("multiFractalWeight", multiFractalWeight);
         densityShader.SetVector("params", shaderParams);
 
         densityShader.SetBuffer(0, "points", pointsBuffer);

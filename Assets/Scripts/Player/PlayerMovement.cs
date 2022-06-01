@@ -12,10 +12,10 @@ public class PlayerMovement : MonoBehaviour
     public TerrainMesh terrainMesh;
     public Image screenShotMask;
 
-
     public float walkingSpeed = 7.5f;
     public float runningSpeed = 11.5f;
     public float jumpSpeed = 8.0f;
+    public float flySpeed = 0.1f;
     public float gravity = 20.0f;
     public Camera playerCamera;
     public AudioListener audioListener;
@@ -33,6 +33,7 @@ public class PlayerMovement : MonoBehaviour
 
     [Range(1, 10)]
     public int drawRange = 5;
+
     //Input
 
     // Flags
@@ -63,7 +64,6 @@ public class PlayerMovement : MonoBehaviour
         playerInputActions = new PlayerInputActions();
         playerInputActions.Player.Enable();
     }
-
 
     // Land on planet initially
     void TryToLand()
@@ -107,7 +107,6 @@ public class PlayerMovement : MonoBehaviour
             CheckRay();
             CheckScreenShot();
         }
-
     }
 
     IEnumerator DiggingCountdown()
@@ -119,7 +118,13 @@ public class PlayerMovement : MonoBehaviour
     IEnumerator TakePhoto()
     {
         String desktopPath = Environment.GetFolderPath(Environment.SpecialFolder.Desktop);
-        String filename = desktopPath + "/" + botName.ToUpper() + "_" + UnityEngine.Random.Range(100, 1000).ToString() + ".png";
+        String filename =
+            desktopPath
+            + "/"
+            + botName.ToUpper()
+            + "_"
+            + UnityEngine.Random.Range(100, 1000).ToString()
+            + ".png";
         ScreenCapture.CaptureScreenshot(filename, 1);
         yield return new WaitForSeconds(0.05f);
         audioSource.PlayOneShot(Cam_35mm);
@@ -150,7 +155,6 @@ public class PlayerMovement : MonoBehaviour
         RaycastHit hit;
         if (Physics.Raycast(ray, out hit, rayLength))
         {
-
             // Get Left Mouse Button
 
             // The direct hit is a chunk
@@ -169,7 +173,6 @@ public class PlayerMovement : MonoBehaviour
                         RestartCoroutine();
                     }
                 }
-
                 // Right Mouse Btn
                 else if (Input.GetMouseButton(1))
                 {
@@ -212,15 +215,17 @@ public class PlayerMovement : MonoBehaviour
 
     private bool PlayerWantsToLockCursor()
     {
-        return ((playerInputActions.Player.Return.ReadValue<float>() == 1) ||
-        (playerInputActions.Player.Movement.ReadValue<Vector2>() != new Vector2(0, 0)))
-         ? true : false;
+        return (
+            (playerInputActions.Player.Return.ReadValue<float>() == 1)
+            || (playerInputActions.Player.Movement.ReadValue<Vector2>() != new Vector2(0, 0))
+        )
+            ? true
+            : false;
     }
 
     private bool PlayerWantsToUnlockCursor()
     {
-        return (playerInputActions.Player.Exit.ReadValue<float>() == 1)
-        ? true : false;
+        return (playerInputActions.Player.Exit.ReadValue<float>() == 1) ? true : false;
     }
 
     private void LockCursor()
@@ -257,21 +262,24 @@ public class PlayerMovement : MonoBehaviour
         Vector3 forward = transform.TransformDirection(Vector3.forward);
         Vector3 right = transform.TransformDirection(Vector3.right);
         // Press Left Shift to run
-        float curSpeedX = canMove ? (sprintPressed ? runningSpeed : walkingSpeed) * inputVector.y : 0;
-        float curSpeedY = canMove ? (sprintPressed ? runningSpeed : walkingSpeed) * inputVector.x : 0;
+        float curSpeedX = canMove
+            ? (sprintPressed ? runningSpeed : walkingSpeed) * inputVector.y
+            : 0;
+        float curSpeedY = canMove
+            ? (sprintPressed ? runningSpeed : walkingSpeed) * inputVector.x
+            : 0;
         float movementDirectionY = moveDirection.y;
         moveDirection = (forward * curSpeedX) + (right * curSpeedY);
 
-        if (jumpPressed && canMove && characterController.isGrounded)
-            moveDirection.y = jumpSpeed;
-        else
-            moveDirection.y = movementDirectionY;
-
-        // Apply gravity. Gravity is multiplied by deltaTime twice (once here, and once below
-        // when the moveDirection is multiplied by deltaTime). This is because gravity should be applied
-        // as an acceleration (ms^-2)
+        // Apply gravity
         if (!characterController.isGrounded)
+        {
+            moveDirection.y = movementDirectionY;
             moveDirection.y -= gravity * Time.deltaTime;
+        }
+
+        if (jumpPressed && canMove)
+            moveDirection.y += flySpeed * Time.deltaTime;
 
         // Move the controller
         characterController.Move(moveDirection * Time.deltaTime);

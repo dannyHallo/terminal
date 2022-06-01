@@ -3,7 +3,8 @@
 #include "/Includes/Noise.compute"
 #include "/Includes/Density.compute"
 
-// #include "Packages/jp.keijiro.noiseshader/Shader/ClassicNoise3D.hlsl"
+#include "Packages/jp.keijiro.noiseshader/Shader/ClassicNoise3D.hlsl"
+#include "Packages/jp.keijiro.noiseshader/Shader/SimplexNoise3D.hlsl"
 
 // Noise settings
 StructuredBuffer<float3> offsets;
@@ -17,10 +18,13 @@ float noiseScale;
 float noiseWeight;
 float floorOffset;
 float heightGredient;
-float weightMultiplier;
+float multiFractalWeight;
 bool closeEdges;
-float hardFloor;
-float hardFloorWeight;
+bool b1;
+bool b2;
+float f1;
+float f2;
+float f3;
 float4 params;
 float isoLevel;
 
@@ -52,29 +56,31 @@ void Density (int3 id : SV_DispatchThreadID)
         // 0-1
         float n = snoise((pos+offsetNoise) * frequency + offsets[j]);
 
-        float v = 0;
-        // v = abs(n);
-        v = n;
-        v = v*v;
-        // v *= weight;
-        // weight = max(min(v*weightMultiplier,1),0);
-        noise += v * amplitude;
+        if(j >= 1){
+            n *= noise * multiFractalWeight;
+        }
+        
+        n = abs(f2 * n - f3);
+        n = f1 - n;
+        // n = n * 1.5 - 1.0;
+        if(b1)
+        {
+            n = clamp(n, 0, 1);
+
+        }
+        
+        // n = abs(2 * n - 1);
+        
+        noise += n * amplitude;
 
         amplitude *= persistence;
         frequency *= lacunarity;
     }
 
-    noise = abs(2 * noise - 1);
-
-    float ditherNoise = snoise((pos+offsetNoise) * frequency * 10 + offsets[j]) * 3;
+    // noise = abs(2 * noise - 1);  
 
     // The higher the position is, the less likely it is gonna appear.
-    float finalVal = -pos.y * heightGredient + floorOffset + ditherNoise + 
-    noise * noiseWeight + (pos.y%params.x) * params.y;
-
-    if (pos.y < hardFloor) {
-        finalVal += hardFloorWeight;
-    }
+    float finalVal = -pos.y * heightGredient + floorOffset + noise * noiseWeight;
 
     if (closeEdges) {
         float3 edgeOffset = abs(pos*2)-worldSize + spacing/2;

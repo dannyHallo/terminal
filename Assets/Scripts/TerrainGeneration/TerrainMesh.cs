@@ -22,7 +22,7 @@ public class TerrainMesh : MonoBehaviour
 
     [Header("Voxel Settings")]
     public float isoLevel;
-    public float boundsSize = 20;
+    public float boundSize = 20;
     Vector3 offset = Vector3.zero;
 
     // [Header("Gizmos")]
@@ -48,19 +48,18 @@ public class TerrainMesh : MonoBehaviour
     bool settingsUpdated;
     bool boundedMapGenerated = false;
 
-    public int maxChunksInViewHori;
-    public int maxChunksInViewVert;
-    public int maxChunksInViewHoriDisappear;
-    public int maxChunksInViewVertDisappear;
-    public int maxChunksInViewHoriPreload;
-    public int maxChunksInViewVertPreload;
+    int maxChunksInViewHoriMustLoad;
+    int maxChunksInViewVertMustLoad;
+    int maxChunksInViewHoriDisappear;
+    int maxChunksInViewVertDisappear;
+    int maxChunksInViewHori;
+    int maxChunksInViewVert;
 
     float loadTime;
 
     [System.Serializable]
     public struct LodSetup
     {
-        public int numPointsPerAxisPreview;
         public int numPointsPerAxis;
         public int viewDistanceHori;
         public int viewDistanceVert;
@@ -145,7 +144,7 @@ public class TerrainMesh : MonoBehaviour
     private Vector3Int GetViewerCoord()
     {
         Vector3 p = viewer.position;
-        Vector3 ps = p / boundsSize;
+        Vector3 ps = p / boundSize;
 
         // Indicates which chunk the viewer in in
         Vector3Int viewerCoord = new Vector3Int(
@@ -159,18 +158,18 @@ public class TerrainMesh : MonoBehaviour
 
     private void PrecalculateChunkBounds()
     {
-        maxChunksInViewHori = Mathf.CeilToInt(lodSetup.viewDistanceHori / boundsSize);
-        maxChunksInViewVert = Mathf.CeilToInt(lodSetup.viewDistanceVert / boundsSize);
+        maxChunksInViewHori = Mathf.CeilToInt(lodSetup.viewDistanceHori / boundSize);
+        maxChunksInViewVert = Mathf.CeilToInt(lodSetup.viewDistanceVert / boundSize);
+
+        maxChunksInViewHoriMustLoad = Mathf.CeilToInt(lodSetup.viewDistanceHori * 0.5f / boundSize);
+        maxChunksInViewVertMustLoad = Mathf.CeilToInt(lodSetup.viewDistanceVert * 0.5f / boundSize);
 
         maxChunksInViewHoriDisappear = Mathf.CeilToInt(
-            lodSetup.viewDistanceHori * 3.5f / boundsSize
+            lodSetup.viewDistanceHori * 3.5f / boundSize
         );
         maxChunksInViewVertDisappear = Mathf.CeilToInt(
-            lodSetup.viewDistanceVert * 3.5f / boundsSize
+            lodSetup.viewDistanceVert * 3.5f / boundSize
         );
-
-        maxChunksInViewHoriPreload = Mathf.CeilToInt(lodSetup.viewDistanceHori * 2.5f / boundsSize);
-        maxChunksInViewVertPreload = maxChunksInViewVert;
     }
 
     /// <summary>
@@ -212,48 +211,88 @@ public class TerrainMesh : MonoBehaviour
                 (
                     Mathf.Pow(currentCoord.x - viewerCoord.x, 2)
                     + Mathf.Pow(currentCoord.z - viewerCoord.z, 2)
-                ) > Mathf.Pow(maxChunksInViewHoriPreload, 2)
+                ) > Mathf.Pow(maxChunksInViewHori, 2)
             )
             {
                 chunkCoordsNeededToBeRendered.Remove(currentCoord);
             }
         }
+        int tryCount = 0;
 
-        int updatedChunkNum = 0;
-
-        for (int xzBound = 0; xzBound <= maxChunksInViewHoriPreload; xzBound++)
+        for (int xzBound = 0; xzBound <= maxChunksInViewHori; xzBound++)
         {
-            for (int yBound = 0; yBound <= maxChunksInViewVertPreload; yBound++)
+            int yBound = maxChunksInViewVert;
+            if (AllBoundCornersAreLoaded(xzBound, yBound))
+                continue;
+            for (int x = -xzBound; x <= xzBound; x++)
             {
-                for (int x = -xzBound; x <= xzBound; x++)
+                for (int z = -xzBound; z <= xzBound; z++)
                 {
                     for (int y = -yBound; y <= yBound; y++)
                     {
-                        for (int z = -xzBound; z <= xzBound; z++)
-                        {
-                            Vector3Int coord = new Vector3Int(
-                                x + viewerCoord.x,
-                                y,
-                                z + viewerCoord.z
-                            );
+                        Vector3Int coord = new Vector3Int(
+                            x + viewerCoord.x,
+                            y + viewerCoord.y,
+                            z + viewerCoord.z
+                        );
 
-                            // Keep the chunk unchanged
-                            if (existingChunks.ContainsKey(coord))
-                                continue;
+                        // Keep the chunk unchanged
+                        if (existingChunks.ContainsKey(coord))
+                            continue;
 
-                            updatedChunkNum += RenderChunk(coord, 0);
+                        if ((RenderChunk(coord, 0) != 0) || tryCount > 10)
                             goto renderedOnce;
-                        }
+
+                        tryCount++;
                     }
                 }
             }
         }
         renderedOnce:
+        // if (tryCount > 10)
+        // {
+        //     print("We searched " + tryCount + " chunks in this frame");
+        // }
+        return;
+    }
 
-        if (updatedChunkNum > 0)
-        {
-            print("We updated " + updatedChunkNum + " chunks in this frame");
-        }
+    private bool AllBoundCornersAreLoaded(int xzBound, int yBound)
+    {
+        Vector3Int viewerCoord = GetViewerCoord();
+        Vector3Int coord;
+        coord = new Vector3Int(
+            xzBound + viewerCoord.x,
+            yBound + viewerCoord.y,
+            xzBound + viewerCoord.z
+        );
+        if (!existingChunks.ContainsKey(coord))
+            return false;
+
+        coord = new Vector3Int(
+            xzBound + viewerCoord.x,
+            yBound + viewerCoord.y,
+            -xzBound + viewerCoord.z
+        );
+        if (!existingChunks.ContainsKey(coord))
+            return false;
+
+        coord = new Vector3Int(
+            -xzBound + viewerCoord.x,
+            yBound + viewerCoord.y,
+            xzBound + viewerCoord.z
+        );
+        if (!existingChunks.ContainsKey(coord))
+            return false;
+
+        coord = new Vector3Int(
+            -xzBound + viewerCoord.x,
+            yBound + viewerCoord.y,
+            -xzBound + viewerCoord.z
+        );
+        if (!existingChunks.ContainsKey(coord))
+            return false;
+
+        return true;
     }
 
     /// <param name="coord"></param>
@@ -304,8 +343,8 @@ public class TerrainMesh : MonoBehaviour
         CreateChunkHolderIfNeeded();
 
         // All chunks, no matter lod
-        int fixedChunksHori = Mathf.CeilToInt(lodSetup.fixedDistanceHori / boundsSize);
-        int fixedChunksVert = Mathf.CeilToInt(lodSetup.fixedDistanceVert / boundsSize);
+        int fixedChunksHori = Mathf.CeilToInt(lodSetup.fixedDistanceHori / boundSize);
+        int fixedChunksVert = Mathf.CeilToInt(lodSetup.fixedDistanceVert / boundSize);
 
         int updatedChunks = 0;
         for (int x = -fixedChunksHori; x <= fixedChunksHori; x++)
@@ -387,22 +426,22 @@ public class TerrainMesh : MonoBehaviour
         int numPointsPerAxis = lodSetup.numPointsPerAxis;
         List<Vector3Int> chunksNeedToBeUpdated = new List<Vector3Int>();
         int numPoints = numPointsPerAxis * numPointsPerAxis * numPointsPerAxis;
-        Vector3 ps = hitPoint / boundsSize;
+        Vector3 ps = hitPoint / boundSize;
         Vector3Int originalHittingCoord = new Vector3Int(
             Mathf.RoundToInt(ps.x),
             Mathf.RoundToInt(ps.y),
             Mathf.RoundToInt(ps.z)
         );
         Vector3 centre = CentreFromCoord(originalHittingCoord);
-        float pointSpacing = boundsSize / (numPointsPerAxis - 1);
+        float pointSpacing = boundSize / (numPointsPerAxis - 1);
         // The exact chunk the player is drawing at
         //print(hitCoord);
 
         // Get idVector from hitpoint
         Vector3 IdVector = new Vector3(
-            ((hitPoint - centre).x + boundsSize / 2) / pointSpacing,
-            ((hitPoint - centre).y + boundsSize / 2) / pointSpacing,
-            ((hitPoint - centre).z + boundsSize / 2) / pointSpacing
+            ((hitPoint - centre).x + boundSize / 2) / pointSpacing,
+            ((hitPoint - centre).y + boundSize / 2) / pointSpacing,
+            ((hitPoint - centre).z + boundSize / 2) / pointSpacing
         );
         //print("originalHittingCoord: " + originalHittingCoord);
         // print("IdVector: " + IdVector);
@@ -855,17 +894,17 @@ public class TerrainMesh : MonoBehaviour
         if (Application.isPlaying)
             numPointsPerAxis = lodSetup.numPointsPerAxis;
         else
-            numPointsPerAxis = lodSetup.numPointsPerAxisPreview;
+            numPointsPerAxis = lodSetup.numPointsPerAxis;
 
         int numVoxelsPerAxis = numPointsPerAxis - 1;
         // A thread contains several mini threads
         int numThreadsPerAxis = Mathf.CeilToInt(numVoxelsPerAxis / (float)threadGroupSize);
-        float pointSpacing = boundsSize / (numPointsPerAxis - 1);
+        float pointSpacing = boundSize / (numPointsPerAxis - 1);
 
         Vector3Int coord = chunk.coord;
         Vector3 centre = CentreFromCoord(coord);
 
-        Vector3 worldBounds = new Vector3(numChunks.x, numChunks.y, numChunks.z) * boundsSize;
+        Vector3 worldBounds = new Vector3(numChunks.x, numChunks.y, numChunks.z) * boundSize;
 
         // Indecator of the points are full or empty
         int[] pointStatusData = new int[2];
@@ -880,7 +919,7 @@ public class TerrainMesh : MonoBehaviour
             additionalPointsBuffer,
             pointsStatus,
             numPointsPerAxis,
-            boundsSize,
+            boundSize,
             worldBounds,
             centre,
             offset,
@@ -945,16 +984,12 @@ public class TerrainMesh : MonoBehaviour
     public void UpdateAllChunks()
     {
         additionalPointsBuffer = new ComputeBuffer(
-            lodSetup.numPointsPerAxisPreview
-                * lodSetup.numPointsPerAxisPreview
-                * lodSetup.numPointsPerAxisPreview,
+            lodSetup.numPointsPerAxis * lodSetup.numPointsPerAxis * lodSetup.numPointsPerAxis,
             sizeof(float)
         );
         additionalPointsBuffer.SetData(
             new float[
-                lodSetup.numPointsPerAxisPreview
-                    * lodSetup.numPointsPerAxisPreview
-                    * lodSetup.numPointsPerAxisPreview
+                lodSetup.numPointsPerAxis * lodSetup.numPointsPerAxis * lodSetup.numPointsPerAxis
             ]
         );
 
@@ -989,7 +1024,7 @@ public class TerrainMesh : MonoBehaviour
 
             numVoxelsPerAxis = Application.isPlaying
                 ? lodSetup.numPointsPerAxis - 1
-                : lodSetup.numPointsPerAxisPreview - 1;
+                : lodSetup.numPointsPerAxis - 1;
 
             numPoints = Application.isPlaying
                 ? (int)Mathf.Pow(lodSetup.numPointsPerAxis, 3)
@@ -1032,11 +1067,11 @@ public class TerrainMesh : MonoBehaviour
         // Centre entire map at origin
         if (fixedMapSize)
         {
-            Vector3 totalBounds = (Vector3)numChunks * boundsSize;
-            return -totalBounds / 2 + (Vector3)coord * boundsSize + Vector3.one * boundsSize / 2;
+            Vector3 totalBounds = (Vector3)numChunks * boundSize;
+            return -totalBounds / 2 + (Vector3)coord * boundSize + Vector3.one * boundSize / 2;
         }
 
-        return new Vector3(coord.x, coord.y, coord.z) * boundsSize;
+        return new Vector3(coord.x, coord.y, coord.z) * boundSize;
     }
 
     void CreateChunkHolderIfNeeded()
@@ -1188,9 +1223,9 @@ public class TerrainMesh : MonoBehaviour
                 (this.chunks == null) ? new List<Chunk>(FindObjectsOfType<Chunk>()) : this.chunks;
             foreach (var chunk in chunks)
             {
-                Bounds bounds = new Bounds(CentreFromCoord(chunk.coord), Vector3.one * boundsSize);
+                Bounds bounds = new Bounds(CentreFromCoord(chunk.coord), Vector3.one * boundSize);
                 Gizmos.color = boundsGizmoCol;
-                Gizmos.DrawWireCube(CentreFromCoord(chunk.coord), Vector3.one * boundsSize);
+                Gizmos.DrawWireCube(CentreFromCoord(chunk.coord), Vector3.one * boundSize);
             }
         }
     }
