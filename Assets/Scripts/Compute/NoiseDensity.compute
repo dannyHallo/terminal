@@ -53,24 +53,17 @@ void Density (int3 id : SV_DispatchThreadID)
     float amplitude = 1;
     float weight = 1;
     for (int j = 0; j < octaves; j++) {
-        // 0-1
+        // -1 -> 1
         float n = snoise((pos+offsetNoise) * frequency + offsets[j]);
 
+        
+        
+        n = abs(n);
+        n = - n + 1;
+        
         if(j >= 1){
             n *= noise * multiFractalWeight;
         }
-        
-        n = abs(f2 * n - f3);
-        n = f1 - n;
-        // n = n * 1.5 - 1.0;
-        if(b1)
-        {
-            n = clamp(n, 0, 1);
-
-        }
-        
-        // n = abs(2 * n - 1);
-        
         noise += n * amplitude;
 
         amplitude *= persistence;
