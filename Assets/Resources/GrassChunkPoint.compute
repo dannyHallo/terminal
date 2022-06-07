@@ -1,0 +1,65 @@
+#pragma kernel InitializeGrassChunk
+
+// #include "Simplex.compute"
+#include "Assets/Scripts/Compute/Includes/Noise.compute"
+
+struct GrassData {
+    float4 position;
+    float2 uv;
+    float displacement;
+};
+
+RWStructuredBuffer<GrassData> _GrassDataBuffer;
+// Texture2D<float4> _HeightMap;
+SamplerState sampler_HeightMap;
+
+int _Dimension, scale, numGrassesPerAxis;
+
+float chunkBoundSize;
+float3 centre;
+float3 offset;
+float spacing;
+
+float _DisplacementStrength;
+
+[numthreads(8,8,1)]
+void InitializeGrassChunk(uint3 id : SV_DispatchThreadID) {
+    if (id.x < uint(numGrassesPerAxis - 1) && id.y < uint(numGrassesPerAxis - 1)) {
+
+        GrassData grass;
+
+        float4 pos = 0.0f;
+        pos.w = 0.0f;       // Out of order
+        pos.x = centre.x - chunkBoundSize/2 + id.x * spacing;
+        pos.z = centre.z - chunkBoundSize/2 + id.y * spacing;
+
+        // float dimension = float(_Dimension);
+        float chunkDimension = float(numGrassesPerAxis);
+        // float scaledDimension = dimension * scale;
+
+        // Offset slightly
+        pos.x += snoise(float3(pos.xz, 0.0f) * 5.0f) * spacing * 0.5f;
+        pos.z += snoise(float3(pos.xz, 0.0f) * 5.0f) * spacing * 0.5f;
+        
+        // Vertical displacement
+        float4 displacement = 0.0f;
+        // pos.y += displacement.r * _DisplacementStrength + 0.5f;
+        float verticalDisplacementFac = 0.1f;
+        pos.y += snoise(float3(pos.xz, 0.0f) * 5.0f) * verticalDisplacementFac;
+
+        // 2D noise
+        float noise = abs(snoise(float3(pos.xz, 0.0f) * 2.2f));
+
+        float2 uv = 0.0f;
+
+        // grass.position = pos;
+        // grass.displacement = displacement.r * _DisplacementStrength;
+        // grass.uv = uv;
+
+        grass.position = pos;
+        grass.displacement = 0.0f;
+        grass.uv = 0.0f;
+
+        _GrassDataBuffer[id.x + id.y * numGrassesPerAxis] = grass;
+    }
+}

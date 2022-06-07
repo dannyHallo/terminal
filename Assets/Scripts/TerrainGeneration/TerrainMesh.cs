@@ -5,10 +5,10 @@ using UnityEngine;
 public class TerrainMesh : MonoBehaviour
 {
     const int threadGroupSize = 8;
+    public NoiseDensity noiseDensity;
+    public ModelGrass modelGrass;
 
     [Header("General Settings")]
-    public NoiseDensity noiseDensity;
-
     public bool fixedMapSize;
 
     // Nums of chunks to generate
@@ -47,7 +47,6 @@ public class TerrainMesh : MonoBehaviour
     float changeFactor = -0.6f;
     bool settingsUpdated;
     bool boundedMapGenerated = false;
-
     int maxChunksInViewHoriMustLoad;
     int maxChunksInViewVertMustLoad;
     int maxChunksInViewHoriDisappear;
@@ -67,7 +66,7 @@ public class TerrainMesh : MonoBehaviour
         public int fixedDistanceVert;
     }
 
-    void Awake()
+    private void Awake()
     {
         if (Application.isPlaying)
         {
@@ -75,6 +74,7 @@ public class TerrainMesh : MonoBehaviour
             ReleaseBuffers();
             InitVariableChunkStructures();
             PrecalculateChunkBounds();
+            modelGrass.Init(boundSize);
             DestroyOldChunks();
         }
     }
@@ -97,6 +97,7 @@ public class TerrainMesh : MonoBehaviour
         // Editor update
         else if (settingsUpdated)
         {
+            // modelGrass.Init(boundSize, lodSetup.numPointsPerAxis);
             RequestMeshUpdate();
             settingsUpdated = false;
         }
@@ -115,7 +116,9 @@ public class TerrainMesh : MonoBehaviour
 
         if (!fixedMapSize)
         {
+            modelGrass.GenerateWind();
             UpdateSurroundingChunks();
+            modelGrass.DrawAllGrass(chunks);
             return;
         }
     }
@@ -315,8 +318,6 @@ public class TerrainMesh : MonoBehaviour
 
         chunk.coord = coord;
         chunk.SetUp(mat, generateColliders);
-        existingChunks.Add(coord, chunk);
-        chunks.Add(chunk);
 
         additionalPointsBuffer = new ComputeBuffer(numPoints, sizeof(float));
 
@@ -331,6 +332,9 @@ public class TerrainMesh : MonoBehaviour
             renderedChunks += UpdateChunkMesh(chunk, additionalPointsBuffer);
         }
         additionalPointsBuffer.Release();
+
+        existingChunks.Add(coord, chunk);
+        chunks.Add(chunk);
 
         return renderedChunks;
     }
@@ -400,8 +404,8 @@ public class TerrainMesh : MonoBehaviour
     {
         if (!existingChunkVolumeData.ContainsKey(chunkCoord))
         {
-            int numPointsPerAxis = lodSetup.numPointsPerAxis;
-            int numPoints = numPointsPerAxis * numPointsPerAxis * numPointsPerAxis;
+            int numPoints =
+                lodSetup.numPointsPerAxis * lodSetup.numPointsPerAxis * lodSetup.numPointsPerAxis;
             float[] chunkVolumeData = new float[numPoints];
             existingChunkVolumeData.Add(chunkCoord, chunkVolumeData);
         }
@@ -890,13 +894,9 @@ public class TerrainMesh : MonoBehaviour
     /// <returns>0: Inactive chunk, 1: Active chunk</returns>
     public int UpdateChunkMesh(Chunk chunk, ComputeBuffer additionalPointsBuffer)
     {
-        int numPointsPerAxis = 0;
-        if (Application.isPlaying)
-            numPointsPerAxis = lodSetup.numPointsPerAxis;
-        else
-            numPointsPerAxis = lodSetup.numPointsPerAxis;
-
+        int numPointsPerAxis = lodSetup.numPointsPerAxis;
         int numVoxelsPerAxis = numPointsPerAxis - 1;
+
         // A thread contains several mini threads
         int numThreadsPerAxis = Mathf.CeilToInt(numVoxelsPerAxis / (float)threadGroupSize);
         float pointSpacing = boundSize / (numPointsPerAxis - 1);
@@ -978,6 +978,12 @@ public class TerrainMesh : MonoBehaviour
         mesh.RecalculateNormals();
         chunk.UpdateColliders();
 
+        // Chunk grass is not initialized yet (not in registery)
+        if (Application.isPlaying && !existingChunks.ContainsValue(chunk))
+        {
+            modelGrass.InitializeGrassChunk(chunk, centre);
+        }
+
         return 1;
     }
 
@@ -1006,6 +1012,7 @@ public class TerrainMesh : MonoBehaviour
         if (Application.isPlaying)
         {
             ReleaseBuffers();
+            modelGrass.ClearGrassBuffer(chunks);
         }
     }
 
@@ -1184,7 +1191,6 @@ public class TerrainMesh : MonoBehaviour
     {
         if (!Application.isPlaying)
         {
-            // boundedMapGenerated = false;
             settingsUpdated = true;
         }
     }

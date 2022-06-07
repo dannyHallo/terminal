@@ -49,7 +49,7 @@ public class NoiseDensity : MonoBehaviour
 
     void OnValidate()
     {
-        if (FindObjectOfType<TerrainMesh>())
+        if (!Application.isPlaying && FindObjectOfType<TerrainMesh>())
         {
             FindObjectOfType<TerrainMesh>().RequestMeshUpdate();
         }

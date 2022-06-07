@@ -1,10 +1,9 @@
 ﻿// The function name
 #pragma kernel Density
-#include "/Includes/Noise.compute"
-#include "/Includes/Density.compute"
+#include "Assets/Scripts/Compute/Includes/Noise.compute"
+// #include "Packages/jp.keijiro.noiseshader/Shader/ClassicNoise3D.hlsl"
 
-#include "Packages/jp.keijiro.noiseshader/Shader/ClassicNoise3D.hlsl"
-#include "Packages/jp.keijiro.noiseshader/Shader/SimplexNoise3D.hlsl"
+static const int numThreads = 8;
 
 // Noise settings
 StructuredBuffer<float3> offsets;
@@ -12,22 +11,27 @@ RWStructuredBuffer<float> manualData;
 RWStructuredBuffer<int> pointsStatus;
 
 int octaves;
-float lacunarity;
-float persistence;
-float noiseScale;
-float noiseWeight;
-float floorOffset;
-float heightGredient;
-float multiFractalWeight;
+float lacunarity, persistence, noiseScale, noiseWeight, floorOffset, 
+heightGredient, multiFractalWeight;
+
 bool closeEdges;
-bool b1;
-bool b2;
-float f1;
-float f2;
-float f3;
+bool b1, b2;
+float f1, f2, f3;
+
 float4 params;
 float isoLevel;
 
+RWStructuredBuffer<float4> points;
+int numPointsPerAxis;
+float boundsSize;
+float3 centre;
+float3 offset;
+float spacing;
+float3 worldSize;
+
+int indexFromCoord(uint x, uint y, uint z) {
+    return z * numPointsPerAxis * numPointsPerAxis + y * numPointsPerAxis + x;
+}
 
 [numthreads(numThreads,numThreads,numThreads)]
 void Density (int3 id : SV_DispatchThreadID)
@@ -40,10 +44,7 @@ void Density (int3 id : SV_DispatchThreadID)
     }
     
     // World pos
-    float3 pos3D = centre + id * spacing - boundsSize/2;
-    float3 pos = 0;
-    pos = pos3D;
-    // pos.xz = pos3D.xz;
+    float3 pos = centre + id * spacing - boundsSize/2;
 
     float offsetNoise = 0;
     
@@ -56,8 +57,6 @@ void Density (int3 id : SV_DispatchThreadID)
         // -1 -> 1
         float n = snoise((pos+offsetNoise) * frequency + offsets[j]);
 
-        
-        
         n = abs(n);
         n = - n + 1;
         
@@ -69,8 +68,6 @@ void Density (int3 id : SV_DispatchThreadID)
         amplitude *= persistence;
         frequency *= lacunarity;
     }
-
-    // noise = abs(2 * noise - 1);  
 
     // The higher the position is, the less likely it is gonna appear.
     float finalVal = -pos.y * heightGredient + floorOffset + noise * noiseWeight;

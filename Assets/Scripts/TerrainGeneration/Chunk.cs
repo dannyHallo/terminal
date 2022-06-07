@@ -15,6 +15,12 @@ public class Chunk : MonoBehaviour
     bool generateCollider;
     bool setuped = false;
 
+    public ComputeBuffer argsBuffer;
+    public ComputeBuffer argsBufferLOD;
+    public ComputeBuffer positionsBuffer;
+    public ComputeBuffer culledPositionsBuffer;
+    public Material grassMaterial;
+
     public void DestroyOrDisable()
     {
         if (Application.isPlaying)

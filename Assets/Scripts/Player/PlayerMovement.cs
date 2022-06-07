@@ -104,7 +104,7 @@ public class PlayerMovement : MonoBehaviour
             if (PlayerWantsToUnlockCursor())
                 UnlockCursor();
             Movement(true);
-            CheckRay();
+            // CheckRay();
             CheckScreenShot();
         }
     }

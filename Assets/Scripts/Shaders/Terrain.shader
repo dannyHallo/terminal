@@ -1,4 +1,4 @@
-﻿Shader "Custom/Terrain"
+Shader "Custom/Terrain"
 {
     Properties
     {
@@ -45,7 +45,7 @@
             // Metallic and smoothness come from slider variables
             o.Metallic = _Metallic;
             o.Smoothness = _Glossiness;
-           }
+        }
         ENDCG
     }
     FallBack "Diffuse"
