@@ -10,6 +10,7 @@ public class TerrainMesh : MonoBehaviour
 
     [Header("General Settings")]
     public bool fixedMapSize;
+    public bool drawGrass;
 
     // Nums of chunks to generate
     // Show this variable when fixedMapSize is true
@@ -21,7 +22,6 @@ public class TerrainMesh : MonoBehaviour
     public Material mat;
 
     [Header("Voxel Settings")]
-    public float isoLevel;
     public float boundSize = 20;
     Vector3 offset = Vector3.zero;
 
@@ -34,6 +34,7 @@ public class TerrainMesh : MonoBehaviour
 
     GameObject chunkHolder;
     List<Chunk> chunks;
+    List<Chunk> activeChunks;
     Dictionary<Vector3Int, Chunk> existingChunks;
     List<Vector3Int> chunkCoordsNeededToBeRendered;
     Dictionary<Vector3Int, float[]> existingChunkVolumeData;
@@ -54,11 +55,10 @@ public class TerrainMesh : MonoBehaviour
     int maxChunksInViewHori;
     int maxChunksInViewVert;
 
-    float loadTime;
-
     [System.Serializable]
     public struct LodSetup
     {
+        [Header("8n")]
         public int numPointsPerAxis;
         public int viewDistanceHori;
         public int viewDistanceVert;
@@ -70,22 +70,27 @@ public class TerrainMesh : MonoBehaviour
     {
         if (Application.isPlaying)
         {
-            loadTime = 0;
-            ReleaseBuffers();
+            DestroyOldChunks();
             InitVariableChunkStructures();
             PrecalculateChunkBounds();
-            modelGrass.Init(boundSize);
-            DestroyOldChunks();
         }
     }
 
     void DestroyOldChunks()
     {
-        // Destroy all chunks by searching all objects contains Chunk script
-        var oldChunks = FindObjectsOfType<Chunk>();
+        var oldChunks = FindObjectsOfType<Chunk>(true);
         for (int i = 0; i < oldChunks.Length; i++)
         {
-            Destroy(oldChunks[i].gameObject);
+            oldChunks[i].DestroyAndClearBuffer();
+        }
+    }
+
+    void ReleaseExistingChunkBuffers()
+    {
+        var oldChunks = FindObjectsOfType<Chunk>(true);
+        for (int i = 0; i < oldChunks.Length; i++)
+        {
+            oldChunks[i].FreeBuffers();
         }
     }
 
@@ -94,19 +99,19 @@ public class TerrainMesh : MonoBehaviour
         // Playing update
         if (Application.isPlaying)
             RuntimeUpdatePerFrame();
+
         // Editor update
         else if (settingsUpdated)
         {
-            // modelGrass.Init(boundSize, lodSetup.numPointsPerAxis);
             RequestMeshUpdate();
             settingsUpdated = false;
         }
-        loadTime += Time.deltaTime;
     }
 
     private void RuntimeUpdatePerFrame()
     {
         CreateBuffers();
+        modelGrass.InitIfNeeded(boundSize, lodSetup.numPointsPerAxis);
 
         if (fixedMapSize && !boundedMapGenerated)
         {
@@ -116,21 +121,23 @@ public class TerrainMesh : MonoBehaviour
 
         if (!fixedMapSize)
         {
-            modelGrass.GenerateWind();
             UpdateSurroundingChunks();
-            modelGrass.DrawAllGrass(chunks);
+            if (drawGrass)
+                modelGrass.DrawAllGrass(activeChunks);
             return;
         }
     }
 
     public void RequestMeshUpdate()
     {
+        ReleaseBuffers();
         CreateBuffers();
 
+        modelGrass.InitIfNeeded(boundSize, lodSetup.numPointsPerAxis);
         InitChunks();
         UpdateAllChunks();
+        // modelGrass.DrawAllGrass(chunks);
 
-        // Release buffers immediately in editor
         ReleaseBuffers();
     }
 
@@ -138,6 +145,7 @@ public class TerrainMesh : MonoBehaviour
     {
         recycleableChunks = new Queue<Chunk>();
         chunks = new List<Chunk>();
+        activeChunks = new List<Chunk>();
         chunkCoordsNeededToBeRendered = new List<Vector3Int>();
         existingChunks = new Dictionary<Vector3Int, Chunk>();
         existingChunkVolumeData = new Dictionary<Vector3Int, float[]>();
@@ -201,8 +209,12 @@ public class TerrainMesh : MonoBehaviour
             )
             {
                 existingChunks.Remove(chunk.coord);
-                chunk.DestroyOrDisable();
+                chunk.DestroyAndClearBuffer();
                 chunks.RemoveAt(i);
+                if (activeChunks.Contains(chunk))
+                {
+                    activeChunks.Remove(chunk);
+                }
             }
         }
 
@@ -243,7 +255,7 @@ public class TerrainMesh : MonoBehaviour
                         if (existingChunks.ContainsKey(coord))
                             continue;
 
-                        if ((RenderChunk(coord, 0) != 0) || tryCount > 10)
+                        if ((RenderChunk(coord) != 0) || tryCount > 10)
                             goto renderedOnce;
 
                         tryCount++;
@@ -251,7 +263,7 @@ public class TerrainMesh : MonoBehaviour
                 }
             }
         }
-        renderedOnce:
+    renderedOnce:
         // if (tryCount > 10)
         // {
         //     print("We searched " + tryCount + " chunks in this frame");
@@ -300,7 +312,7 @@ public class TerrainMesh : MonoBehaviour
 
     /// <param name="coord"></param>
     /// <returns>The chunk is worth render (1) or not (0)</returns>
-    private int RenderChunk(Vector3Int coord, int i)
+    private int RenderChunk(Vector3Int coord)
     {
         if (existingChunks.ContainsKey(coord))
         {
@@ -335,7 +347,10 @@ public class TerrainMesh : MonoBehaviour
 
         existingChunks.Add(coord, chunk);
         chunks.Add(chunk);
-
+        if (renderedChunks == 1)
+        {
+            activeChunks.Add(chunk);
+        }
         return renderedChunks;
     }
 
@@ -396,7 +411,6 @@ public class TerrainMesh : MonoBehaviour
         if (updatedChunks == 0)
         {
             boundedMapGenerated = true;
-            print("Loadtime: " + loadTime);
         }
     }
 
@@ -896,7 +910,7 @@ public class TerrainMesh : MonoBehaviour
     {
         int numPointsPerAxis = lodSetup.numPointsPerAxis;
         int numVoxelsPerAxis = numPointsPerAxis - 1;
-
+        float isoLevel = 0;
         // A thread contains several mini threads
         int numThreadsPerAxis = Mathf.CeilToInt(numVoxelsPerAxis / (float)threadGroupSize);
         float pointSpacing = boundSize / (numPointsPerAxis - 1);
@@ -913,8 +927,12 @@ public class TerrainMesh : MonoBehaviour
         ComputeBuffer pointsStatus = new ComputeBuffer(2, sizeof(int));
         pointsStatus.SetData(pointStatusData);
 
+        // Chunk grass is not initialized yet (not in registery)
+        modelGrass.InitializeGrassChunkIfNeeded(chunk, centre, numPointsPerAxis);
+
         // Gerenate individual noise value using compute shader， modifies pointsBuffer
         noiseDensity.Generate(
+            chunk,
             pointsBuffer,
             additionalPointsBuffer,
             pointsStatus,
@@ -978,12 +996,8 @@ public class TerrainMesh : MonoBehaviour
         mesh.RecalculateNormals();
         chunk.UpdateColliders();
 
-        // Chunk grass is not initialized yet (not in registery)
-        if (Application.isPlaying && !existingChunks.ContainsValue(chunk))
-        {
-            modelGrass.InitializeGrassChunk(chunk, centre);
-        }
-
+        // Dispatch grass chunk point shader
+        modelGrass.CalculateGrassPos(chunk);
         return 1;
     }
 
@@ -1012,7 +1026,7 @@ public class TerrainMesh : MonoBehaviour
         if (Application.isPlaying)
         {
             ReleaseBuffers();
-            modelGrass.ClearGrassBuffer(chunks);
+            modelGrass.ClearGrassBufferIfNeeded();
         }
     }
 
@@ -1057,6 +1071,9 @@ public class TerrainMesh : MonoBehaviour
 
     void ReleaseBuffers()
     {
+        modelGrass.ClearGrassBufferIfNeeded();
+        ReleaseExistingChunkBuffers();
+
         if (triangleBuffer != null)
         {
             triangleBuffer.Release();
@@ -1122,6 +1139,11 @@ public class TerrainMesh : MonoBehaviour
         else
             chunks = new List<Chunk>();
 
+        if (activeChunks != null)
+            activeChunks.Clear();
+        else
+            activeChunks = new List<Chunk>();
+
         List<Chunk> oldChunks = FindChunkInChildWithTag(chunkHolder);
 
         // Go through all coords and create a chunk there if one doesn't already exist
@@ -1162,7 +1184,7 @@ public class TerrainMesh : MonoBehaviour
         // Delete all unused old chunks
         for (int i = 0; i < oldChunks.Count; i++)
         {
-            oldChunks[i].DestroyOrDisable();
+            oldChunks[i].DestroyAndClearBuffer();
         }
     }
 
@@ -1226,7 +1248,7 @@ public class TerrainMesh : MonoBehaviour
             Gizmos.color = boundsGizmoCol;
 
             List<Chunk> chunks =
-                (this.chunks == null) ? new List<Chunk>(FindObjectsOfType<Chunk>()) : this.chunks;
+                (this.chunks == null) ? new List<Chunk>(FindObjectsOfType<Chunk>(false)) : this.chunks;
             foreach (var chunk in chunks)
             {
                 Bounds bounds = new Bounds(CentreFromCoord(chunk.coord), Vector3.one * boundSize);

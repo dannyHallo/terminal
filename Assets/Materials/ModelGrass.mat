@@ -62,7 +62,7 @@ Material:
     - _DetailNormalMapScale: 1
     - _Droop: 1.25
     - _DstBlend: 0
-    - _FogDensity: 0.005
+    - _FogDensity: 0
     - _FogOffset: 0
     - _GlossMapScale: 1
     - _Glossiness: 0.5
@@ -79,15 +79,15 @@ Material:
     - _UVSec: 0
     - _WindStrength: 0.5
     - _ZWrite: 1
-    - bottomThickness: 1
-    - overallScale: 2
-    - verticalScale: 1.1
-    - verticalStretchDueToHeight: 0.076
+    - bottomThickness: 1.4
+    - overallScale: 2.91
+    - verticalScale: 1.95
+    - verticalStretchDueToHeight: 0.238
     m_Colors:
-    - _AOColor: {r: 0.7169812, g: 0.6670869, b: 0.65272343, a: 1}
+    - _AOColor: {r: 0.27058828, g: 0.8867066, b: 1, a: 1}
     - _Albedo: {r: 0.84029955, g: 1, b: 0.740566, a: 1}
-    - _Albedo1: {r: 0.18066102, g: 0.4056604, b: 0, a: 1}
-    - _Albedo2: {r: 0.39703214, g: 1, b: 0, a: 1}
+    - _Albedo1: {r: 0, g: 0.82287943, b: 0.83137256, a: 1}
+    - _Albedo2: {r: 0.33333337, g: 0.8682585, b: 1, a: 1}
     - _Color: {r: 1, g: 1, b: 1, a: 1}
     - _EmissionColor: {r: 0, g: 0, b: 0, a: 1}
     - _FogColor: {r: 0.9386792, g: 1, b: 0.9829519, a: 1}

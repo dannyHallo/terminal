@@ -8,8 +8,6 @@
 
 struct GrassData {
     float4 position;
-    float2 uv;
-    float displacement;
 };
 
 RWStructuredBuffer<uint> _ArgsBuffer;
@@ -122,7 +120,7 @@ void ScanGroupSums(uint3 id : SV_DISPATCHTHREADID, uint groupIndex : SV_GROUPIND
     }
 
     if (tid == 0)
-        grouptemp[_NumOfGroups - 1] = 0;
+    grouptemp[_NumOfGroups - 1] = 0;
 
     for (d = 1; d < _NumOfGroups; d *= 2) {
         offset >>= 1;

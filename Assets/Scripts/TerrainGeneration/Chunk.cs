@@ -18,23 +18,46 @@ public class Chunk : MonoBehaviour
     public ComputeBuffer argsBuffer;
     public ComputeBuffer argsBufferLOD;
     public ComputeBuffer positionsBuffer;
+    public ComputeBuffer groundLevelDataBuffer;
     public ComputeBuffer culledPositionsBuffer;
     public Material grassMaterial;
 
-    public void DestroyOrDisable()
+    public void DestroyAndClearBuffer()
     {
         if (Application.isPlaying)
         {
             Destroy(mesh);
             Destroy(meshFilter);
             mesh.Clear();
-            // gameObject.SetActive(false);
             Destroy(this.gameObject);
         }
         else
         {
             DestroyImmediate(gameObject, false);
         }
+        FreeBuffers();
+
+    }
+
+    public void FreeBuffers()
+    {
+        if (positionsBuffer == null)
+            return;
+
+        positionsBuffer.Release();
+        positionsBuffer = null;
+
+        culledPositionsBuffer.Release();
+        culledPositionsBuffer = null;
+
+        argsBuffer.Release();
+        argsBuffer = null;
+
+        argsBufferLOD.Release();
+        argsBufferLOD = null;
+
+        groundLevelDataBuffer.Release();
+        groundLevelDataBuffer = null;
     }
 
     // Add components/get references in case lost (references can be lost when working in the editor)

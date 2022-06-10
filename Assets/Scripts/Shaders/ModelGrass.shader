@@ -44,14 +44,10 @@ Shader "Custom/ModelGrass" {
                 float2 uv : TEXCOORD0;
                 float4 vertex : SV_POSITION;
                 float4 worldPos : TEXCOORD1;
-                float noiseVal : TEXCOORD2;
-                float3 chunkNum : TEXCOORD3;
             };
 
             struct GrassData {
                 float4 position;
-                float2 uv;
-                float displacement;
             };
 
             sampler2D _WindTex;
@@ -109,44 +105,39 @@ Shader "Custom/ModelGrass" {
                 // Overall scale
                 localPosition *= overallScale * age;
 
-                float4 worldUV = float4(positionBuffer[instanceID].uv, 0, 0);
-                
-                // idHash = 0 -> sway = 0.8
-                // idHash = 1 -> sway = 1.0
-                // float windFac = v.uv.y * v.uv.y * (tex2Dlod(_WindTex, worldUV).r);
-                float windFrequency = 0.1f;
-                float windScale = 0.1f;
+                float windFrequency = 0.1f;     // Wind changing frequency
+                float windScale = 0.2f;         // Wind effect area
                 float numOctaves = 4;
                 float amplitude = 1;
                 float persistence = 0.6f;
-                float lacunarity = 1.6f;
+                float lacunarity = 1.4f;
 
-                float windFac = 0;
+                float windStrength = 0;
                 for(int j = 0; j < numOctaves; j++){
-                    float n = snoise(float3(
+                    float n = abs(snoise(float3(
                     (grassPosition.x * windScale + _Time.y), 
                     0.0f, 
-                    (grassPosition.z * windScale + _Time.y)) * windFrequency);
+                    (grassPosition.z * windScale + _Time.y)) * windFrequency));
                     
-                    windFac += n * amplitude;
+                    windStrength += n * amplitude;
 
                     amplitude *= persistence;
-                    windFrequency *= lacunarity;
+                    windScale *= lacunarity;
                 }
+                float2 windDirection = 0.0f;
+                float windChangeFrequency = 0.02f;
+                windDirection.x = snoise(float3(_Time.y * windChangeFrequency, 0 , 0));
+                windDirection.y = snoise(float3(_Time.y * windChangeFrequency + 10, 0 , 0));
+                windDirection = normalize(windDirection);
 
-                localPosition.xz += windFac * v.uv.y * tenderness * 5.0f;
+                localPosition.x += windDirection.x * windStrength * v.uv.y * tenderness * 2.0f;
+                localPosition.z += windDirection.y * windStrength * v.uv.y * tenderness * 2.0f;
                 
-                float4 worldPosition = float4(grassPosition.xyz + localPosition, 1.0f);
-
-                worldPosition.y -= positionBuffer[instanceID].displacement;
-                worldPosition.y += positionBuffer[instanceID].displacement;
+                float4 worldPosition = float4(grassPosition.xyz + localPosition, 0.0f);
                 
                 o.vertex = UnityObjectToClipPos(worldPosition);
                 o.uv = v.uv;
-                o.noiseVal = tex2Dlod(_WindTex, worldUV).r;
                 o.worldPos = worldPosition;
-                // o.chunkNum = float3(randValue(_ChunkNum * 20 + 1024), randValue(randValue(_ChunkNum) * 10 + 2048), randValue(_ChunkNum * 4 + 4096));
-
                 return o;
             }
 
@@ -157,8 +148,6 @@ Shader "Custom/ModelGrass" {
 
                 float4 ao = lerp(_AOColor, 1.0f, i.uv.y);
                 float4 tip = lerp(0.0f, _TipColor, i.uv.y * i.uv.y * (1.0f + verticalStretchDueToHeight));
-                //return fixed4(i.chunkNum, 1.0f);
-                //return i.noiseVal;
 
                 float4 grassColor = (col + tip) * ndotl * ao;
 

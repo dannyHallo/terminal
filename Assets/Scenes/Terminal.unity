@@ -1090,8 +1090,8 @@ MonoBehaviour:
   botName: Origin
   terrainMesh: {fileID: 0}
   screenShotMask: {fileID: 180104741}
-  walkingSpeed: 20
-  runningSpeed: 10
+  walkingSpeed: 120
+  runningSpeed: 240
   jumpSpeed: 30
   flySpeed: 160
   gravity: 100
@@ -1113,15 +1113,15 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 939415158}
-  m_LocalRotation: {x: -0, y: 0.8675853, z: -0, w: -0.4972884}
-  m_LocalPosition: {x: 5.343021, y: 0.44763184, z: 4.611959}
+  m_LocalRotation: {x: -0, y: 0.9848499, z: -0, w: 0.17340921}
+  m_LocalPosition: {x: 5.343021, y: 344.57, z: 4.611959}
   m_LocalScale: {x: 2, y: 2, z: 2}
   m_Children:
   - {fileID: 375528277}
   - {fileID: 305034492}
   m_Father: {fileID: 0}
   m_RootOrder: 0
-  m_LocalEulerAnglesHint: {x: 0, y: 239.64099, z: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 160.028, z: 0}
 --- !u!81 &939415164
 AudioListener:
   m_ObjectHideFlags: 0
@@ -1286,17 +1286,14 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 5155b32776785bf4f922086ef38d6a0d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  numGrassesPerAxis: 512
+  numGrassesPerAxis: 128
   grassMaterial: {fileID: 2100000, guid: eebc524fd64d0834aa31034c23d2fe01, type: 2}
   grassMesh: {fileID: 7629811779324647873, guid: df4fdd86fd2d684438697461e8af9c6a,
     type: 3}
   grassLODMesh: {fileID: 7629811779324647873, guid: d13af16486f285e4e8fd1b4d9ab77c97,
     type: 3}
   noLOD: 1
-  lodCutoff: 1000
-  windSpeed: 0.5
-  frequency: 1
-  windStrength: 0.1
+  lodCutoff: 100
 --- !u!114 &1227901944
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1312,18 +1309,18 @@ MonoBehaviour:
   noiseDensity: {fileID: 1227901946}
   modelGrass: {fileID: 1227901943}
   fixedMapSize: 0
-  numChunks: {x: 4, y: 3, z: 4}
+  drawGrass: 0
+  numChunks: {x: 1, y: 1, z: 1}
   viewer: {fileID: 939415163}
   lodSetup:
-    numPointsPerAxis: 16
-    viewDistanceHori: 100
-    viewDistanceVert: 100
-    fixedDistanceHori: 4000
-    fixedDistanceVert: 2000
+    numPointsPerAxis: 64
+    viewDistanceHori: 2500
+    viewDistanceVert: 1500
+    fixedDistanceHori: 100
+    fixedDistanceVert: 100
   shader: {fileID: 7200000, guid: e6675a5747764487687871eed95a316b, type: 3}
   mat: {fileID: 2100000, guid: d93366c815783437abcf8032ab99990b, type: 2}
-  isoLevel: 0
-  boundSize: 50
+  boundSize: 600
 --- !u!4 &1227901945
 Transform:
   m_ObjectHideFlags: 0
@@ -1350,24 +1347,24 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 39819c572c3204902847662df1fa9c6e, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  seed: 60
-  DragMeToUpdate: 0.019
+  seed: 31
+  DragMeToUpdate: 0.085
   numOctaves: 12
   lacunarity: 1.624
   persistence: 0.497
   noiseScale: 0.018
   heightGredient: 0.32
   multiFractalWeight: 1.07
-  noiseWeight: 0
+  noiseWeight: 289.4
   closeEdges: 0
   b1: 0
   b2: 0
   f1: 0
   f2: 0
   f3: 0
-  floorOffset: -0.52
+  floorOffset: -157.12
   shaderParams: {x: 0.28, y: 0, z: 0, w: 0}
-  densityShader: {fileID: 7200000, guid: 6f17253ba515b49de95452c1dcbdc45c, type: 3}
+  noiseDensityShader: {fileID: 7200000, guid: 6f17253ba515b49de95452c1dcbdc45c, type: 3}
 --- !u!1 &1294267559
 GameObject:
   m_ObjectHideFlags: 0
@@ -1819,7 +1816,7 @@ Transform:
   m_GameObject: {fileID: 1996619236}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 0.1, y: 0.1, z: 0.1}
+  m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 0}
   m_RootOrder: 7

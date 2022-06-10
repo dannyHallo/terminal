@@ -5,6 +5,7 @@ using UnityEngine;
 
 public class ModelGrass : MonoBehaviour
 {
+    [Header("8n")]
     public int numGrassesPerAxis = 12;
     public Material grassMaterial;
     public Mesh grassMesh;
@@ -13,24 +14,15 @@ public class ModelGrass : MonoBehaviour
 
     [Range(0, 1000.0f)]
     public float lodCutoff = 1000.0f;
+    private float chunkBoundsize;
 
-    [Header("Wind")]
-    public float windSpeed = 1.0f;
-    public float frequency = 1.0f;
-    public float windStrength = 1.0f;
-
-    private bool inited = false;
-    private ComputeShader GrassChunkPointShader,
-        WindNoiseShader,
-        cullGrassShader;
+    private ComputeShader grassChunkPointShader, cullGrassShader;
     private ComputeBuffer voteBuffer,
         scanBuffer,
         groupSumArrayBuffer,
         scannedGroupSumBuffer;
 
-    private RenderTexture wind;
-
-    private int grassesPerChunk,
+    private int numGrassesPerChunk,
         chunkDimension,
         numThreadGroups,
         numVoteThreadGroups,
@@ -41,24 +33,27 @@ public class ModelGrass : MonoBehaviour
     private struct GrassData
     {
         public Vector4 position;
-        public Vector2 uv;
-        public float displacement;
     }
+
+    private struct GroundLevelData
+    {
+        float twodeeHeight;
+    };
 
     uint[] args;
     uint[] argsLOD;
 
     Bounds fieldBounds;
 
-    public void Init(float chunkBoundSize)
+    public void InitIfNeeded(float chunkBoundsize, int numPointsPerAxis)
     {
-        if (inited)
+        if (voteBuffer != null)
             return;
 
-        float spacing = chunkBoundSize / (numGrassesPerAxis - 1);
-
-        grassesPerChunk = numGrassesPerAxis * numGrassesPerAxis;
-        numThreadGroups = Mathf.CeilToInt(grassesPerChunk / 128.0f);
+        this.chunkBoundsize = chunkBoundsize;
+        float spacing = chunkBoundsize / numGrassesPerAxis;
+        numGrassesPerChunk = numGrassesPerAxis * numGrassesPerAxis;
+        numThreadGroups = Mathf.CeilToInt(numGrassesPerChunk / 128.0f);
 
         // Make sure the num of threads are the power of two
         if (numThreadGroups > 128)
@@ -75,35 +70,22 @@ public class ModelGrass : MonoBehaviour
                 numThreadGroups++;
         }
 
-        numVoteThreadGroups = Mathf.CeilToInt(grassesPerChunk / 128.0f);
-        numGroupScanThreadGroups = Mathf.CeilToInt(grassesPerChunk / 1024.0f);
+        numVoteThreadGroups = Mathf.CeilToInt(numGrassesPerChunk / 128.0f);
+        numGroupScanThreadGroups = Mathf.CeilToInt(numGrassesPerChunk / 1024.0f);
 
-        GrassChunkPointShader = Resources.Load<ComputeShader>("GrassChunkPoint");
-        WindNoiseShader = Resources.Load<ComputeShader>("WindNoise");
+        grassChunkPointShader = Resources.Load<ComputeShader>("GrassChunkPoint");
         cullGrassShader = Resources.Load<ComputeShader>("CullGrass");
 
-        voteBuffer = new ComputeBuffer(grassesPerChunk, 4);
-        scanBuffer = new ComputeBuffer(grassesPerChunk, 4);
+        voteBuffer = new ComputeBuffer(numGrassesPerChunk, 4);
+        scanBuffer = new ComputeBuffer(numGrassesPerChunk, 4);
         groupSumArrayBuffer = new ComputeBuffer(numThreadGroups, 4);
         scannedGroupSumBuffer = new ComputeBuffer(numThreadGroups, 4);
 
-        GrassChunkPointShader.SetFloat("chunkBoundSize", chunkBoundSize);
-        GrassChunkPointShader.SetFloat("spacing", spacing);
+        grassChunkPointShader.SetFloat("chunkBoundSize", chunkBoundsize);
+        grassChunkPointShader.SetFloat("spacing", spacing);
 
-        GrassChunkPointShader.SetInt("numGrassesPerAxis", numGrassesPerAxis);
-        GrassChunkPointShader.SetInt("scale", numGrassesPerAxis);
-        // GrassChunkPointShader.SetTexture(0, "_HeightMap", heightMap);
-
-        wind = new RenderTexture(
-            1024,
-            1024,
-            0,
-            RenderTextureFormat.ARGBFloat,
-            RenderTextureReadWrite.Linear
-        );
-        wind.enableRandomWrite = true;
-        wind.Create();
-        numWindThreadGroups = Mathf.CeilToInt(wind.height / 8.0f);
+        grassChunkPointShader.SetInt("numGrassesPerAxis", numGrassesPerAxis);
+        grassChunkPointShader.SetInt("numPointsPerAxis", numPointsPerAxis);
 
         args = new uint[5] { 0, 0, 0, 0, 0 };
         args[0] = (uint)grassMesh.GetIndexCount(0);
@@ -119,18 +101,21 @@ public class ModelGrass : MonoBehaviour
 
         fieldBounds = new Bounds(
             Vector3.zero,
-            new Vector3(-chunkBoundSize, chunkBoundSize * 2, chunkBoundSize)
+            new Vector3(-chunkBoundsize, chunkBoundsize * 2, chunkBoundsize)
         );
-        inited = true;
     }
 
-    public void InitializeGrassChunk(Chunk chunk, Vector3 centre)
+
+
+    public void InitializeGrassChunkIfNeeded(Chunk chunk, Vector3 centre, int numPointsPerAxis)
     {
-        if (!inited)
+        if (voteBuffer == null)
         {
-            print("Please call GrassBufferInit before initialize grass chunk!");
+            print("init vote buffer!");
             return;
         }
+
+        chunk.FreeBuffers();
 
         // Create buffer to store grass mesh
         chunk.argsBuffer = new ComputeBuffer(
@@ -143,21 +128,27 @@ public class ModelGrass : MonoBehaviour
             5 * sizeof(uint),
             ComputeBufferType.IndirectArguments
         );
+        chunk.groundLevelDataBuffer = new ComputeBuffer(numPointsPerAxis * numPointsPerAxis,
+            SizeOf(typeof(GroundLevelData)));
 
         chunk.argsBuffer.SetData(args);
         chunk.argsBufferLOD.SetData(argsLOD);
 
-        chunk.positionsBuffer = new ComputeBuffer(grassesPerChunk, SizeOf(typeof(GrassData)));
-        chunk.culledPositionsBuffer = new ComputeBuffer(grassesPerChunk, SizeOf(typeof(GrassData)));
+        chunk.positionsBuffer = new ComputeBuffer(numGrassesPerChunk, SizeOf(typeof(GrassData)));
+        chunk.culledPositionsBuffer = new ComputeBuffer(numGrassesPerChunk, SizeOf(typeof(GrassData)));
 
-        GrassChunkPointShader.SetVector("centre", new Vector4(centre.x, centre.y, centre.z));
-        GrassChunkPointShader.SetBuffer(0, "_GrassDataBuffer", chunk.positionsBuffer);
-        GrassChunkPointShader.Dispatch(0, numGrassesPerAxis, numGrassesPerAxis, 1);
+        grassChunkPointShader.SetVector("centre", new Vector4(centre.x, centre.y, centre.z));
+        grassChunkPointShader.SetBuffer(0, "_GrassDataBuffer", chunk.positionsBuffer);
+        grassChunkPointShader.SetBuffer(0, "GroundLevelDataBuffer", chunk.groundLevelDataBuffer);
 
         chunk.grassMaterial = new Material(grassMaterial);
         chunk.grassMaterial.SetBuffer("positionBuffer", chunk.culledPositionsBuffer);
-        chunk.grassMaterial.SetTexture("_WindTex", wind);
-        // chunk.grassMaterial.SetInt("_ChunkNum", xOffset + yOffset * numChunks);
+    }
+
+    public void CalculateGrassPos(Chunk chunk)
+    {
+        int threadGroupNum = Mathf.CeilToInt(numGrassesPerAxis / (float)8);
+        grassChunkPointShader.Dispatch(0, threadGroupNum, threadGroupNum, 1);
     }
 
     void CullGrass(Chunk chunk, Matrix4x4 VP, bool noLOD)
@@ -200,15 +191,6 @@ public class ModelGrass : MonoBehaviour
         cullGrassShader.Dispatch(3, numThreadGroups, 1, 1);
     }
 
-    public void GenerateWind()
-    {
-        WindNoiseShader.SetTexture(0, "_WindMap", wind);
-        WindNoiseShader.SetFloat("_Time", Time.time);
-        WindNoiseShader.SetFloat("_Frequency", frequency);
-        WindNoiseShader.SetFloat("_Amplitude", windStrength);
-        WindNoiseShader.Dispatch(0, numWindThreadGroups, numWindThreadGroups, 1);
-    }
-
     public void DrawAllGrass(List<Chunk> chunks)
     {
         Matrix4x4 P = Camera.main.projectionMatrix;
@@ -226,10 +208,10 @@ public class ModelGrass : MonoBehaviour
 
     private void DrawGrassOnChunk(Chunk chunk, Matrix4x4 VP)
     {
-        // float dist = Vector3.Distance(Camera.main.transform.position, chunks[i].bounds.center);
-        // bool noLOD = dist < lodCutoff;
+        float dist = Vector3.Distance(Camera.main.transform.position, CentreFromCoord(chunk.coord));
+        bool noLOD = dist < lodCutoff;
+        // bool noLOD = this.noLOD;
 
-        bool noLOD = this.noLOD;
         CullGrass(chunk, VP, noLOD);
 
         if (noLOD)
@@ -250,38 +232,28 @@ public class ModelGrass : MonoBehaviour
             );
     }
 
-    public void ClearGrassBuffer(List<Chunk> chunks)
+    Vector3 CentreFromCoord(Vector3Int coord)
     {
-        if (!inited)
-            return;
+        return new Vector3(coord.x, coord.y, coord.z) * chunkBoundsize;
+    }
 
-        foreach (Chunk chunk in chunks)
-            FreeChunk(chunk);
+    public void ClearGrassBufferIfNeeded()
+    {
+        if (voteBuffer == null)
+            return;
 
         voteBuffer.Release();
-        scanBuffer.Release();
-        groupSumArrayBuffer.Release();
-        scannedGroupSumBuffer.Release();
-        wind.Release();
-        wind = null;
-        scannedGroupSumBuffer = null;
         voteBuffer = null;
+
+        scanBuffer.Release();
         scanBuffer = null;
+
+        groupSumArrayBuffer.Release();
         groupSumArrayBuffer = null;
+
+        scannedGroupSumBuffer.Release();
+        scannedGroupSumBuffer = null;
     }
 
-    void FreeChunk(Chunk chunk)
-    {
-        if (chunk.positionsBuffer == null)
-            return;
 
-        chunk.positionsBuffer.Release();
-        chunk.positionsBuffer = null;
-        chunk.culledPositionsBuffer.Release();
-        chunk.culledPositionsBuffer = null;
-        chunk.argsBuffer.Release();
-        chunk.argsBuffer = null;
-        chunk.argsBufferLOD.Release();
-        chunk.argsBufferLOD = null;
-    }
 }

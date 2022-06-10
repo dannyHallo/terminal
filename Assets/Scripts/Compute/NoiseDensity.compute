@@ -1,13 +1,17 @@
 ﻿// The function name
 #pragma kernel Density
 #include "Assets/Scripts/Compute/Includes/Noise.compute"
-// #include "Packages/jp.keijiro.noiseshader/Shader/ClassicNoise3D.hlsl"
 
 static const int numThreads = 8;
+
+struct GroundLevelData{
+    float twodeeHeight;
+};
 
 // Noise settings
 StructuredBuffer<float3> offsets;
 RWStructuredBuffer<float> manualData;
+RWStructuredBuffer<GroundLevelData> GroundLevelDataBuffer;
 RWStructuredBuffer<int> pointsStatus;
 
 int octaves;
@@ -36,12 +40,12 @@ int indexFromCoord(uint x, uint y, uint z) {
 [numthreads(numThreads,numThreads,numThreads)]
 void Density (int3 id : SV_DispatchThreadID)
 {
-    int index = indexFromCoord(id.x,id.y,id.z);
-    
     // Out of bound
     if (id.x >= numPointsPerAxis || id.y >= numPointsPerAxis || id.z >= numPointsPerAxis) {
         return;
     }
+
+    int index = indexFromCoord(id.x,id.y,id.z);
     
     // World pos
     float3 pos = centre + id * spacing - boundsSize/2;
@@ -55,7 +59,9 @@ void Density (int3 id : SV_DispatchThreadID)
     float weight = 1;
     for (int j = 0; j < octaves; j++) {
         // -1 -> 1
-        float n = snoise((pos+offsetNoise) * frequency + offsets[j]);
+        float3 noiseSamplePoint = (pos+offsetNoise) * frequency + offsets[j];
+        noiseSamplePoint.y = 0.0f;
+        float n = snoise(noiseSamplePoint);
 
         n = abs(n);
         n = - n + 1;
@@ -68,9 +74,10 @@ void Density (int3 id : SV_DispatchThreadID)
         amplitude *= persistence;
         frequency *= lacunarity;
     }
+    noise *= noiseWeight;
 
     // The higher the position is, the less likely it is gonna appear.
-    float finalVal = -pos.y * heightGredient + floorOffset + noise * noiseWeight;
+    float finalVal = -pos.y * heightGredient + floorOffset + noise;
 
     if (closeEdges) {
         float3 edgeOffset = abs(pos*2)-worldSize + spacing/2;
@@ -79,8 +86,11 @@ void Density (int3 id : SV_DispatchThreadID)
         
     }
 
-    finalVal = clamp(finalVal, isoLevel - 10, isoLevel + 10);
-    
+    if(id.y == 0){
+        GroundLevelDataBuffer[id.x + id.z * numPointsPerAxis].twodeeHeight = 
+        (noise + floorOffset) / heightGredient;
+    }
+
     if(finalVal + manualData[index] - isoLevel > 0)
     pointsStatus[0] = 1;
     if(finalVal + manualData[index] - isoLevel < 0)
