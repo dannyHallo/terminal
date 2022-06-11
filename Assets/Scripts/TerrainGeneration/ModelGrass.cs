@@ -99,10 +99,6 @@ public class ModelGrass : MonoBehaviour
         argsLOD[2] = (uint)grassLODMesh.GetIndexStart(0);
         argsLOD[3] = (uint)grassLODMesh.GetBaseVertex(0);
 
-        fieldBounds = new Bounds(
-            Vector3.zero,
-            new Vector3(-chunkBoundsize, chunkBoundsize * 2, chunkBoundsize)
-        );
     }
 
 
@@ -111,7 +107,7 @@ public class ModelGrass : MonoBehaviour
     {
         if (voteBuffer == null)
         {
-            print("init vote buffer!");
+            print("Init votebuffer!");
             return;
         }
 
@@ -213,6 +209,11 @@ public class ModelGrass : MonoBehaviour
         // bool noLOD = this.noLOD;
 
         CullGrass(chunk, VP, noLOD);
+
+        fieldBounds = new Bounds(
+            Vector3.zero,
+            new Vector3(float.MaxValue, float.MaxValue, float.MaxValue)
+        );
 
         if (noLOD)
             Graphics.DrawMeshInstancedIndirect(

@@ -19,7 +19,7 @@ public class NoiseDensity : MonoBehaviour
     [Range(0, 1)]
     public float persistence = .5f;
 
-    [Range(0, 0.04f)]
+    [Range(0, 1f)]
     public float noiseScale = 0.1f;
 
     [Range(0, 3f)]

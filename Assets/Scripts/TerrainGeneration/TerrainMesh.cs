@@ -172,14 +172,14 @@ public class TerrainMesh : MonoBehaviour
         maxChunksInViewHori = Mathf.CeilToInt(lodSetup.viewDistanceHori / boundSize);
         maxChunksInViewVert = Mathf.CeilToInt(lodSetup.viewDistanceVert / boundSize);
 
-        maxChunksInViewHoriMustLoad = Mathf.CeilToInt(lodSetup.viewDistanceHori * 0.5f / boundSize);
-        maxChunksInViewVertMustLoad = Mathf.CeilToInt(lodSetup.viewDistanceVert * 0.5f / boundSize);
+        // maxChunksInViewHoriMustLoad = Mathf.CeilToInt(lodSetup.viewDistanceHori * 0.5f / boundSize);
+        // maxChunksInViewVertMustLoad = Mathf.CeilToInt(lodSetup.viewDistanceVert * 0.5f / boundSize);
 
         maxChunksInViewHoriDisappear = Mathf.CeilToInt(
-            lodSetup.viewDistanceHori * 3.5f / boundSize
+            lodSetup.viewDistanceHori * 1.5f / boundSize
         );
         maxChunksInViewVertDisappear = Mathf.CeilToInt(
-            lodSetup.viewDistanceVert * 3.5f / boundSize
+            lodSetup.viewDistanceVert * 1.5f / boundSize
         );
     }
 
@@ -201,12 +201,9 @@ public class TerrainMesh : MonoBehaviour
             Chunk chunk = chunks[i];
             Vector3Int chunkCoord = chunk.coord;
 
-            if (
-                (
-                    Mathf.Pow(chunkCoord.x - viewerCoord.x, 2)
-                    + Mathf.Pow(chunkCoord.z - viewerCoord.z, 2)
-                ) > Mathf.Pow(maxChunksInViewHoriDisappear, 2)
-            )
+            if (Mathf.Abs(viewerCoord.x - chunkCoord.x) > maxChunksInViewHoriDisappear ||
+                Mathf.Abs(viewerCoord.y - chunkCoord.y) > maxChunksInViewVertDisappear ||
+                Mathf.Abs(viewerCoord.z - chunkCoord.z) > maxChunksInViewHoriDisappear)
             {
                 existingChunks.Remove(chunk.coord);
                 chunk.DestroyAndClearBuffer();
@@ -264,10 +261,6 @@ public class TerrainMesh : MonoBehaviour
             }
         }
     renderedOnce:
-        // if (tryCount > 10)
-        // {
-        //     print("We searched " + tryCount + " chunks in this frame");
-        // }
         return;
     }
 
@@ -281,31 +274,9 @@ public class TerrainMesh : MonoBehaviour
             xzBound + viewerCoord.z
         );
         if (!existingChunks.ContainsKey(coord))
+        {
             return false;
-
-        coord = new Vector3Int(
-            xzBound + viewerCoord.x,
-            yBound + viewerCoord.y,
-            -xzBound + viewerCoord.z
-        );
-        if (!existingChunks.ContainsKey(coord))
-            return false;
-
-        coord = new Vector3Int(
-            -xzBound + viewerCoord.x,
-            yBound + viewerCoord.y,
-            xzBound + viewerCoord.z
-        );
-        if (!existingChunks.ContainsKey(coord))
-            return false;
-
-        coord = new Vector3Int(
-            -xzBound + viewerCoord.x,
-            yBound + viewerCoord.y,
-            -xzBound + viewerCoord.z
-        );
-        if (!existingChunks.ContainsKey(coord))
-            return false;
+        }
 
         return true;
     }
@@ -316,10 +287,9 @@ public class TerrainMesh : MonoBehaviour
     {
         if (existingChunks.ContainsKey(coord))
         {
-            // print("Try to render " + coord + " but it is already exist! " + i);
+            print("Try to render " + coord + " but it already exists! ");
             return 0;
         }
-
         int renderedChunks = 0;
 
         int numPoints =

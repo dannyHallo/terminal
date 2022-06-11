@@ -219,7 +219,7 @@ Transform:
   m_LocalScale: {x: 100000, y: 1, z: 100000}
   m_Children: []
   m_Father: {fileID: 0}
-  m_RootOrder: 5
+  m_RootOrder: 4
   m_LocalEulerAnglesHint: {x: 180, y: 0, z: 0}
 --- !u!1 &180104739
 GameObject:
@@ -477,84 +477,6 @@ Transform:
   m_Father: {fileID: 939415163}
   m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!1 &410678711
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 410678713}
-  - component: {fileID: 410678712}
-  m_Layer: 0
-  m_Name: Colour Generator
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!114 &410678712
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 410678711}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 2a7f2fb7efcfa49e5be67c9dde95e073, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  mat: {fileID: 2100000, guid: d93366c815783437abcf8032ab99990b, type: 2}
-  normalOffsetWeight: -460.7
-  gradient:
-    serializedVersion: 2
-    key0: {r: 1, g: 1, b: 1, a: 1}
-    key1: {r: 0.26415092, g: 0.26415092, b: 0.26415092, a: 1}
-    key2: {r: 0.61279786, g: 0.8018868, b: 0.4501157, a: 1}
-    key3: {r: 0.6602512, g: 0.8028354, b: 0.63211906, a: 1}
-    key4: {r: 0.6602512, g: 0.8028354, b: 0.63211906, a: 1}
-    key5: {r: 0.6602512, g: 0.8028354, b: 0.63211906, a: 1}
-    key6: {r: 0.6602512, g: 0.8028354, b: 0.63211906, a: 0}
-    key7: {r: 0.2735849, g: 0.14324492, b: 0.14324492, a: 0}
-    ctime0: 42405
-    ctime1: 55512
-    ctime2: 65535
-    ctime3: 65535
-    ctime4: 65535
-    ctime5: 65535
-    ctime6: 65535
-    ctime7: 65535
-    atime0: 13107
-    atime1: 26214
-    atime2: 39321
-    atime3: 52428
-    atime4: 65535
-    atime5: 65535
-    atime6: 0
-    atime7: 0
-    m_Mode: 1
-    m_NumColorKeys: 3
-    m_NumAlphaKeys: 5
-  colorNum: 5
-  colorPalette: {fileID: 0}
-  boundsY: -3143.2
-  offsetY: -1111
---- !u!4 &410678713
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 410678711}
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_Children: []
-  m_Father: {fileID: 0}
-  m_RootOrder: 3
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &722531122
 GameObject:
   m_ObjectHideFlags: 0
@@ -775,7 +697,7 @@ Transform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 0}
-  m_RootOrder: 4
+  m_RootOrder: 3
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &882909482
 GameObject:
@@ -1090,8 +1012,8 @@ MonoBehaviour:
   botName: Origin
   terrainMesh: {fileID: 0}
   screenShotMask: {fileID: 180104741}
-  walkingSpeed: 120
-  runningSpeed: 240
+  walkingSpeed: 20
+  runningSpeed: 40
   jumpSpeed: 30
   flySpeed: 160
   gravity: 100
@@ -1114,7 +1036,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 939415158}
   m_LocalRotation: {x: -0, y: 0.9848499, z: -0, w: 0.17340921}
-  m_LocalPosition: {x: 5.343021, y: 344.57, z: 4.611959}
+  m_LocalPosition: {x: 0, y: 56.9, z: 0}
   m_LocalScale: {x: 2, y: 2, z: 2}
   m_Children:
   - {fileID: 375528277}
@@ -1267,6 +1189,7 @@ GameObject:
   - component: {fileID: 1227901944}
   - component: {fileID: 1227901946}
   - component: {fileID: 1227901943}
+  - component: {fileID: 1227901947}
   m_Layer: 0
   m_Name: TerrainMesh
   m_TagString: Chunk
@@ -1286,14 +1209,14 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 5155b32776785bf4f922086ef38d6a0d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  numGrassesPerAxis: 128
+  numGrassesPerAxis: 256
   grassMaterial: {fileID: 2100000, guid: eebc524fd64d0834aa31034c23d2fe01, type: 2}
   grassMesh: {fileID: 7629811779324647873, guid: df4fdd86fd2d684438697461e8af9c6a,
     type: 3}
   grassLODMesh: {fileID: 7629811779324647873, guid: d13af16486f285e4e8fd1b4d9ab77c97,
     type: 3}
   noLOD: 1
-  lodCutoff: 100
+  lodCutoff: 40
 --- !u!114 &1227901944
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1310,17 +1233,17 @@ MonoBehaviour:
   modelGrass: {fileID: 1227901943}
   fixedMapSize: 0
   drawGrass: 0
-  numChunks: {x: 1, y: 1, z: 1}
+  numChunks: {x: 5, y: 2, z: 5}
   viewer: {fileID: 939415163}
   lodSetup:
-    numPointsPerAxis: 64
-    viewDistanceHori: 2500
-    viewDistanceVert: 1500
+    numPointsPerAxis: 32
+    viewDistanceHori: 250
+    viewDistanceVert: 120
     fixedDistanceHori: 100
     fixedDistanceVert: 100
   shader: {fileID: 7200000, guid: e6675a5747764487687871eed95a316b, type: 3}
   mat: {fileID: 2100000, guid: d93366c815783437abcf8032ab99990b, type: 2}
-  boundSize: 600
+  boundSize: 80
 --- !u!4 &1227901945
 Transform:
   m_ObjectHideFlags: 0
@@ -1349,22 +1272,69 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   seed: 31
   DragMeToUpdate: 0.085
-  numOctaves: 12
-  lacunarity: 1.624
-  persistence: 0.497
-  noiseScale: 0.018
-  heightGredient: 0.32
-  multiFractalWeight: 1.07
-  noiseWeight: 289.4
+  numOctaves: 7
+  lacunarity: 1.465
+  persistence: 0.689
+  noiseScale: 0.199
+  heightGredient: 1
+  multiFractalWeight: 0.52
+  noiseWeight: 41.2
   closeEdges: 0
   b1: 0
   b2: 0
   f1: 0
   f2: 0
   f3: 0
-  floorOffset: -157.12
+  floorOffset: 0
   shaderParams: {x: 0.28, y: 0, z: 0, w: 0}
   noiseDensityShader: {fileID: 7200000, guid: 6f17253ba515b49de95452c1dcbdc45c, type: 3}
+--- !u!114 &1227901947
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1227901942}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2a7f2fb7efcfa49e5be67c9dde95e073, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  mat: {fileID: 2100000, guid: d93366c815783437abcf8032ab99990b, type: 2}
+  normalOffsetWeight: -456.8
+  gradient:
+    serializedVersion: 2
+    key0: {r: 0.4056604, g: 0.22029081, b: 0.16647385, a: 1}
+    key1: {r: 0.3962264, g: 0.3400647, b: 0.3233357, a: 1}
+    key2: {r: 0.7395466, g: 0.745283, b: 0.36912602, a: 1}
+    key3: {r: 0.6602512, g: 0.8028354, b: 0.63211906, a: 1}
+    key4: {r: 0.6602512, g: 0.8028354, b: 0.63211906, a: 1}
+    key5: {r: 0.6602512, g: 0.8028354, b: 0.63211906, a: 1}
+    key6: {r: 0.6602512, g: 0.8028354, b: 0.63211906, a: 0}
+    key7: {r: 0.2735849, g: 0.14324492, b: 0.14324492, a: 0}
+    ctime0: 29105
+    ctime1: 65535
+    ctime2: 65535
+    ctime3: 65535
+    ctime4: 65535
+    ctime5: 65535
+    ctime6: 65535
+    ctime7: 65535
+    atime0: 13107
+    atime1: 26214
+    atime2: 39321
+    atime3: 52428
+    atime4: 65535
+    atime5: 65535
+    atime6: 0
+    atime7: 0
+    m_Mode: 1
+    m_NumColorKeys: 2
+    m_NumAlphaKeys: 5
+  colorNum: 5
+  colorPalette: {fileID: 0}
+  boundsY: 714
+  offsetY: 0
 --- !u!1 &1294267559
 GameObject:
   m_ObjectHideFlags: 0
@@ -1536,7 +1506,7 @@ RectTransform:
   - {fileID: 1294267560}
   - {fileID: 923202055}
   m_Father: {fileID: 0}
-  m_RootOrder: 9
+  m_RootOrder: 8
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 0, y: 0}
@@ -1571,7 +1541,7 @@ Transform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 0}
-  m_RootOrder: 8
+  m_RootOrder: 7
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1828501176
 GameObject:
@@ -1618,7 +1588,7 @@ Transform:
   m_Children:
   - {fileID: 2000863096}
   m_Father: {fileID: 0}
-  m_RootOrder: 6
+  m_RootOrder: 5
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1867833544
 GameObject:
@@ -1815,11 +1785,11 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1996619236}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_LocalPosition: {x: 0, y: 3.4, z: -12.45}
+  m_LocalScale: {x: 4, y: 4, z: 4}
   m_Children: []
   m_Father: {fileID: 0}
-  m_RootOrder: 7
+  m_RootOrder: 6
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &2000863095
 GameObject:
