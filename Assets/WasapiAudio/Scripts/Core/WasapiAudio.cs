@@ -44,7 +44,8 @@ namespace Assets.WasapiAudio.Scripts.Core
             switch (_captureType)
             {
                 case WasapiCaptureType.Loopback:
-                    _wasapiCapture = new WasapiLoopbackCapture();
+                    // _wasapiCapture = new WasapiLoopbackCapture();
+                    _wasapiCapture = new WasapiLoopbackCapture(100, new WaveFormat(48000, 24, 2));
                     break;
                 case WasapiCaptureType.Microphone:
                     MMDevice defaultMicrophone;
@@ -83,8 +84,8 @@ namespace Assets.WasapiAudio.Scripts.Core
                 foreach (var filter in _filters)
                 {
                     sampleSource = sampleSource.AppendSource(x => new BiQuadFilterSource(x));
-                    var biQuadSource = (BiQuadFilterSource) sampleSource;
-                    
+                    var biQuadSource = (BiQuadFilterSource)sampleSource;
+
                     switch (filter.Type)
                     {
                         case WasapiAudioFilterType.LowPass:
