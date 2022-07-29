@@ -30,9 +30,9 @@ public class AtmosphereSettings : ScriptableObject
 
 
     [Header("Planet Settings")]
-    [Range(0, 300000)] public float planetRadius = 100000f;
-    [Range(-10000, 10000)] public float bottomOffset = 0f;
-    [Range(0, 20000)] public float atmosHeight = 1000f;
+    [Range(0, 400)] public float planetRadius;
+    [Range(-100, 100)] public float bottomOffset = 0f;
+    [Range(0, 400)] public float atmosHeight = 1000f;
 
 
     [Header("Sun Settings")]
@@ -59,7 +59,7 @@ public class AtmosphereSettings : ScriptableObject
             atmosphereRadius = atmosHeight + planetRadius + bottomOffset;
             material.SetFloat("atmosphereRadius", atmosphereRadius);
             material.SetFloat("planetRadius", planetRadius + bottomOffset);
-            material.SetVector("planetCentre", new Vector3(0, -300000, 0));
+            material.SetVector("planetCentre", new Vector3(0, 0, 0));
 
             // material.SetVector("params", testParams);
             material.SetInt("numInScatteringPoints", inScatteringPoints);

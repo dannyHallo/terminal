@@ -15,6 +15,7 @@ RWStructuredBuffer<GroundLevelData> GroundLevelDataBuffer;
 RWStructuredBuffer<int> pointsStatus;
 
 int octaves;
+float radius = 80;
 float lacunarity, persistence, noiseScale, noiseWeight, floorOffset, 
 heightGredient, multiFractalWeight;
 
@@ -60,7 +61,7 @@ void Density (int3 id : SV_DispatchThreadID)
     for (int j = 0; j < octaves; j++) {
         // -1 -> 1
         float3 noiseSamplePoint = (pos+offsetNoise) * frequency + offsets[j];
-        noiseSamplePoint.y = 0.0f;
+        // noiseSamplePoint.y = 0.0f;
         float n = snoise(noiseSamplePoint);
 
         n = abs(n);
@@ -77,7 +78,7 @@ void Density (int3 id : SV_DispatchThreadID)
     noise *= noiseWeight;
 
     // The higher the position is, the less likely it is gonna appear.
-    float finalVal = -pos.y * heightGredient + floorOffset + noise;
+    float finalVal = (20 - distance(float3(0,0,0), pos)) * heightGredient + floorOffset + noise;
 
     if (closeEdges) {
         float3 edgeOffset = abs(pos*2)-worldSize + spacing/2;
@@ -86,10 +87,13 @@ void Density (int3 id : SV_DispatchThreadID)
         
     }
 
-    if(id.y == 0){
-        GroundLevelDataBuffer[id.x + id.z * numPointsPerAxis].twodeeHeight = 
-        (noise + floorOffset) / heightGredient;
-    }
+    // if(id.y == 0){
+        //     if(GroundLevelDataBuffer!= null){
+            //         GroundLevelDataBuffer[id.x + id.z * numPointsPerAxis].twodeeHeight = 
+            //         (noise + floorOffset) / heightGredient;
+        //     }
+        
+    // }
 
     if(finalVal + manualData[index] - isoLevel > 0)
     pointsStatus[0] = 1;

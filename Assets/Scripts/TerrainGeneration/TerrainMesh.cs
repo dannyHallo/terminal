@@ -111,7 +111,8 @@ public class TerrainMesh : MonoBehaviour
     private void RuntimeUpdatePerFrame()
     {
         CreateBuffers();
-        modelGrass.InitIfNeeded(boundSize, lodSetup.numPointsPerAxis);
+        if (drawGrass)
+            modelGrass.InitIfNeeded(boundSize, lodSetup.numPointsPerAxis);
 
         if (fixedMapSize && !boundedMapGenerated)
         {
@@ -133,10 +134,10 @@ public class TerrainMesh : MonoBehaviour
         ReleaseBuffers();
         CreateBuffers();
 
-        modelGrass.InitIfNeeded(boundSize, lodSetup.numPointsPerAxis);
+        if (drawGrass)
+            modelGrass.InitIfNeeded(boundSize, lodSetup.numPointsPerAxis);
         InitChunks();
         UpdateAllChunks();
-        // modelGrass.DrawAllGrass(chunks);
 
         ReleaseBuffers();
     }
@@ -897,8 +898,12 @@ public class TerrainMesh : MonoBehaviour
         ComputeBuffer pointsStatus = new ComputeBuffer(2, sizeof(int));
         pointsStatus.SetData(pointStatusData);
 
-        // Chunk grass is not initialized yet (not in registery)
-        modelGrass.InitializeGrassChunkIfNeeded(chunk, centre, numPointsPerAxis);
+        if (drawGrass)
+        {
+            // Chunk grass is not initialized yet (not in registery)
+            modelGrass.InitializeGrassChunkIfNeeded(chunk, centre, numPointsPerAxis);
+        }
+
 
         // Gerenate individual noise value using compute shader， modifies pointsBuffer
         noiseDensity.Generate(
@@ -966,8 +971,12 @@ public class TerrainMesh : MonoBehaviour
         mesh.RecalculateNormals();
         chunk.UpdateColliders();
 
-        // Dispatch grass chunk point shader
-        modelGrass.CalculateGrassPos(chunk);
+        if (drawGrass)
+        {
+            // Dispatch grass chunk point shader
+            modelGrass.CalculateGrassPos(chunk);
+        }
+
         return 1;
     }
 
@@ -996,7 +1005,11 @@ public class TerrainMesh : MonoBehaviour
         if (Application.isPlaying)
         {
             ReleaseBuffers();
-            modelGrass.ClearGrassBufferIfNeeded();
+            if (drawGrass)
+            {
+                modelGrass.ClearGrassBufferIfNeeded();
+
+            }
         }
     }
 
@@ -1041,7 +1054,11 @@ public class TerrainMesh : MonoBehaviour
 
     void ReleaseBuffers()
     {
-        modelGrass.ClearGrassBufferIfNeeded();
+        if (drawGrass)
+        {
+            modelGrass.ClearGrassBufferIfNeeded();
+
+        }
         ReleaseExistingChunkBuffers();
 
         if (triangleBuffer != null)

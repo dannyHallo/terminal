@@ -19,7 +19,6 @@ public class NoiseDensity : MonoBehaviour
     [Range(0, 1)]
     public float persistence = .5f;
 
-    [Range(0, 1f)]
     public float noiseScale = 0.1f;
 
     [Range(0, 3f)]
@@ -122,7 +121,8 @@ public class NoiseDensity : MonoBehaviour
 
         noiseDensityShader.SetBuffer(0, "points", pointsBuffer);
         noiseDensityShader.SetBuffer(0, "manualData", additionalPointsBuffer);
-        noiseDensityShader.SetBuffer(0, "GroundLevelDataBuffer", chunk.groundLevelDataBuffer);
+        if (chunk.groundLevelDataBuffer != null)
+            noiseDensityShader.SetBuffer(0, "GroundLevelDataBuffer", chunk.groundLevelDataBuffer);
         noiseDensityShader.SetBuffer(0, "pointsStatus", pointsStatus);
         noiseDensityShader.SetInt("numPointsPerAxis", numPointsPerAxis);
         noiseDensityShader.SetFloat("boundsSize", boundsSize);
