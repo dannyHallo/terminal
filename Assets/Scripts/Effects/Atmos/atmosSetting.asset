@@ -19,12 +19,12 @@ MonoBehaviour:
   blueNoise: {fileID: 2800000, guid: 18b30821a3f047f42aae7c5a160db4d0, type: 3}
   wavelengths: {x: 700, y: 610, z: 440}
   densityFalloff: 1
-  scatteringStrength: 127.02
-  scatteringIntensity: 3.23
-  totalIntensity: 1.27
-  planetRadius: 76
+  scatteringStrength: 99.8
+  scatteringIntensity: 1.7
+  totalIntensity: 0.8
+  planetRadius: 122
   bottomOffset: 0
-  atmosHeight: 108
+  atmosHeight: 20
   startTimeOfDay: 0
   sunSpeed: 1
   sunDistance: 100000

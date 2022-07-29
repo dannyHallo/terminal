@@ -91,7 +91,7 @@ public class PlayerMovement : MonoBehaviour
     private void Update()
     {
         if (!terrainMesh)
-            terrainMesh = GameObject.Find("TerrainMesh").GetComponent<TerrainMesh>();
+            terrainMesh = GameObject.Find("PlanetGenerator").GetComponent<TerrainMesh>();
 
         if (Cursor.lockState == CursorLockMode.None)
         {

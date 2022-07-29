@@ -15,7 +15,7 @@ RWStructuredBuffer<GroundLevelData> GroundLevelDataBuffer;
 RWStructuredBuffer<int> pointsStatus;
 
 int octaves;
-float radius = 80;
+float radius;
 float lacunarity, persistence, noiseScale, noiseWeight, floorOffset, 
 heightGredient, multiFractalWeight;
 
@@ -78,7 +78,7 @@ void Density (int3 id : SV_DispatchThreadID)
     noise *= noiseWeight;
 
     // The higher the position is, the less likely it is gonna appear.
-    float finalVal = (20 - distance(float3(0,0,0), pos)) * heightGredient + floorOffset + noise;
+    float finalVal = (radius - distance(float3(0,0,0), pos)) * heightGredient + floorOffset + noise;
 
     if (closeEdges) {
         float3 edgeOffset = abs(pos*2)-worldSize + spacing/2;

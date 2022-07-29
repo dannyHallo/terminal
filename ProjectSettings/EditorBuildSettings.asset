@@ -5,9 +5,12 @@ EditorBuildSettings:
   m_ObjectHideFlags: 0
   serializedVersion: 2
   m_Scenes:
-  - enabled: 1
+  - enabled: 0
     path: Assets/Scenes/Terminal.unity
     guid: 8c7a90472e0ce44c399bb36f11b1af13
+  - enabled: 1
+    path: Assets/Scenes/DancingGlobe.unity
+    guid: 2ddba18d8ca57434d9595b65076b53cd
   m_configObjects:
     com.unity.input.settings: {fileID: 11400000, guid: a18af12cea2d4d34ab768661c787358d,
       type: 2}

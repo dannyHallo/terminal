@@ -26,7 +26,7 @@ public class NoiseDensity : MonoBehaviour
 
     [Range(0, 3f)]
     public float multiFractalWeight = 1;
-
+    public float planetRadius = 50;
     public float noiseWeight = 1;
     public bool closeEdges;
     public bool b1;
@@ -115,6 +115,7 @@ public class NoiseDensity : MonoBehaviour
         noiseDensityShader.SetFloat("f3", f3);
         noiseDensityShader.SetBuffer(0, "offsets", offsetsBuffer);
         noiseDensityShader.SetFloat("floorOffset", floorOffset);
+        noiseDensityShader.SetFloat("radius", planetRadius);
         noiseDensityShader.SetFloat("heightGredient", heightGredient);
         noiseDensityShader.SetFloat("multiFractalWeight", multiFractalWeight);
         noiseDensityShader.SetVector("params", shaderParams);

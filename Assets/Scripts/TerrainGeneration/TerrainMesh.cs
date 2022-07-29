@@ -29,7 +29,7 @@ public class TerrainMesh : MonoBehaviour
     private Color boundsGizmoCol = Color.white;
 
     private bool showBoundsGizmo = true;
-    private bool generateColliders = true;
+    private bool generateColliders = false;
     private string chunkHolderName = "ChunkHolder";
 
     GameObject chunkHolder;
