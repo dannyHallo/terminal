@@ -20,13 +20,13 @@ MonoBehaviour:
   wavelengths: {x: 700, y: 610, z: 440}
   densityFalloff: 1
   scatteringStrength: 99.8
-  scatteringIntensity: 1.7
-  totalIntensity: 0.8
+  scatteringIntensity: 0.57
+  totalIntensity: 0.86
   planetRadius: 122
-  bottomOffset: 0
-  atmosHeight: 20
+  bottomOffset: 7
+  atmosHeight: 268
   startTimeOfDay: 0
-  sunSpeed: 1
-  sunDistance: 100000
+  sunSpeed: 3.19
+  sunDistance: 1000
   allowTimeFlow: 1
   settingsUpToDate: 1
