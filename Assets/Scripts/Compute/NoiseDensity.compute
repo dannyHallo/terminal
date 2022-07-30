@@ -60,7 +60,7 @@ void Density (int3 id : SV_DispatchThreadID)
     float weight = 1;
     for (int j = 0; j < octaves; j++) {
         // -1 -> 1
-        float3 noiseSamplePoint = (pos+offsetNoise) * frequency + offsets[j];
+        float3 noiseSamplePoint = (pos+offsetNoise) * frequency + offsets[j] + float3(f1, f2, f3);
         // noiseSamplePoint.y = 0.0f;
         float n = snoise(noiseSamplePoint);
 
@@ -86,14 +86,6 @@ void Density (int3 id : SV_DispatchThreadID)
         finalVal = finalVal * (1-edgeWeight) - 100 * edgeWeight;
         
     }
-
-    // if(id.y == 0){
-        //     if(GroundLevelDataBuffer!= null){
-            //         GroundLevelDataBuffer[id.x + id.z * numPointsPerAxis].twodeeHeight = 
-            //         (noise + floorOffset) / heightGredient;
-        //     }
-        
-    // }
 
     if(finalVal + manualData[index] - isoLevel > 0)
     pointsStatus[0] = 1;

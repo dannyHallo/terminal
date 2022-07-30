@@ -28,9 +28,12 @@ Shader "Custom/Terrain"
             float3 worldNormal;
         };
 
-        float boundsY;
+        float minMaxBounds;
         float offsetY;
+        float planetRadius;
         float normalOffsetWeight;
+        float musicNoise;
+        float musicNoiseWeight;
 
         half _Glossiness;
         half _Metallic;
@@ -39,7 +42,14 @@ Shader "Custom/Terrain"
 
         void surf (Input IN, inout SurfaceOutputStandard o)
         {
-            float h = smoothstep(-boundsY/2, boundsY/2, IN.worldPos.y + offsetY + IN.worldNormal.y * normalOffsetWeight);
+            float h = smoothstep(  
+            -minMaxBounds, 
+            minMaxBounds, 
+            (distance(float3(0,0,0), IN.worldPos) - planetRadius) + 
+            offsetY + 
+            (abs(IN.worldNormal.x) + abs(IN.worldNormal.y) + abs(IN.worldNormal.z)) * normalOffsetWeight + 
+            musicNoise * musicNoiseWeight);
+
             float3 tex = tex2D(ramp, float2(h,.5));
             o.Albedo = tex;
             // Metallic and smoothness come from slider variables

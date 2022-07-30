@@ -2,9 +2,10 @@ using Assets.WasapiAudio.Scripts.Unity;
 using UnityEngine;
 using UnityEngine.UI;
 
-// This script is written by hallidev
+// This script is originally written by hallidev
 // https://github.com/hallidev/UnityWasapiAudio
-// With some minor modifications by dannyHallo
+// Some minor modifications are made by dannyHallo
+
 namespace Assets.WasapiAudio.Scripts.Unity
 {
     public class DancingPlanet : MonoBehaviour

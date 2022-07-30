@@ -7,8 +7,9 @@ public class ColourGenerator : MonoBehaviour
 {
     [Header("General")]
     public Material mat;
-
     public float normalOffsetWeight;
+    public float musicNoise;
+    public float musicNoiseWeight;
 
 
     [Header("ColorPalette")]
@@ -21,28 +22,24 @@ public class ColourGenerator : MonoBehaviour
 
 
     [Header("Offset")]
-    public float boundsY;
+    public float minMaxBounds;
     public float offsetY;
 
     Texture2D texture;
     const int textureResolution = 50;
 
-    // Set up a 1d texture to store color
-    void Init()
-    {
-        if (texture == null || texture.width != textureResolution)
-        {
-            texture = new Texture2D(textureResolution, 1, TextureFormat.RGBA32, false);
-        }
-    }
-
     void Update()
     {
-        Init();
+        if (texture == null || texture.width != textureResolution)
+            texture = new Texture2D(textureResolution, 1, TextureFormat.RGBA32, false);
+
         UpdateTexture();
 
-        mat.SetFloat("boundsY", boundsY);
+        mat.SetFloat("minMaxBounds", minMaxBounds);
         mat.SetFloat("offsetY", offsetY);
+        mat.SetFloat("planetRadius", gameObject.GetComponent<NoiseDensity>().planetRadius);
+        mat.SetFloat("musicNoise", musicNoise);
+        mat.SetFloat("musicNoiseWeight", musicNoiseWeight);
         mat.SetFloat("normalOffsetWeight", normalOffsetWeight);
         mat.SetTexture("ramp", texture);
     }

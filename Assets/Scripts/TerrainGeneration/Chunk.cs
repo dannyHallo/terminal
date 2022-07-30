@@ -71,7 +71,9 @@ public class Chunk : MonoBehaviour
             gameObject.tag = "Chunk";
         meshFilter = GetComponent<MeshFilter>();
         meshRenderer = GetComponent<MeshRenderer>();
-        meshCollider = GetComponent<MeshCollider>();
+
+        if (generateCollider)
+            meshCollider = GetComponent<MeshCollider>();
 
         if (meshFilter == null)
         {
