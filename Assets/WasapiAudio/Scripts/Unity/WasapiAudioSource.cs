@@ -35,6 +35,7 @@ namespace Assets.WasapiAudio.Scripts.Unity
 
         public float[] GetSpectrumData()
         {
+            Debug.Log(_spectrumData.Length);
             return _spectrumData;
         }
 
