@@ -10,6 +10,7 @@ public class ColourGenerator : MonoBehaviour
     public float normalOffsetWeight;
     public float musicNoise;
     public float musicNoiseWeight;
+    public Color allColor;
 
 
     [Header("ColorPalette")]
@@ -28,40 +29,15 @@ public class ColourGenerator : MonoBehaviour
     Texture2D texture;
     const int textureResolution = 50;
 
-    void Update()
+    public bool usePalette = false;
+    public bool updateRequest = false;
+
+    private void Awake()
     {
-        if (texture == null || texture.width != textureResolution)
-            texture = new Texture2D(textureResolution, 1, TextureFormat.RGBA32, false);
-
-        UpdateTexture();
-
-        mat.SetFloat("minMaxBounds", minMaxBounds);
-        mat.SetFloat("offsetY", offsetY);
-        mat.SetFloat("planetRadius", gameObject.GetComponent<NoiseDensity>().planetRadius);
-        mat.SetFloat("musicNoise", musicNoise);
-        mat.SetFloat("musicNoiseWeight", musicNoiseWeight);
-        mat.SetFloat("normalOffsetWeight", normalOffsetWeight);
-        mat.SetTexture("ramp", texture);
+        allColor = Color.black;
     }
 
-    // Update 1d texture with color gradients
-    void UpdateTexture()
-    {
-        if (gradient != null)
-        {
-            Color[] colours = new Color[texture.width];
-            for (int i = 0; i < textureResolution; i++)
-            {
-                Color gradientCol = gradient.Evaluate(i / (textureResolution - 1f));
-                colours[i] = gradientCol;
-            }
-
-            texture.SetPixels(colours);
-            texture.Apply();
-        }
-    }
-
-    private void OnValidate()
+    void UpdatePalette()
     {
         if (colorPalette)
         {
@@ -85,6 +61,50 @@ public class ColourGenerator : MonoBehaviour
             }
             gradient.SetKeys(colorKey, alphaKey);
         }
+    }
 
+    void UpdateTexture()
+    {
+        if (texture == null || texture.width != textureResolution)
+            texture = new Texture2D(textureResolution, 1, TextureFormat.RGBA32, false);
+
+        if (gradient != null)
+        {
+            Color[] colours = new Color[texture.width];
+            for (int i = 0; i < textureResolution; i++)
+            {
+                Color gradientCol = gradient.Evaluate(i / (textureResolution - 1f));
+                // colours[i] = gradientCol;
+                colours[i] = allColor;
+            }
+
+            texture.SetPixels(colours);
+            texture.Apply();
+        }
+
+        mat.SetFloat("minMaxBounds", minMaxBounds);
+        mat.SetFloat("offsetY", offsetY);
+        mat.SetFloat("planetRadius", gameObject.GetComponent<NoiseDensity>().planetRadius);
+        mat.SetFloat("musicNoise", musicNoise);
+        mat.SetFloat("musicNoiseWeight", musicNoiseWeight);
+        mat.SetFloat("normalOffsetWeight", normalOffsetWeight);
+        mat.SetTexture("ramp", texture);
+    }
+
+    private void Update()
+    {
+        // if (updateRequest)
+        {
+            if (usePalette)
+                UpdatePalette();
+
+            UpdateTexture();
+            updateRequest = false;
+        }
+    }
+
+    private void OnValidate()
+    {
+        updateRequest = true;
     }
 }

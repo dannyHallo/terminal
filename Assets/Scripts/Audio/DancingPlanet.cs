@@ -20,11 +20,20 @@ namespace Assets.WasapiAudio.Scripts.Unity
         public float maxPlanetScale = 80f;
         [Range(0, 0.02f)] public float dynamicScaleSensitivity;
 
+
         [Header("Rolling texture")]
         public float textureRollingSpeed;
 
+
+        [Header("Debug")]
+        public int loudestId;
+        public float loudestFrequency;
+
+
+        [Space]
         private TerrainMesh terrainMesh;
         private NoiseDensity noiseDensity;
+        private ColourGenerator colourGenerator;
 
         private void Start()
         {
@@ -32,27 +41,30 @@ namespace Assets.WasapiAudio.Scripts.Unity
 
             terrainMesh = planetGenerator.GetComponent<TerrainMesh>();
             noiseDensity = planetGenerator.GetComponent<NoiseDensity>();
+            colourGenerator = planetGenerator.GetComponent<ColourGenerator>();
+
+            if (!terrainMesh || !noiseDensity || !colourGenerator)
+            {
+                print("Script dependency is not fully satisfied.");
+            }
         }
 
         public void Update()
         {
-            float lownoteStrength = (
-                barSpectrum.processedAudioScales[0] +
-                barSpectrum.processedAudioScales[1] +
-                barSpectrum.processedAudioScales[2]) / 3;
+            loudestId = barSpectrum.loudestSpectrumBarIndex;
+            loudestFrequency = barSpectrum.loudestFrequency;
 
-            float avgStrength = 0;
-            foreach (float audioScale in barSpectrum.processedAudioScales)
-            {
-                avgStrength += audioScale;
-            }
-            avgStrength /= barSpectrum.processedAudioScales.Count;
+            noiseDensity.planetRadius = Mathf.Lerp(
+                minPlanetScale,
+                maxPlanetScale,
+                dynamicScaleSensitivity * barSpectrum.loudness);
 
-            noiseDensity.planetRadius = Mathf.Lerp(minPlanetScale, maxPlanetScale, dynamicScaleSensitivity * avgStrength);
             noiseDensity.f1 += textureRollingSpeed * Time.deltaTime * 0.01f;
 
             // noiseDensity.noiseWeight = noiseWeightMul * barSpectrum.processedAudioScales[5];
             terrainMesh.RequestMeshUpdate();
+
+            colourGenerator.allColor = ColorHandler.GetColorFromFrequency(loudestFrequency);
         }
     }
 
