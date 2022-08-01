@@ -64,7 +64,8 @@ namespace Assets.WasapiAudio.Scripts.Unity
             // // noiseDensity.noiseWeight = noiseWeightMul * audioProcessor.processedAudioScales[5];
             // terrainMesh.RequestMeshUpdate();
 
-            colourGenerator.allColor = ColorHandler.GetColorFromFrequency(loudestFrequency);
+            // colourGenerator.allColor = ColorHandler.GetColorFromFrequency(loudestFrequency);
+
         }
     }
 

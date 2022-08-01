@@ -10,6 +10,8 @@ public class PlayerMovement : MonoBehaviour
 {
     public String botName;
     public TerrainMesh terrainMesh;
+    public FauxGravityAttractor fauxGravityAttractor;
+
     public Image screenShotMask;
 
     public float walkingSpeed = 7.5f;
@@ -267,11 +269,13 @@ public class PlayerMovement : MonoBehaviour
         float movementDirectionY = moveDirection.y;
         moveDirection = (forward * curSpeedX) + (right * curSpeedY);
 
-        // Apply gravity
+        // TODO: Apply gravity
         if (!characterController.isGrounded)
         {
-            moveDirection.y = movementDirectionY;
-            moveDirection.y -= gravity * Time.deltaTime;
+            // moveDirection.y = movementDirectionY;
+            // moveDirection.y -= gravity * Time.deltaTime;
+            fauxGravityAttractor.Attract(transform, 1f);
+
         }
 
         if (jumpPressed && canMove)
