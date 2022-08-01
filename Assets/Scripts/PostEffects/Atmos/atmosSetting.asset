@@ -22,10 +22,10 @@ MonoBehaviour:
   scatteringStrength: 100
   scatteringIntensity: 1.46
   totalIntensity: 0.83
-  planetRadius: 122
+  planetRadius: 400
   bottomOffset: 0
-  atmosHeight: 22
-  startTimeOfDay: 0.336
+  atmosHeight: 97
+  startTimeOfDay: 0.524
   sunSpeed: 10
   sunDistance: 170.2
   allowTimeFlow: 1

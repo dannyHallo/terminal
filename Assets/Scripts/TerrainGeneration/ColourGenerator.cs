@@ -74,8 +74,8 @@ public class ColourGenerator : MonoBehaviour
             for (int i = 0; i < textureResolution; i++)
             {
                 Color gradientCol = gradient.Evaluate(i / (textureResolution - 1f));
-                // colours[i] = gradientCol;
-                colours[i] = allColor;
+                colours[i] = gradientCol;
+                // colours[i] = allColor;
             }
 
             texture.SetPixels(colours);

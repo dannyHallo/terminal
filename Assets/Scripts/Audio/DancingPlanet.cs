@@ -11,7 +11,7 @@ namespace Assets.WasapiAudio.Scripts.Unity
     public class DancingPlanet : MonoBehaviour
     {
         public GameObject planetGenerator;  // Planet to control
-        public BarSpectrum barSpectrum;     // Audio date source
+        public AudioProcessor audioProcessor;     // Audio date source
         public float noiseWeightMul = 1.0f;
 
 
@@ -51,18 +51,18 @@ namespace Assets.WasapiAudio.Scripts.Unity
 
         public void Update()
         {
-            loudestId = barSpectrum.loudestSpectrumBarIndex;
-            loudestFrequency = barSpectrum.loudestFrequency;
+            // loudestId = audioProcessor.loudestSpectrumBarIndex;
+            // loudestFrequency = audioProcessor.loudestFrequency;
 
-            noiseDensity.planetRadius = Mathf.Lerp(
-                minPlanetScale,
-                maxPlanetScale,
-                dynamicScaleSensitivity * barSpectrum.loudness);
+            // noiseDensity.planetRadius = Mathf.Lerp(
+            //     minPlanetScale,
+            //     maxPlanetScale,
+            //     dynamicScaleSensitivity * audioProcessor.loudness);
 
-            noiseDensity.f1 += textureRollingSpeed * Time.deltaTime * 0.01f;
+            // noiseDensity.f1 += textureRollingSpeed * Time.deltaTime * 0.01f;
 
-            // noiseDensity.noiseWeight = noiseWeightMul * barSpectrum.processedAudioScales[5];
-            terrainMesh.RequestMeshUpdate();
+            // // noiseDensity.noiseWeight = noiseWeightMul * audioProcessor.processedAudioScales[5];
+            // terrainMesh.RequestMeshUpdate();
 
             colourGenerator.allColor = ColorHandler.GetColorFromFrequency(loudestFrequency);
         }
