@@ -29,7 +29,7 @@ public class TerrainMesh : MonoBehaviour
     private Color boundsGizmoCol = Color.white;
 
     private bool showBoundsGizmo = true;
-    private bool generateColliders = false;
+    public bool generateColliders = false;
     private string chunkHolderName = "ChunkHolder";
 
     GameObject chunkHolder;
@@ -333,8 +333,10 @@ public class TerrainMesh : MonoBehaviour
         CreateChunkHolderIfNeeded();
 
         // All chunks, no matter lod
-        int fixedChunksHori = Mathf.CeilToInt(lodSetup.fixedDistanceHori / boundSize);
-        int fixedChunksVert = Mathf.CeilToInt(lodSetup.fixedDistanceVert / boundSize);
+        // int fixedChunksHori = Mathf.CeilToInt(lodSetup.fixedDistanceHori / boundSize);
+        // int fixedChunksVert = Mathf.CeilToInt(lodSetup.fixedDistanceVert / boundSize);
+        int fixedChunksHori = Mathf.CeilToInt(numChunks.x / 2.0f);
+        int fixedChunksVert = Mathf.CeilToInt(numChunks.y / 2.0f);
 
         int updatedChunks = 0;
         for (int x = -fixedChunksHori; x <= fixedChunksHori; x++)
@@ -889,8 +891,6 @@ public class TerrainMesh : MonoBehaviour
         Vector3Int coord = chunk.coord;
         Vector3 centre = CentreFromCoord(coord);
 
-        Vector3 worldBounds = new Vector3(numChunks.x, numChunks.y, numChunks.z) * boundSize;
-
         // Indecator of the points are full or empty
         int[] pointStatusData = new int[2];
         pointStatusData[0] = 0;
@@ -913,7 +913,6 @@ public class TerrainMesh : MonoBehaviour
             pointsStatus,
             numPointsPerAxis,
             boundSize,
-            worldBounds,
             centre,
             offset,
             pointSpacing,
@@ -1076,7 +1075,7 @@ public class TerrainMesh : MonoBehaviour
     Vector3 CentreFromCoord(Vector3Int coord)
     {
         // Centre entire map at origin
-        if (fixedMapSize)
+        if (fixedMapSize && !Application.isPlaying)
         {
             Vector3 totalBounds = (Vector3)numChunks * boundSize;
             return -totalBounds / 2 + (Vector3)coord * boundSize + Vector3.one * boundSize / 2;

@@ -85,7 +85,7 @@ public class PlayerMovement : MonoBehaviour
 
     private void FixedUpdate()
     {
-        // CheckRay();
+        CheckRay();
     }
 
     private void Update()
@@ -155,9 +155,6 @@ public class PlayerMovement : MonoBehaviour
         RaycastHit hit;
         if (Physics.Raycast(ray, out hit, rayLength))
         {
-            // Get Left Mouse Button
-
-            // The direct hit is a chunk
             if (hit.collider.tag == "Chunk")
             {
                 if (Input.GetMouseButton(0))
@@ -173,7 +170,6 @@ public class PlayerMovement : MonoBehaviour
                         RestartCoroutine();
                     }
                 }
-                // Right Mouse Btn
                 else if (Input.GetMouseButton(1))
                 {
                     if (ableToDig)

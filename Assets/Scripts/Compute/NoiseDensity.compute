@@ -19,7 +19,6 @@ float radius;
 float lacunarity, persistence, noiseScale, noiseWeight, floorOffset, 
 heightGredient, multiFractalWeight;
 
-bool closeEdges;
 bool b1, b2;
 float f1, f2, f3;
 
@@ -32,7 +31,6 @@ float boundsSize;
 float3 centre;
 float3 offset;
 float spacing;
-float3 worldSize;
 
 int indexFromCoord(uint x, uint y, uint z) {
     return z * numPointsPerAxis * numPointsPerAxis + y * numPointsPerAxis + x;
@@ -79,13 +77,6 @@ void Density (int3 id : SV_DispatchThreadID)
 
     // The higher the position is, the less likely it is gonna appear.
     float finalVal = (radius - distance(float3(0,0,0), pos)) * heightGredient + floorOffset + noise;
-
-    if (closeEdges) {
-        float3 edgeOffset = abs(pos*2)-worldSize + spacing/2;
-        float edgeWeight = saturate(sign(max(max(edgeOffset.x,edgeOffset.y),edgeOffset.z)));
-        finalVal = finalVal * (1-edgeWeight) - 100 * edgeWeight;
-        
-    }
 
     if(finalVal + manualData[index] - isoLevel > 0)
     pointsStatus[0] = 1;
