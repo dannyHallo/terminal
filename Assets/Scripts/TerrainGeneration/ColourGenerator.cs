@@ -6,6 +6,7 @@ using UnityEngine;
 public class ColourGenerator : MonoBehaviour
 {
     [Header("General")]
+    public GameObject target;
     public Material mat;
     public float normalOffsetWeight;
     public float musicNoise;
@@ -74,11 +75,14 @@ public class ColourGenerator : MonoBehaviour
             for (int i = 0; i < textureResolution; i++)
             {
                 Color gradientCol = gradient.Evaluate(i / (textureResolution - 1f));
-                colours[i] = gradientCol;
-                // colours[i] = allColor;
+                //colours[i] = gradientCol;
+                 colours[i] = allColor;
             }
-
-            texture.SetPixels(colours);
+            //Debug.Log(allColor+" "+1/Time.deltaTime);
+            mat.SetColor("_Color", allColor);
+            var cubeRenderer = target.GetComponent<Renderer>();
+            cubeRenderer.material.SetColor("_Color", allColor);
+            //texture.SetPixels(colours);
             texture.Apply();
         }
 

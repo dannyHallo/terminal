@@ -25,6 +25,9 @@ public class ColorHandler
     const float Gamma = 0.80f;
     const float IntensityMax = 255;
 
+
+
+
     public static Color GetColorFromFrequency(float frequency)
     {
         if (frequency == 0)
@@ -57,49 +60,57 @@ public class ColorHandler
         float factor;
         float Red, Green, Blue;
 
-        if ((Wavelength >= 380) && (Wavelength < 440))
+        if ((Wavelength >= 380) && (Wavelength < 1100))
         {
-            Red = -(Wavelength - 440) / (440 - 380);
-            Green = 0.0f;
-            Blue = 1.0f;
+            Red = 1f - .8f * (1100 - Wavelength) / (1100 - 380);
+            Green = 0.6f;
+            Blue = .9f;
+            //Debug.Log("Good");
         }
-        else if ((Wavelength >= 440) && (Wavelength < 490))
-        {
-            Red = 0.0f;
-            Green = (Wavelength - 440) / (490 - 440);
-            Blue = 1.0f;
-        }
-        else if ((Wavelength >= 490) && (Wavelength < 510))
-        {
-            Red = 0.0f;
-            Green = 1.0f;
-            Blue = -(Wavelength - 510) / (510 - 490);
-        }
-        else if ((Wavelength >= 510) && (Wavelength < 580))
-        {
-            Red = (Wavelength - 510) / (580 - 510);
-            Green = 1.0f;
-            Blue = 0.0f;
-        }
-        else if ((Wavelength >= 580) && (Wavelength < 645))
-        {
-            Red = 1.0f;
-            Green = -(Wavelength - 645) / (645 - 580);
-            Blue = 0.0f;
-        }
-        else if ((Wavelength >= 645) && (Wavelength < 781))
-        {
-            Red = 1.0f;
-            Green = 0.0f;
-            Blue = 0.0f;
-        }
+        //.6f - .2f*(1100-Wavelength) / (1100 - 380)
+        //else if ((Wavelength >= 440) && (Wavelength < 490))
+        //{
+        //    Red = 0.0f;
+        //    Green = (Wavelength - 440) / (490 - 440);
+        //    Blue = 1.0f;
+        //   // Debug.Log("Good");
+        //}
+        //else if ((Wavelength >= 490) && (Wavelength < 510))
+        //{
+        //    Red = 0.0f;
+        //    Green = 1.0f;
+        //    Blue = -(Wavelength - 510) / (510 - 490);
+        //   // Debug.Log("Good");
+        //}
+        //else if ((Wavelength >= 510) && (Wavelength < 580))
+        //{
+        //    Red = (Wavelength - 510) / (580 - 510);
+        //    Green = 1.0f;
+        //    Blue = 0.0f;
+        // //   Debug.Log("Good");
+        //}
+        //else if ((Wavelength >= 580) && (Wavelength < 645))
+        //{
+        //    Red = 1.0f;
+        //    Green = -(Wavelength - 645) / (645 - 580);
+        //    Blue = 0.0f;
+        //  //  Debug.Log("Good");
+        //}
+        //else if ((Wavelength >= 645) && (Wavelength < 781))
+        //{
+        //    Red = 1.0f;
+        //    Green = 0.0f;
+        //    Blue = 0.0f;
+        //  //  
+        //}
         else
         {
             Red = 0.0f;
             Green = 0.0f;
             Blue = 0.0f;
+           // Debug.Log("Nah");
         }
-
+        Debug.Log("Nah" + Wavelength);
         // Let the intensity fall off near the vision limits
 
         if ((Wavelength >= 380) && (Wavelength < 420))
@@ -123,11 +134,11 @@ public class ColorHandler
         Color rgb = new Color();
 
         // Don't want 0^x = 1 for x <> 0
-        rgb.r = Red == 0.0 ? 0 : (int)Mathf.Round(IntensityMax * Mathf.Pow(Red * factor, Gamma));
-        rgb.g = Green == 0.0 ? 0 : (int)Mathf.Round(IntensityMax * Mathf.Pow(Green * factor, Gamma));
-        rgb.b = Blue == 0.0 ? 0 : (int)Mathf.Round(IntensityMax * Mathf.Pow(Blue * factor, Gamma));
+        rgb.r = Red;//== 0.0 ? 0 : (int)Mathf.Round(IntensityMax * Mathf.Pow(Red * factor, Gamma));
+        rgb.g = Green;//== 0.0 ? 0 : (int)Mathf.Round(IntensityMax * Mathf.Pow(Green * factor, Gamma));
+        rgb.b = Blue;//== 0.0 ? 0 : (int)Mathf.Round(IntensityMax * Mathf.Pow(Blue * factor, Gamma));
         rgb.a = IntensityMax;
-
+        Debug.Log(rgb);
         return rgb;
     }
 }
