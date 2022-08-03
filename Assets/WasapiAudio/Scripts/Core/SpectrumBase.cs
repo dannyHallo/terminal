@@ -5,6 +5,8 @@ using System.Diagnostics;
 using CSCore;
 using CSCore.DSP;
 
+using UnityEngine;
+
 namespace Assets.WasapiAudio.Scripts.Core
 {
     internal abstract class SpectrumBase
@@ -57,13 +59,13 @@ namespace Assets.WasapiAudio.Scripts.Core
         [Browsable(false)]
         public FftSize FftSize
         {
-            get => (FftSize) _fftSize;
+            get => (FftSize)_fftSize;
             protected set
             {
-                if ((int) Math.Log((int) value, 2) % 1 != 0)
+                if ((int)Math.Log((int)value, 2) % 1 != 0)
                     throw new ArgumentOutOfRangeException(nameof(value));
 
-                _fftSize = (int) value;
+                _fftSize = (int)value;
                 _maxFftIndex = _fftSize / 2 - 1;
             }
         }
@@ -79,23 +81,27 @@ namespace Assets.WasapiAudio.Scripts.Core
             _minimumFrequencyIndex = Math.Min(_spectrumProvider.GetFftBandIndex(_minFrequency), _maxFftIndex);
             _maximumFrequencyIndex = Math.Min(_spectrumProvider.GetFftBandIndex(_maxFrequency) + 1, _maxFftIndex);
 
+            // UnityEngine.Debug.Log("Minimum: " + _minimumFrequencyIndex + ", Maximum: " + _maximumFrequencyIndex);
+            // UnityEngine.Debug.Log("Real Max: " + _maxFftIndex);
+
             var actualResolution = SpectrumResolution;
 
             var indexCount = _maximumFrequencyIndex - _minimumFrequencyIndex;
-            var linearIndexBucketSize = Math.Round(indexCount / (double) actualResolution, 3);
+            var linearIndexBucketSize = Math.Round(indexCount / (double)actualResolution, 3);
 
             _spectrumIndexMax = _spectrumIndexMax.CheckBuffer(actualResolution, true);
             _spectrumLogScaleIndexMax = _spectrumLogScaleIndexMax.CheckBuffer(actualResolution, true);
 
             var maxLog = Math.Log(actualResolution, actualResolution);
-            
+
             for (int i = 1; i < actualResolution; i++)
             {
                 var logIndex =
-                    (int) ((maxLog - Math.Log((actualResolution + 1) - i, (actualResolution + 1))) * indexCount) +
+                    (int)((maxLog - Math.Log((actualResolution + 1) - i, (actualResolution + 1))) * indexCount) +
                     _minimumFrequencyIndex;
+                // UnityEngine.Debug.Log("i: " + i + ", logIndex: " + logIndex);
 
-                _spectrumIndexMax[i - 1] = _minimumFrequencyIndex + (int) (i * linearIndexBucketSize);
+                _spectrumIndexMax[i - 1] = _minimumFrequencyIndex + (int)(i * linearIndexBucketSize);
                 _spectrumLogScaleIndexMax[i - 1] = logIndex;
             }
 
@@ -155,7 +161,7 @@ namespace Assets.WasapiAudio.Scripts.Core
                         value = (lastValue + value) / 2.0;
                     }
 
-                    dataPoints.Add(new SpectrumPointData {SpectrumPointIndex = spectrumPointIndex, Value = value});
+                    dataPoints.Add(new SpectrumPointData { SpectrumPointIndex = spectrumPointIndex, Value = value });
 
                     lastValue = value;
                     value = 0.0;

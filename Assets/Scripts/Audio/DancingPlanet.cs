@@ -51,8 +51,8 @@ namespace Assets.WasapiAudio.Scripts.Unity
 
         public void Update()
         {
-            // loudestId = audioProcessor.loudestSpectrumBarIndex;
-            // loudestFrequency = audioProcessor.loudestFrequency;
+            loudestId = audioProcessor.loudestSpectrumBarIndex;
+            loudestFrequency = audioProcessor.loudestFrequency;
 
             // noiseDensity.planetRadius = Mathf.Lerp(
             //     minPlanetScale,

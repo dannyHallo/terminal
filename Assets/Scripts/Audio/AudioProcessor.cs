@@ -3,6 +3,7 @@ using UnityEngine;
 using System.Collections.Generic;
 using UnityEngine.UI;
 using System.Linq;
+using System;
 
 // This script is written by hallidev
 // https://github.com/hallidev/UnityWasapiAudio
@@ -33,11 +34,11 @@ public class AudioProcessor : AudioVisualizationEffect
     {
         spectrumChannelNum = SpectrumSize;
 
-        spectrumFrequencies = new float[64];
+        spectrumFrequencies = new float[spectrumChannelNum];
         processedAudioScales = new List<float>(new float[spectrumChannelNum]);
 
         // Run this for once, aquire the according freq list
-        for (int spectrumIndex = 0; spectrumIndex < 64; spectrumIndex++)
+        for (int spectrumIndex = 0; spectrumIndex < spectrumChannelNum; spectrumIndex++)
         {
             float thisSpecFreq = CALC_GetFrequencyFromSpectrumIndex(spectrumIndex);
             spectrumFrequencies[spectrumIndex] = thisSpecFreq;
@@ -53,30 +54,32 @@ public class AudioProcessor : AudioVisualizationEffect
         return processedAudioScales[spectrumIndex];
     }
 
-    // 20 - 20000Hz, 64 spectrums, only for init (dont't call this one, it is expensive)
-    // private static float CALC_GetFrequencyFromSpectrumIndex(int spectrumIndex)
-    // {
-    //     float lFreq = 2.0f * Mathf.Pow(10.0f, (spectrumIndex / 64.0f) * 3.0f + 1.0f);
-    //     float rFreq = 2.0f * Mathf.Pow(10.0f, ((spectrumIndex + 1) / 64.0f) * 3.0f + 1.0f);
-    //     return (lFreq + rFreq) / 2.0f;
-    // }
-
-    private static float CALC_GetFrequencyFromSpectrumIndex(int spectrumIndex)
+    private float CALC_GetFrequencyFromSpectrumIndex(int spectrumIndex)
     {
-        float a = 31.53408f;
-        float b = 67.35244f;
-        float c = 0.7440902f;
-        float d = 0.02971706f;
-        float e = -0.00119847f;
-        float f = 0.00001785697f;
+        const int minFrequency = 20;
+        const int maxFrequency = 20000;
+        const int _minimumFrequencyIndex = 1;
+        const int _maximumFrequencyIndex = 1707;
 
-        return
-        a +
-        b * Mathf.Pow(spectrumIndex, 1) +
-        c * Mathf.Pow(spectrumIndex, 2) +
-        d * Mathf.Pow(spectrumIndex, 3) +
-        e * Mathf.Pow(spectrumIndex, 4) +
-        f * Mathf.Pow(spectrumIndex, 5);
+        int logIndex;
+        float freq;
+
+        int indexCount = _maximumFrequencyIndex - _minimumFrequencyIndex;
+
+        var maxLog = Math.Log(spectrumChannelNum, spectrumChannelNum);
+
+        if (spectrumIndex == spectrumChannelNum - 1)
+            logIndex = _maximumFrequencyIndex;
+        else
+            logIndex = (int)((maxLog - Math.Log((spectrumChannelNum + 1) - spectrumIndex,
+                                (spectrumChannelNum + 1))) * indexCount) + _minimumFrequencyIndex;
+
+        freq = (float)minFrequency +
+                (float)(maxFrequency - minFrequency) *
+                (float)((float)(logIndex - _minimumFrequencyIndex) / (float)(_maximumFrequencyIndex - _minimumFrequencyIndex));
+
+        // Debug.Log("LogId = " + logIndex + ", Freq = " + freq);
+        return freq;
     }
 
     // Lookup method (use this one)
