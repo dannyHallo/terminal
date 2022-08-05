@@ -29,6 +29,10 @@ Shader "Custom/TerrainPainter2D"
             float3 worldNormal;
         };
 
+        float f1;
+        float f2;
+        float f3;
+
         float bound;
         float normalOffsetWeight;
         float musicNoise;
@@ -42,8 +46,10 @@ Shader "Custom/TerrainPainter2D"
 
         void surf (Input IN, inout SurfaceOutputStandard o)
         {
-            float3 tex = tex2D(_MainTex, float2(IN.worldPos.x * _BoundTest, IN.worldPos.z * _BoundTest));
-
+            // Load 1bit texture
+            float texId = tex2D(_MainTex, float2(IN.worldPos.x * _BoundTest, IN.worldPos.z * _BoundTest)).r;
+            float3 tex = tex2D(ramp, float2(texId,.5));
+            
             o.Albedo = tex;
             // Metallic and smoothness come from slider variables
             o.Metallic = _Metallic;

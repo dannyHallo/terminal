@@ -63,7 +63,7 @@ public class ColourGenerator1D : MonoBehaviour
         }
     }
 
-    void UpdateTexture()
+    void UpdateShader()
     {
         if (texture == null || texture.width != textureResolution)
             texture = new Texture2D(textureResolution, 1, TextureFormat.RGBA32, false);
@@ -98,7 +98,7 @@ public class ColourGenerator1D : MonoBehaviour
             if (usePalette)
                 UpdatePalette();
 
-            UpdateTexture();
+            UpdateShader();
             updateRequest = false;
         }
     }
