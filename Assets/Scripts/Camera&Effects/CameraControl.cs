@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using UnityEngine;
 using Cinemachine;
 
-[ExecuteInEditMode]
 public class CameraControl : MonoBehaviour
 {
     public CinemachineVirtualCamera cinemachineVirtualCamera;
@@ -11,37 +10,60 @@ public class CameraControl : MonoBehaviour
 
     public float cameraVerticalOffset;
     private bool settingsChanged = false;
+    private CinemachineComposer composer;
+    private Cinemachine3rdPersonFollow follower;
 
-    private void Start()
+    [Space]
+
+    [Header("Scrolling")]
+    public float camDstMin;
+    public float camDstMax;
+    public float camDstSpeed = 1.0f;
+
+
+    [Header("Mouse Y")]
+    [Range(0, 1)] public float mouseYMin;
+    [Range(0, 1)] public float mouseYMax;
+    [Range(0, 0.1f)] public float mouseYSpeed = 0.03f;
+
+    private void Awake()
+    {
+        Init();
+    }
+
+    private void Init()
     {
         // Add camera brain to the main camera if it is not added
         Camera.main.gameObject.TryGetComponent<CinemachineBrain>(out var brain);
         if (brain == null) Camera.main.gameObject.AddComponent<CinemachineBrain>();
 
+        composer = cinemachineVirtualCamera.GetCinemachineComponent<CinemachineComposer>();
+        follower = cinemachineVirtualCamera.GetCinemachineComponent<Cinemachine3rdPersonFollow>();
         cinemachineVirtualCamera.Priority = 20;
 
         // Ask for a update
         settingsChanged = true;
     }
 
-    private void OnValidate()
-    {
-        settingsChanged = true;
-    }
-
     private void Update()
     {
-        if (settingsChanged)
-        {
-            ChangeCameraVerticalOffset(cameraVerticalOffset);
-            settingsChanged = false;
-        }
+        HandleMouseYMovement();
+        HandleMouseScrollMovement();
     }
 
-    private void ChangeCameraVerticalOffset(in float height)
+    private void HandleMouseYMovement()
     {
-        Vector3 position = cameraLookAtItem.localPosition;
-        position.y = height;
-        cameraLookAtItem.localPosition = position;
+        float mouseDelY = Input.GetAxis("Mouse Y");
+
+        composer.m_ScreenY += mouseDelY * mouseYSpeed;
+        composer.m_ScreenY = Mathf.Clamp(composer.m_ScreenY, mouseYMin, mouseYMax);
+    }
+
+    private void HandleMouseScrollMovement()
+    {
+        float mouseScrollDel = -Input.mouseScrollDelta.y;
+
+        follower.CameraDistance += mouseScrollDel * camDstSpeed;
+        follower.CameraDistance = Mathf.Clamp(follower.CameraDistance, camDstMin, camDstMax);
     }
 }
