@@ -83,10 +83,13 @@ public class PlayerMovement : MonoBehaviour
         }
     }
 
-    private void Update()
+    private void FixedUpdate()
     {
         CheckRay();
+    }
 
+    private void Update()
+    {
         if (!terrainMesh)
             terrainMesh = GameObject.Find("PlanetGenerator").GetComponent<TerrainMesh>();
 
@@ -145,13 +148,12 @@ public class PlayerMovement : MonoBehaviour
 
         // actual Ray
         Ray ray = Camera.main.ViewportPointToRay(rayOrigin);
-        LayerMask IgnoreMe = LayerMask.GetMask("Player");
 
         // debug Ray
         Debug.DrawRay(ray.origin, ray.direction * rayLength, Color.red);
 
         RaycastHit hit;
-        if (Physics.Raycast(ray, out hit, rayLength, ~IgnoreMe))
+        if (Physics.Raycast(ray, out hit, rayLength))
         {
             if (hit.collider.tag == "Chunk")
             {
