@@ -995,3 +995,7 @@ Received Import Request.
   path: Assets/Models/机关石块.FBX
   artifactKey: Guid(d193aef5d38118d46b7cb997c04bc6c6) Importer(815301076,1909f56bfc062723c751e8b465ee728b)
 Start importing Assets/Models/机关石块.FBX using Guid(d193aef5d38118d46b7cb997c04bc6c6) Importer(815301076,1909f56bfc062723c751e8b465ee728b)  -> (artifact id: 'ae295bcf8546cadc1cf0683030eccadd') in 0.031187 seconds 
+Editor requested this worker to shutdown with reason: Scaling down because of idle timeout
+AssetImportWorker is now disconnected from the server
+Process exiting
+Exiting without the bug reporter. Application will terminate with return code 0
