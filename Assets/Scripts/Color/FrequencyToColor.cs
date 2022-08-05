@@ -196,7 +196,7 @@ public class FrequencyToColor : MonoBehaviour
                 var partMain = partS.main;
                 var particalColor = ColorHandler.waveLengthToRGB(audioProcessor.loudestFrequency);
                 float darken = audioProcessor.GetStrengthFromSpectrumIndex(audioProcessor.loudestSpectrumBarIndex) / 100f;
-                Debug.Log(darken+"  "+particalColor);
+               // Debug.Log(darken+"  "+particalColor);
              
                 particalColor = ColorDarknessModifer(particalColor, darken);
                 particalColor = BaseColorMix(particalColor, baseColor, mixratio);
