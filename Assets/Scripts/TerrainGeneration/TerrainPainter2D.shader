@@ -1,8 +1,9 @@
-Shader "Custom/Terrain"
+Shader "Custom/TerrainPainter2D"
 {
     Properties
     {
         _Color ("Color", Color) = (1,1,1,1)
+        _BoundTest("Bound", Range(0,1)) = 0.1
         _MainTex ("Albedo (RGB)", 2D) = "white" {}
         _Glossiness ("Smoothness", Range(0,1)) = 0.5
         _Metallic ("Metallic", Range(0,1)) = 0.0
@@ -28,9 +29,7 @@ Shader "Custom/Terrain"
             float3 worldNormal;
         };
 
-        float minMaxBounds;
-        float offsetY;
-        float planetRadius;
+        float bound;
         float normalOffsetWeight;
         float musicNoise;
         float musicNoiseWeight;
@@ -42,15 +41,8 @@ Shader "Custom/Terrain"
 
         void surf (Input IN, inout SurfaceOutputStandard o)
         {
-            float h = smoothstep(  
-            -minMaxBounds, 
-            minMaxBounds, 
-            -IN.worldPos.y + 
-            offsetY + 
-            (abs(IN.worldNormal.x) + abs(IN.worldNormal.y) + abs(IN.worldNormal.z)) * normalOffsetWeight + 
-            musicNoise * musicNoiseWeight);
+            float3 tex = tex2D(_MainTex, float2(IN.worldPos.x * bound, IN.worldPos.z * bound));
 
-            float3 tex = tex2D(ramp, float2(h,.5));
             o.Albedo = tex;
             // Metallic and smoothness come from slider variables
             o.Metallic = _Metallic;
