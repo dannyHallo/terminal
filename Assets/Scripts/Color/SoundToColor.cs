@@ -2,7 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class ColorSwitchBetween : MonoBehaviour
+public class SoundToColor : MonoBehaviour
 {
     // Start is called before the first frame update
     void Start()

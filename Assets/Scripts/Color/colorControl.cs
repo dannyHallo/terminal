@@ -18,36 +18,50 @@ public class colorControl : MonoBehaviour
     public bool _red;
     public bool _blue;
     public bool _green;
-    [Range(0,2)]public float standardMaxSpeed;
+    [Range(0,2)]public float standardMaxSpeed=.3f;
     [Range(0, 2)] public float redChangeSpeed;
     [Range(0, 2)] public float blueChangeSpeed;
     [Range(0, 2)] public float greenChangeSpeed;
-    public Renderer cubeRenderer;
+   [HideInInspector] public Renderer cubeRenderer;
+
+
+    public bool Mix;
+    public Color mixingColor;
+
+    [Header("Change Between")]
+    private bool ToSecondColor;
 
     public Color colorOne;
     public Color colorTwo;
     private void Start()
     {
-        frameColor.a = 1;
-        red=Random.Range(0,1);
-        green = Random.Range(0, 1);
-        blue = Random.Range(0, 1);
+        // frameColor.a = 1;
+        // red=Random.Range(0,1);
+        // green = Random.Range(0, 1);
+        // blue = Random.Range(0, 1);
 
-        redChangeSpeed = Random.Range(.1f, standardMaxSpeed);
-        greenChangeSpeed = Random.Range(.1f, standardMaxSpeed);
-        blueChangeSpeed = Random.Range(.1f, standardMaxSpeed);
-        frameColor.r = red;
-        frameColor.b = blue;
-        frameColor.g = green;
-        Debug.Log(frameColor);
-       // var cubeRenderer = cube.GetComponent<Renderer>();
-        cubeRenderer.material.SetColor("_Color", frameColor);
+        // redChangeSpeed = Random.Range(.1f, standardMaxSpeed);
+        // greenChangeSpeed = Random.Range(.1f, standardMaxSpeed);
+        // blueChangeSpeed = Random.Range(.1f, standardMaxSpeed);
+        // frameColor.r = red;
+        // frameColor.b = blue;
+        // frameColor.g = green;
+        // Debug.Log(frameColor);
+        cubeRenderer = this.GetComponent<Renderer>();
+       //var cubeRenderer = cube.GetComponent<Renderer>();
+        //cubeRenderer.material.SetColor("_Color", frameColor);
+
     }
     void Update()
     {
+        colorTwo = colorOne;
+        if (Mix)
+        {
+            colorTwo = BaseColorMix(colorTwo, mixingColor, .4f);
+        }
+        //  frameColor = ChangeBetween(frameColor, colorOne, colorTwo, standardMaxSpeed);
+        frameColor = ChangeColorToward(frameColor,colorTwo, standardMaxSpeed);
 
-        frameColor = ChangeColorToward(frameColor,colorOne,standardMaxSpeed);
-      
         cubeRenderer.material.SetColor("_Color", frameColor);
       //  Debug.Log("cgag"+customColor);
         // Call SetColor using the shader property name "_Color" and setting the color to red
@@ -57,23 +71,23 @@ public class colorControl : MonoBehaviour
 
 
 
-    public float changeX(float x,bool decrease, float changeSpeed)
-    {
+   // public float changeX(float x,bool decrease, float changeSpeed)
+   // {
 
       
-            if (decrease)
-            {
-                x -= Time.deltaTime * changeSpeed;
-            return x;
-            }
-            else
-            {
-                x += Time.deltaTime * changeSpeed;
-            return x;
-        }
+   //         if (decrease)
+   //         {
+   //             x -= Time.deltaTime * changeSpeed;
+   //         return x;
+   //         }
+   //         else
+   //         {
+   //             x += Time.deltaTime * changeSpeed;
+   //         return x;
+   //     }
         
-   //     Debug.Log(x+" "+decrease);
-    }
+   ////     Debug.Log(x+" "+decrease);
+   // }
 
     /// <summary>
     /// 
@@ -82,7 +96,7 @@ public class colorControl : MonoBehaviour
     /// <param name="mixColor"></param>
     /// <param name="mixratio">should be between [Range(0,1)]</param>
     /// <returns></returns>
-    Color BaseColorMix(Color baseColor, Color mixColor,float mixratio)
+    public Color BaseColorMix(Color baseColor, Color mixColor,float mixratio)
     {
         Color _color;
         _color.r = baseColor.r * (1 - mixratio) + mixColor.r * mixratio;
@@ -91,6 +105,7 @@ public class colorControl : MonoBehaviour
         _color.a = baseColor.a * (1 - mixratio) + mixColor.a * mixratio;
         return _color;
     }
+    
 
 
 
@@ -99,9 +114,29 @@ public class colorControl : MonoBehaviour
 
 
 
-    void ChangeBetween(Color colorA,Color colorB)
+
+    Color ChangeBetween(Color colorNow,Color colorA,Color colorB,float maxspeed)
     {
+        Color _color;
+        if (ToSecondColor)
+        {
+            _color = ChangeColorToward(colorNow, colorB, maxspeed);
+            if (CheckColorReach(_color, colorB))
+            {
+                ToSecondColor = false;
+            }
 
+            return _color;
+        }
+        else
+        {
+            _color = ChangeColorToward(colorNow, colorA, maxspeed);
+            if (CheckColorReach(_color, colorA))
+            {
+                ToSecondColor = true;
+            }
+            return _color;
+        }
 
         //_red = CheckDecrease(red, _red,Mathf.Max(colorA.r,colorB.r), Mathf.Min(colorA.r, colorB.r));
         //_blue = CheckDecrease(blue, _blue,Mathf.Max(colorA.b, colorB.b), Mathf.Min(colorA.b, colorB.b));
@@ -109,7 +144,17 @@ public class colorControl : MonoBehaviour
     }
 
 
-
+    bool CheckColorReach(Color colorNow,Color targetColor)
+    {
+        if (colorNow==targetColor)
+        {
+            return true;
+        }
+        else
+        {
+            return false;
+        }
+    }
 
 
     /// <summary>
