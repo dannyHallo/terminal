@@ -56,9 +56,10 @@ public class ColorHandler
     {
         float factor;
         float Red, Green, Blue;
-        float range0 = 380;
-        float range1 = 440;
-        float range2 = 490;
+        //orginal range numbers
+        float range0 = 100;
+        float range1 = 330;
+        float range2 = 450;
         float range3 = 510;
         float range4 = 580;
         float range5 = 645;
@@ -109,6 +110,12 @@ public class ColorHandler
             Green = 0.0f;
             Blue = 0.0f;
         }
+        else if(Wavelength >= range6)
+        {
+            Red = 1.0f;
+            Green = 1.0f;
+            Blue = 1.0f;
+        }
         else
         {
             Red = 0.0f;
@@ -116,23 +123,26 @@ public class ColorHandler
             Blue = 0.0f;
         }
 
+        float range21=420;
+        float range22= 701;
+
         // Let the intensity fall off near the vision limits
 
-        if ((Wavelength >= 380) && (Wavelength < 420))
+        if ((Wavelength >= range0) && (Wavelength < range21))
         {
-            factor = 0.3f + 0.7f * (Wavelength - 380) / (420 - 380);
+            factor = 0.3f + 0.7f * (Wavelength - range0) / (range21 - range0);
         }
-        else if ((Wavelength >= 420) && (Wavelength < 701))
+        else if ((Wavelength >= range21) && (Wavelength < range22))
         {
             factor = 1.0f;
         }
-        else if ((Wavelength >= 701) && (Wavelength < 781))
+        else if ((Wavelength >= range22) && (Wavelength < range6))
         {
-            factor = 0.3f + 0.7f * (780 - Wavelength) / (780 - 700);
+            factor = 0.3f + 0.7f * (range6 - Wavelength) / (range6 - range22);
         }
         else
         {
-            factor = 0.0f;
+            factor = 1f;
         }
 
 
