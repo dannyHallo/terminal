@@ -153,8 +153,10 @@ public class FrequencyToColor : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-
-        GetKeyH();
+        if (Time.frameCount == 60)
+        {
+            FrequenciesToColors();
+        }
         if (GotColor)
         {
             CaculateFinalColor();
