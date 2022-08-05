@@ -17,7 +17,7 @@ public class PlayerMovement : MonoBehaviour
     public float jumpSpeed = 8.0f;
     public float flySpeed = 0.1f;
     public float gravity = 20.0f;
-    public Camera playerCamera;
+    // public Camera playerCamera;
     public AudioListener audioListener;
     public float lookSpeed = 2.0f;
     public float lookYLimit = 45.0f;
@@ -285,7 +285,7 @@ public class PlayerMovement : MonoBehaviour
         {
             rotationY += yDrift * lookSpeed;
             rotationY = Mathf.Clamp(rotationY, -lookYLimit, lookYLimit);
-            playerCamera.transform.localRotation = Quaternion.Euler(rotationY, 0, 0);
+            // playerCamera.transform.localRotation = Quaternion.Euler(rotationY, 0, 0);
             transform.rotation *= Quaternion.Euler(0, xDrift * lookSpeed, 0);
         }
     }
