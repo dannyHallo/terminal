@@ -188,6 +188,7 @@ public class FrequencyToColor : MonoBehaviour
                 float darken = audioProcessor.GetStrengthFromSpectrumIndex(audioProcessor.loudestSpectrumBarIndex) / 100f;
                 Debug.Log(darken+"  "+particalColor);
                 particalColor = ColorDarknessModifer(particalColor, darken);
+
                 partMain.startColor = particalColor;
                 _colorObject.material.color = targetColor;
 
