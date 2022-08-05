@@ -45,7 +45,7 @@ Shader "Custom/Terrain"
             float h = smoothstep(  
             -minMaxBounds, 
             minMaxBounds, 
-            (distance(float3(0,0,0), IN.worldPos) - planetRadius) + 
+            -IN.worldPos.y + 
             offsetY + 
             (abs(IN.worldNormal.x) + abs(IN.worldNormal.y) + abs(IN.worldNormal.z)) * normalOffsetWeight + 
             musicNoise * musicNoiseWeight);

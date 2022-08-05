@@ -36,6 +36,11 @@ int indexFromCoord(uint x, uint y, uint z) {
     return z * numPointsPerAxis * numPointsPerAxis + y * numPointsPerAxis + x;
 }
 
+float customDistance(float3 pos, float r){
+    // return radius - distance(float2(0,0), float2(pos.x, pos.y));
+    return -pos.y;
+}
+
 [numthreads(numThreads,numThreads,numThreads)]
 void Density (int3 id : SV_DispatchThreadID)
 {
@@ -76,7 +81,8 @@ void Density (int3 id : SV_DispatchThreadID)
     noise *= noiseWeight;
 
     // The higher the position is, the less likely it is gonna appear.
-    float finalVal = (radius - distance(float3(0,0,0), pos)) * heightGredient + floorOffset + noise;
+    // float finalVal = (radius - distance(float3(0,0,0), pos)) * heightGredient + floorOffset + noise;
+    float finalVal = customDistance(pos, radius) * heightGredient + floorOffset + noise;
 
     if(finalVal + manualData[index] - isoLevel > 0)
     pointsStatus[0] = 1;
