@@ -22,7 +22,7 @@ public class FrequencyToColor : MonoBehaviour
     public int end;
     [Header("Color Mix")]
     public Color baseColor;
-    public float mixratio = .6f;
+    [Range(0,1)]public float mixratio = .6f;
     [Header("Speed Control")]
     public bool redSpeedLimit;
     public bool greenSpeedLimit;
@@ -129,7 +129,15 @@ public class FrequencyToColor : MonoBehaviour
         return _color;
     }
 
-
+    public Color BaseColorMix(Color baseColor, Color mixColor, float mixratio)
+    {
+        Color _color;
+        _color.r = baseColor.r * (1 - mixratio) + mixColor.r * mixratio;
+        _color.b = baseColor.b * (1 - mixratio) + mixColor.b * mixratio;
+        _color.g = baseColor.g * (1 - mixratio) + mixColor.g * mixratio;
+        _color.a = baseColor.a * (1 - mixratio) + mixColor.a * mixratio;
+        return _color;
+    }
 
 
     // Start is called before the first frame update
@@ -187,8 +195,9 @@ public class FrequencyToColor : MonoBehaviour
                 var particalColor = ColorHandler.waveLengthToRGB(audioProcessor.loudestFrequency);
                 float darken = audioProcessor.GetStrengthFromSpectrumIndex(audioProcessor.loudestSpectrumBarIndex) / 100f;
                 Debug.Log(darken+"  "+particalColor);
+             
                 particalColor = ColorDarknessModifer(particalColor, darken);
-
+                particalColor = BaseColorMix(particalColor, baseColor, mixratio);
                 partMain.startColor = particalColor;
                 _colorObject.material.color = targetColor;
 
