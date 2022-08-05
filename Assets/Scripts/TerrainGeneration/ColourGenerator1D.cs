@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 
 [ExecuteInEditMode]
-public class ColourGenerator : MonoBehaviour
+public class ColourGenerator1D : MonoBehaviour
 {
     [Header("General")]
     public Material mat;

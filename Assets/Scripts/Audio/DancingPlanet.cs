@@ -33,7 +33,7 @@ namespace Assets.WasapiAudio.Scripts.Unity
         [Space]
         private TerrainMesh terrainMesh;
         private NoiseDensity noiseDensity;
-        private ColourGenerator colourGenerator;
+        private ColourGenerator1D colourGenerator;
 
         private void Start()
         {
@@ -41,7 +41,7 @@ namespace Assets.WasapiAudio.Scripts.Unity
 
             terrainMesh = planetGenerator.GetComponent<TerrainMesh>();
             noiseDensity = planetGenerator.GetComponent<NoiseDensity>();
-            colourGenerator = planetGenerator.GetComponent<ColourGenerator>();
+            colourGenerator = planetGenerator.GetComponent<ColourGenerator1D>();
 
             if (!terrainMesh || !noiseDensity || !colourGenerator)
             {
