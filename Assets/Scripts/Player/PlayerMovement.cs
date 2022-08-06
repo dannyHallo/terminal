@@ -217,18 +217,18 @@ public class PlayerMovement : MonoBehaviour
             : false;
     }
 
-    private bool PlayerWantsToUnlockCursor()
+    public bool PlayerWantsToUnlockCursor()
     {
         return (playerInputActions.Player.Exit.ReadValue<float>() == 1) ? true : false;
     }
 
-    private void LockCursor()
+    public void LockCursor()
     {
         Cursor.lockState = CursorLockMode.Locked;
         Cursor.visible = false;
     }
 
-    private void UnlockCursor()
+    public void UnlockCursor()
     {
         Cursor.lockState = CursorLockMode.None;
         Cursor.visible = true;

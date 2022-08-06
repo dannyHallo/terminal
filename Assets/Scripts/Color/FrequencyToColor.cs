@@ -22,7 +22,7 @@ public class FrequencyToColor : MonoBehaviour
     public int end;
     [Header("Color Mix")]
     public Color baseColor;
-    [Range(0,1)]public float mixratio = .6f;
+    [Range(0, 1)] public float mixratio = .6f;
     [Header("Speed Control")]
     public bool redSpeedLimit;
     public bool greenSpeedLimit;
@@ -121,8 +121,8 @@ public class FrequencyToColor : MonoBehaviour
     Color ColorDarknessModifer(Color orginalColor, float lightness)
     {
         Color _color;
-        _color.r = orginalColor.r/256* lightness;
-        Debug.Log("r"+orginalColor.r);
+        _color.r = orginalColor.r / 256 * lightness;
+        // Debug.Log("r"+orginalColor.r);
         _color.b = orginalColor.b / 256 * lightness;
         _color.g = orginalColor.g / 256 * lightness;
         _color.a = orginalColor.a;
@@ -166,7 +166,7 @@ public class FrequencyToColor : MonoBehaviour
 
                 //Debug.Log("Nice"+FinalColor );
                 Color targetColor = _colorObject.material.color;
-               // Debug.Log("before" + targetColor);
+                // Debug.Log("before" + targetColor);
                 if (redSpeedLimit)
                 {
                     targetColor.r += Mathf.Clamp(FinalColor.r - targetColor.r, Mathf.Min((FinalColor.r - targetColor.r) * Time.deltaTime, -maxColorChangeSpeeed * Time.deltaTime), Mathf.Max((FinalColor.r - targetColor.r) * Time.deltaTime, maxColorChangeSpeeed * Time.deltaTime));
@@ -192,12 +192,12 @@ public class FrequencyToColor : MonoBehaviour
                     targetColor.g = FinalColor.g;
                 }
 
-              //  Debug.Log(targetColor);
+                //  Debug.Log(targetColor);
                 var partMain = partS.main;
                 var particalColor = ColorHandler.waveLengthToRGB(audioProcessor.loudestFrequency);
                 float darken = audioProcessor.GetStrengthFromSpectrumIndex(audioProcessor.loudestSpectrumBarIndex) / 100f;
-               // Debug.Log(darken+"  "+particalColor);
-             
+                // Debug.Log(darken+"  "+particalColor);
+
                 particalColor = ColorDarknessModifer(particalColor, darken);
                 particalColor = BaseColorMix(particalColor, baseColor, mixratio);
                 partMain.startColor = particalColor;
@@ -206,7 +206,7 @@ public class FrequencyToColor : MonoBehaviour
             }
             else
             {
-                Debug.Log("Np");
+                // Debug.Log("Np");
             }
 
 

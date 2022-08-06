@@ -5,7 +5,8 @@ using Cinemachine;
 
 public class CameraControl : MonoBehaviour
 {
-    public CinemachineVirtualCamera cinemachineVirtualCamera;
+    public CinemachineVirtualCamera normalFollowingCam;
+    public CinemachineVirtualCamera orbitalCam;
     public Transform cameraLookAtItem;
 
     public float cameraVerticalOffset;
@@ -37,9 +38,10 @@ public class CameraControl : MonoBehaviour
         Camera.main.gameObject.TryGetComponent<CinemachineBrain>(out var brain);
         if (brain == null) Camera.main.gameObject.AddComponent<CinemachineBrain>();
 
-        composer = cinemachineVirtualCamera.GetCinemachineComponent<CinemachineComposer>();
-        follower = cinemachineVirtualCamera.GetCinemachineComponent<Cinemachine3rdPersonFollow>();
-        cinemachineVirtualCamera.Priority = 20;
+        composer = normalFollowingCam.GetCinemachineComponent<CinemachineComposer>();
+        follower = normalFollowingCam.GetCinemachineComponent<Cinemachine3rdPersonFollow>();
+
+        FollowPlayer();
 
         // Ask for a update
         settingsChanged = true;
@@ -47,8 +49,18 @@ public class CameraControl : MonoBehaviour
 
     private void Update()
     {
+        // Do nothing when cursor is there
+        if (Cursor.lockState == CursorLockMode.None)
+            return;
+
         HandleMouseYMovement();
         HandleMouseScrollMovement();
+
+        if (Input.GetKeyDown(KeyCode.R))
+        {
+            if (isFollowingPlayer()) OrbitPlayer();
+            else FollowPlayer();
+        }
     }
 
     private void HandleMouseYMovement()
@@ -66,4 +78,27 @@ public class CameraControl : MonoBehaviour
         follower.CameraDistance += mouseScrollDel * camDstSpeed;
         follower.CameraDistance = Mathf.Clamp(follower.CameraDistance, camDstMin, camDstMax);
     }
+
+    public void OrbitPlayer()
+    {
+        normalFollowingCam.Priority = 15;
+        orbitalCam.Priority = 20;
+    }
+
+    public void FollowPlayer()
+    {
+        normalFollowingCam.Priority = 20;
+        orbitalCam.Priority = 15;
+    }
+
+    public bool isFollowingPlayer()
+    {
+        return normalFollowingCam.Priority > orbitalCam.Priority ? true : false;
+    }
+
+    public bool isOrbitingPlayer()
+    {
+        return !isFollowingPlayer();
+    }
+
 }

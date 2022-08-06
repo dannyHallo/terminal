@@ -83,7 +83,7 @@ public class NoiseDensity : MonoBehaviour
         float offsetRange = 1000;
         for (int i = 0; i < numOctaves; i++)
         {
-            // What does it mean ( * 2 - 1 )?
+            // What does it mean by ( * 2 - 1 )?
             offsets[i] =
                 new Vector3(
                     (float)prng.NextDouble() * 2 - 1,
