@@ -27,7 +27,7 @@ public class ColourGenerator2D : MonoBehaviour
     public float minMaxBounds;
     public float offsetY;
 
-    public Texture2D orignalPalette;
+    Texture2D orignalPalette;
     public Texture2D userTex;
     public Texture2D originalGrayscaleTex;
 
