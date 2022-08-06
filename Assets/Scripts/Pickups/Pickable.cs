@@ -21,7 +21,10 @@ public class Pickable : MonoBehaviour
     {
         if (other.gameObject.tag != "Player")
             return;
+        GameObject player = GameObject.Find("Player");
+        PlayerController.InstrumentTypes instrumentType = PlayerController.InstrumentTypes.Guitar;
 
+        player.GetComponent<PlayerController>().UseInstrument(instrumentType);
         Destroy(gameObject);
     }
 }

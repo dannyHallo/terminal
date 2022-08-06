@@ -1,6 +1,7 @@
 using System;
 using UnityEngine;
 using System.Collections;
+using System.Collections.Generic;
 using UnityEngine.UI;
 
 [RequireComponent(typeof(AudioSource))]
@@ -34,8 +35,6 @@ public class PlayerController : MonoBehaviour
     [Range(1, 10)]
     public int drawRange = 5;
 
-    //Input
-
     // Flags
     bool startCoroutineF;
 
@@ -43,14 +42,20 @@ public class PlayerController : MonoBehaviour
     public LayerMask playerMask;
 
     Coroutine c = null;
-    public CapsuleCollider capsuleCollider;
 
     AudioSource audioSource;
     public AudioClip Cam_35mm;
-    int JoystickHorizontal;
-    int JoystickVertical;
-    Vector2 joystickInputVector;
     PlayerInputActions playerInputActions;
+    public enum InstrumentTypes { Guitar };
+    public List<enumToInstrument> instruments;
+    private GameObject activeInstrument;
+
+    [Serializable]
+    public struct enumToInstrument
+    {
+        public InstrumentTypes e;
+        public GameObject g;
+    }
 
     void Start()
     {
@@ -300,5 +305,20 @@ public class PlayerController : MonoBehaviour
     void OnDrawGizmos()
     {
         Gizmos.color = Color.red;
+    }
+
+    public void UseInstrument(InstrumentTypes instrument)
+    {
+        if (activeInstrument)
+            activeInstrument.SetActive(false);
+
+        foreach (enumToInstrument queriedInstrument in instruments)
+        {
+            if (queriedInstrument.e == instrument)
+            {
+                activeInstrument = queriedInstrument.g;
+                activeInstrument.SetActive(true);
+            }
+        }
     }
 }
