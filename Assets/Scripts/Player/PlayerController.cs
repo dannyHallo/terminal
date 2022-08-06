@@ -62,6 +62,7 @@ public class PlayerController : MonoBehaviour
         public GameObject g;
         public bool have;
     }
+    public UIManager uiManager;
 
     void Start()
     {
@@ -74,6 +75,7 @@ public class PlayerController : MonoBehaviour
 
         playerInputActions = new PlayerInputActions();
         playerInputActions.Player.Enable();
+        uiManager = FindObjectOfType<UIManager>();
     }
 
     // Land on planet initially
@@ -324,19 +326,35 @@ public class PlayerController : MonoBehaviour
         }
     }
 
-    private void GreyOtherInstrumentUI(int i)
+    public void InstrumentUIColor(int num)
     {
+        for (int i = 0; i<uiManager.InstrumentsUI.Count; i++)
+        {
 
+            if (i != num)
+            {
+                uiManager.InstrumentsUI[i].GetComponent<Image>().color = Color.gray;
+            }
+            else
+            {
+                uiManager.InstrumentsUI[i].GetComponent<Image>().color = Color.white;
+            }
+        }
     }
+
+
 
     private void TryUseInstrument(int i)
     {
+        
         var instrument = instruments[i].e;
+        InstrumentUIColor(i);
         if (activeInstrument == instruments[i].g)
         {
             if (activeInstrument.activeInHierarchy)
             {
                 activeInstrument.SetActive(false);
+                uiManager.InstrumentsUI[i].GetComponent<Image>().color = Color.gray;
             }
             else
             {
@@ -347,6 +365,7 @@ public class PlayerController : MonoBehaviour
         else
         {
             UseInstrument(instruments[i].e);
+
         }
 
     }
