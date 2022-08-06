@@ -53,11 +53,11 @@ Shader "Custom/TerrainPainter2D"
         void surf (Input IN, inout SurfaceOutputStandard o)
         {
             // User texture
-            float3 userCol = tex2D(
+            float4 userCol = tex2D(
             userTex, 
             float2((IN.worldPos.x + worldPosOffset) * mapBound, (IN.worldPos.z + worldPosOffset) * mapBound));
 
-            // Load oringal texture from color palette and noise
+            // Load original texture from color palette and noise
             // float texId = tex2D(originalGrayscaleTex, float2(IN.worldPos.x * mapBound, IN.worldPos.z * mapBound)).r;
 
             float h = smoothstep(  
@@ -70,8 +70,9 @@ Shader "Custom/TerrainPainter2D"
             float3 originalCol = tex2D(originalPalette, float2(h,.5));
             
             // Blend func
-            float blendFactor = step(2.8f, dot(userCol.rgb, userCol.rgb));
-            float3 finalCol = lerp(userCol, originalCol, blendFactor);
+            // float blendFactor = step(2.8f, dot(userCol.rgb, userCol.rgb));
+            float blendFactor = userCol.a;
+            float3 finalCol = lerp(originalCol, userCol, blendFactor);
 
             o.Albedo = finalCol;
             // Metallic and smoothness come from slider variables

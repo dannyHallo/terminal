@@ -335,15 +335,15 @@ public class TerrainMesh : MonoBehaviour
         // All chunks, no matter lod
         // int fixedChunksHori = Mathf.CeilToInt(lodSetup.fixedDistanceHori / boundSize);
         // int fixedChunksVert = Mathf.CeilToInt(lodSetup.fixedDistanceVert / boundSize);
-        int fixedChunksHori = Mathf.CeilToInt(numChunks.x / 2.0f);
-        int fixedChunksVert = Mathf.CeilToInt(numChunks.y / 2.0f);
+        int fixedChunksHori = numChunks.x;
+        int fixedChunksVert = numChunks.y;
 
         int updatedChunks = 0;
-        for (int x = -fixedChunksHori; x <= fixedChunksHori; x++)
+        for (int x = 0; x < fixedChunksHori; x++)
         {
-            for (int y = -fixedChunksVert; y <= fixedChunksVert; y++)
+            for (int y = 0; y < fixedChunksVert; y++)
             {
-                for (int z = -fixedChunksHori; z <= fixedChunksHori; z++)
+                for (int z = 0; z < fixedChunksHori; z++)
                 {
                     Vector3Int coord = new Vector3Int(x, y, z);
 
@@ -1075,7 +1075,7 @@ public class TerrainMesh : MonoBehaviour
     Vector3 CentreFromCoord(Vector3Int coord)
     {
         // Centre entire map at origin
-        if (fixedMapSize && !Application.isPlaying)
+        if (fixedMapSize || !Application.isPlaying)
         {
             Vector3 totalBounds = (Vector3)numChunks * boundSize;
             return -totalBounds / 2 + (Vector3)coord * boundSize + Vector3.one * boundSize / 2;

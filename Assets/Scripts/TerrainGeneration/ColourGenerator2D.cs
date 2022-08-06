@@ -111,7 +111,7 @@ public class ColourGenerator2D : MonoBehaviour
     private void CreateTexture2DFromBlank(Texture2D src, out Texture2D dst)
     {
         dst = new Texture2D(src.width, src.height, TextureFormat.RGBA32, false);
-        // dst.SetPixels(src.GetPixels());
+        dst.SetPixels(src.GetPixels());
         dst.Apply();
     }
 
@@ -165,7 +165,7 @@ public class ColourGenerator2D : MonoBehaviour
         x *= ratio * texture.width;
         z *= ratio * texture.height;
 
-        print("Drawing origin: " + (int)x + ", " + (int)z);
+        // print("Drawing origin: " + (int)x + ", " + (int)z);
 
         DrawOnTexture(texture, (int)x, (int)z, Mathf.CeilToInt(radius * strokeMul));
     }
