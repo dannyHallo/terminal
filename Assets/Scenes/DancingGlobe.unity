@@ -248,8 +248,8 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 19492581}
-  m_LocalRotation: {x: 0.10218662, y: 0, z: 0, w: 0.9947653}
-  m_LocalPosition: {x: 0, y: 49.449997, z: -3.5}
+  m_LocalRotation: {x: 0.18188372, y: 0, z: 0, w: 0.98332006}
+  m_LocalPosition: {x: 0, y: 49.449997, z: -9.5}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -388,6 +388,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 36445309}
+  - component: {fileID: 36445310}
   m_Layer: 0
   m_Name: -----------UI
   m_TagString: Untagged
@@ -410,6 +411,23 @@ Transform:
   m_Father: {fileID: 0}
   m_RootOrder: 9
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &36445310
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 36445308}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e2a38dbe217cb67449d6bb55ed42e174, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  pickUpUI: {fileID: 1219163559}
+  InstrumentOneUI: {fileID: 0}
+  InstrumentTwoUI: {fileID: 0}
+  InstrumentThreeUI: {fileID: 0}
+  InstrumentFourUI: {fileID: 0}
 --- !u!1 &52172797
 GameObject:
   m_ObjectHideFlags: 0
@@ -521,7 +539,7 @@ PrefabInstance:
     - target: {fileID: 1300737285515403912, guid: db1b8659421fe8841966362b652b779d,
         type: 3}
       propertyPath: m_LocalPosition.y
-      value: 16.5
+      value: 40
       objectReference: {fileID: 0}
     - target: {fileID: 1300737285515403912, guid: db1b8659421fe8841966362b652b779d,
         type: 3}
@@ -5822,7 +5840,7 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 705118727}
-  m_LocalRotation: {x: 0.008125019, y: 0.0000000010753634, z: -8.7376365e-12, w: 0.999967}
+  m_LocalRotation: {x: 0.008125011, y: -0.0000000010753634, z: 8.737627e-12, w: 0.999967}
   m_LocalPosition: {x: 0, y: 46.76, z: -3.7}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
@@ -6241,7 +6259,7 @@ MonoBehaviour:
   ShoulderOffset: {x: 0, y: 3.35, z: 0}
   VerticalArmLength: 0
   CameraSide: 1
-  CameraDistance: 3.5
+  CameraDistance: 9.5
   CameraCollisionFilter:
     serializedVersion: 2
     m_Bits: 1
@@ -6268,7 +6286,7 @@ MonoBehaviour:
   m_HorizontalDamping: 0
   m_VerticalDamping: 0
   m_ScreenX: 0.5
-  m_ScreenY: 0.6169997
+  m_ScreenY: 0.3665
   m_DeadZoneWidth: 0
   m_DeadZoneHeight: 0
   m_SoftZoneWidth: 0.17
@@ -7204,8 +7222,8 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 2035024505}
-  m_LocalRotation: {x: 0.10218662, y: 0, z: 0, w: 0.9947653}
-  m_LocalPosition: {x: 0, y: 49.449997, z: -3.5}
+  m_LocalRotation: {x: 0.18188372, y: 0, z: 0, w: 0.98332006}
+  m_LocalPosition: {x: 0, y: 49.449997, z: -9.5}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -7551,11 +7569,26 @@ PrefabInstance:
     - target: {fileID: 460509502085719020, guid: 9d448bb187b307b4590b1fde57894389,
         type: 3}
       propertyPath: instruments.Array.size
-      value: 1
+      value: 2
       objectReference: {fileID: 0}
     - target: {fileID: 460509502085719020, guid: 9d448bb187b307b4590b1fde57894389,
         type: 3}
       propertyPath: instruments.Array.data[0].g
+      value: 
+      objectReference: {fileID: 1053700850}
+    - target: {fileID: 460509502085719020, guid: 9d448bb187b307b4590b1fde57894389,
+        type: 3}
+      propertyPath: instruments.Array.data[1].e
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 460509502085719020, guid: 9d448bb187b307b4590b1fde57894389,
+        type: 3}
+      propertyPath: instruments.Array.data[1].g
+      value: 
+      objectReference: {fileID: 1053700850}
+    - target: {fileID: 460509502085719020, guid: 9d448bb187b307b4590b1fde57894389,
+        type: 3}
+      propertyPath: instruments.Array.data[2].g
       value: 
       objectReference: {fileID: 1053700850}
     - target: {fileID: 3637207282300666396, guid: 9d448bb187b307b4590b1fde57894389,
