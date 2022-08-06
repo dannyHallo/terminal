@@ -11,21 +11,45 @@ public class CameraControl : MonoBehaviour
 
     public float cameraVerticalOffset;
     private bool settingsChanged = false;
-    private CinemachineComposer composer;
-    private Cinemachine3rdPersonFollow follower;
+
+    private CinemachineComposer normalFollowingCamComposer;
+    private Cinemachine3rdPersonFollow normalFollowingCamFollower;
+    private CinemachineOrbitalTransposer orbitalCamTransposer;
 
     [Space]
 
-    [Header("Scrolling")]
+    [Header("Following Camera Properties")]
     public float camDstMin;
     public float camDstMax;
-    public float camDstSpeed = 1.0f;
-
-
-    [Header("Mouse Y")]
     [Range(0, 1)] public float mouseYMin;
     [Range(0, 1)] public float mouseYMax;
-    [Range(0, 0.1f)] public float mouseYSpeed = 0.03f;
+
+
+    [Header("Orbiting Camera Properties")]
+    public float orbitingSpeed;
+
+
+    [Header("Sensitivity")]
+    [Range(0, 0.1f)] public float mouseYSensitivity = 0.03f;
+    [Range(0.5f, 1.5f)] public float scrollingSensitivity = 1.0f;
+
+
+
+    private bool isFollowingPlayer
+    {
+        get
+        {
+            return normalFollowingCam.Priority > orbitalCam.Priority ? true : false;
+        }
+    }
+
+    private bool isOrbitingPlayer
+    {
+        get
+        {
+            return normalFollowingCam.Priority < orbitalCam.Priority ? true : false;
+        }
+    }
 
     private void Awake()
     {
@@ -38,8 +62,9 @@ public class CameraControl : MonoBehaviour
         Camera.main.gameObject.TryGetComponent<CinemachineBrain>(out var brain);
         if (brain == null) Camera.main.gameObject.AddComponent<CinemachineBrain>();
 
-        composer = normalFollowingCam.GetCinemachineComponent<CinemachineComposer>();
-        follower = normalFollowingCam.GetCinemachineComponent<Cinemachine3rdPersonFollow>();
+        normalFollowingCamComposer = normalFollowingCam.GetCinemachineComponent<CinemachineComposer>();
+        normalFollowingCamFollower = normalFollowingCam.GetCinemachineComponent<Cinemachine3rdPersonFollow>();
+        orbitalCamTransposer = orbitalCam.GetCinemachineComponent<CinemachineOrbitalTransposer>();
 
         FollowPlayer();
 
@@ -53,12 +78,25 @@ public class CameraControl : MonoBehaviour
         if (Cursor.lockState == CursorLockMode.None)
             return;
 
-        HandleMouseYMovement();
-        HandleMouseScrollMovement();
+        if (isFollowingPlayer)
+        {
+            HandleMouseYMovement();
+            HandleMouseScrollMovement();
+        }
+
+        // Move cam automatically
+        else if (isOrbitingPlayer)
+        {
+            orbitalCamTransposer.m_XAxis.Value += orbitingSpeed * Time.deltaTime;
+            if (-100.0f < orbitalCamTransposer.m_XAxis.Value && orbitalCamTransposer.m_XAxis.Value < -80.0f)
+            {
+                FollowPlayer();
+            }
+        }
 
         if (Input.GetKeyDown(KeyCode.R))
         {
-            if (isFollowingPlayer()) OrbitPlayer();
+            if (isFollowingPlayer) OrbitPlayer();
             else FollowPlayer();
         }
     }
@@ -67,22 +105,24 @@ public class CameraControl : MonoBehaviour
     {
         float mouseDelY = Input.GetAxis("Mouse Y");
 
-        composer.m_ScreenY += mouseDelY * mouseYSpeed;
-        composer.m_ScreenY = Mathf.Clamp(composer.m_ScreenY, mouseYMin, mouseYMax);
+        normalFollowingCamComposer.m_ScreenY += mouseDelY * mouseYSensitivity;
+        normalFollowingCamComposer.m_ScreenY = Mathf.Clamp(normalFollowingCamComposer.m_ScreenY, mouseYMin, mouseYMax);
     }
 
     private void HandleMouseScrollMovement()
     {
         float mouseScrollDel = -Input.mouseScrollDelta.y;
 
-        follower.CameraDistance += mouseScrollDel * camDstSpeed;
-        follower.CameraDistance = Mathf.Clamp(follower.CameraDistance, camDstMin, camDstMax);
+        normalFollowingCamFollower.CameraDistance += mouseScrollDel * scrollingSensitivity;
+        normalFollowingCamFollower.CameraDistance = Mathf.Clamp(normalFollowingCamFollower.CameraDistance, camDstMin, camDstMax);
     }
 
     public void OrbitPlayer()
     {
         normalFollowingCam.Priority = 15;
         orbitalCam.Priority = 20;
+
+        orbitalCamTransposer.m_XAxis.Value = 80.0f;
     }
 
     public void FollowPlayer()
@@ -90,15 +130,4 @@ public class CameraControl : MonoBehaviour
         normalFollowingCam.Priority = 20;
         orbitalCam.Priority = 15;
     }
-
-    public bool isFollowingPlayer()
-    {
-        return normalFollowingCam.Priority > orbitalCam.Priority ? true : false;
-    }
-
-    public bool isOrbitingPlayer()
-    {
-        return !isFollowingPlayer();
-    }
-
 }
