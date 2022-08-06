@@ -389,6 +389,10 @@ public class TerrainMesh : MonoBehaviour
 
     void ChangeVolumeData(Vector3Int chunkCoord, int id, float rangeFactor)
     {
+        // Error Handler: Chunk does not exist
+        if (!existingChunks.ContainsKey(chunkCoord))
+            return;
+
         if (!existingChunkVolumeData.ContainsKey(chunkCoord))
         {
             int numPoints =

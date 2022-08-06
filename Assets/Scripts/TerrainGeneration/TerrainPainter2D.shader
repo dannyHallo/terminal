@@ -75,9 +75,9 @@ Shader "Custom/TerrainPainter2D"
             float3 finalCol = lerp(originalCol, userCol, blendFactor);
 
             o.Albedo = finalCol;
-            // Metallic and smoothness come from slider variables
-            o.Metallic = _Metallic;
-            o.Smoothness = _Glossiness;
+            // Use values when painted
+            o.Metallic = lerp(0, _Metallic, blendFactor);
+            o.Smoothness = lerp(0, _Glossiness, blendFactor);
         }
         ENDCG
     }
