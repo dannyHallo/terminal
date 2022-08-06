@@ -97,7 +97,7 @@ public class PlayerController : MonoBehaviour
     private void Update()
     {
         CheckRay();
-
+        ChangeWeaponCheck();
         if (!terrainMesh)
             terrainMesh = GameObject.Find("PlanetGenerator").GetComponent<TerrainMesh>();
 
@@ -312,7 +312,39 @@ public class PlayerController : MonoBehaviour
     {
         Gizmos.color = Color.red;
     }
+    private void ChangeWeaponCheck()
+    {
+        if (Input.GetKeyDown(KeyCode.Alpha1))
+        {
+            TryUseInstrument(0);
+        }
+        if (Input.GetKeyDown(KeyCode.Alpha2))
+        {
+            TryUseInstrument(1);
+        }
+    }
 
+
+    private void TryUseInstrument(int i)
+    {
+        var instrument = instruments[i].e;
+        if (activeInstrument == instruments[i].g)
+        {
+            if (activeInstrument)
+            {
+                activeInstrument.SetActive(false);
+            }
+            else
+            {
+                activeInstrument.SetActive(true);
+            }
+        }
+        else
+        {
+            UseInstrument(instruments[i].e);
+        }
+
+    }
     public void UseInstrument(InstrumentTypes instrument)
     {
         if (activeInstrument)
