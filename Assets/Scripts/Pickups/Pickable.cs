@@ -8,10 +8,11 @@ using TMPro;
 [RequireComponent(typeof(AudioClip))]
 public class Pickable : MonoBehaviour
 {
-    public UIManager PressE;
+    public PlayerController.InstrumentTypes instrumentType;
+    public UIManager UIManager;
     private void Start()
     {
-        PressE = FindObjectOfType<UIManager>();
+        UIManager = FindObjectOfType<UIManager>();
     }
 
     private void Update()
@@ -26,7 +27,7 @@ public class Pickable : MonoBehaviour
             return;
 
         }
-        PressE.pickUpUI.SetActive(true);
+        UIManager.pickUpUI.SetActive(true);
     }
     private void OnTriggerExit(Collider other)
     {
@@ -34,7 +35,7 @@ public class Pickable : MonoBehaviour
         {
             return;
         }
-        PressE.pickUpUI.SetActive(false);
+        UIManager.pickUpUI.SetActive(false);
 
     }
     private void OnTriggerStay(Collider other)
@@ -42,11 +43,22 @@ public class Pickable : MonoBehaviour
         if (Input.GetKeyDown(KeyCode.E))
         {
             GameObject player = GameObject.Find("Player");
-            PlayerController.InstrumentTypes instrumentType = PlayerController.InstrumentTypes.Guitar;
-
+            // PlayerController.InstrumentTypes instrumentType = PlayerController.InstrumentTypes.Guitar;
+            List<PlayerController.enumToInstrument> playerInstuments = player.GetComponent<PlayerController>().instruments;
+            for (int i=0; i < playerInstuments.Count; i ++)
+            {
+                if (playerInstuments[i].e == instrumentType)
+                {
+                    PlayerController.enumToInstrument instrumentSetting= playerInstuments[i];
+                    instrumentSetting.have = true;
+                    playerInstuments[i] = instrumentSetting;
+                }
+            }
+            
             player.GetComponent<PlayerController>().UseInstrument(instrumentType);
+
             Destroy(gameObject);
-            PressE.pickUpUI.SetActive(false);
+            UIManager.pickUpUI.SetActive(false);
         }
 
     }

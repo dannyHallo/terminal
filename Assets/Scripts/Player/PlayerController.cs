@@ -46,7 +46,12 @@ public class PlayerController : MonoBehaviour
     AudioSource audioSource;
     public AudioClip Cam_35mm;
     PlayerInputActions playerInputActions;
-    public enum InstrumentTypes { Guitar };
+    //Instrument
+    public enum InstrumentTypes
+    {
+        Guitar,
+        Violin
+    };
     public List<enumToInstrument> instruments;
     private GameObject activeInstrument;
 
@@ -55,6 +60,7 @@ public class PlayerController : MonoBehaviour
     {
         public InstrumentTypes e;
         public GameObject g;
+        public bool have;
     }
 
     void Start()
@@ -314,7 +320,7 @@ public class PlayerController : MonoBehaviour
 
         foreach (enumToInstrument queriedInstrument in instruments)
         {
-            if (queriedInstrument.e == instrument)
+            if (queriedInstrument.e == instrument && queriedInstrument.have == true)
             {
                 activeInstrument = queriedInstrument.g;
                 activeInstrument.SetActive(true);
