@@ -8,10 +8,10 @@ using TMPro;
 [RequireComponent(typeof(AudioClip))]
 public class Pickable : MonoBehaviour
 {
-    public GameObject PressE;
+    public UIManager PressE;
     private void Start()
     {
-        PressE= GameObject.Find("Press E To Pickup"); 
+        PressE = FindObjectOfType<UIManager>();
     }
 
     private void Update()
@@ -22,30 +22,31 @@ public class Pickable : MonoBehaviour
     private void OnTriggerEnter(Collider other)
     {
         if (other.gameObject.tag != "Player")
-            PressE.SetActive(true);
+        {
             return;
 
-
+        }
+        PressE.pickUpUI.SetActive(true);
     }
     private void OnTriggerExit(Collider other)
     {
         if (other.gameObject.tag != "Player")
         {
-            PressE.SetActive(false);
             return;
         }
-            
+        PressE.pickUpUI.SetActive(false);
+
     }
     private void OnTriggerStay(Collider other)
     {
         if (Input.GetKeyDown(KeyCode.E))
-            {
+        {
             GameObject player = GameObject.Find("Player");
             PlayerController.InstrumentTypes instrumentType = PlayerController.InstrumentTypes.Guitar;
 
             player.GetComponent<PlayerController>().UseInstrument(instrumentType);
             Destroy(gameObject);
-            PressE.SetActive(false);
+            PressE.pickUpUI.SetActive(false);
         }
 
     }

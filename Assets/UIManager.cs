@@ -8,7 +8,7 @@ public class UIManager : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
-        
+        pickUpUI.SetActive(false);
     }
 
     // Update is called once per frame
