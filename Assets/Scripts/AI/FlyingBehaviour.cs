@@ -7,10 +7,17 @@ public class FlyingBehaviour : MonoBehaviour
     public float minDistanceFromGround;
     public float maxDistanceFromGround;
     public float verticalMovementSpeed;
+    public float horizontalMovementSpeed;
     public float verticalMovementFrequency;
+
+    public bool chasePlayer;
+    public bool leavePlayer;
 
     [Header("debug")]
     public float f1;
+
+    private Vector3 playerPos;
+    private Vector3 creaturePos;
 
     private void KeepDistanceFromTerrain()
     {
@@ -30,38 +37,51 @@ public class FlyingBehaviour : MonoBehaviour
             if (hit.collider.tag != "Chunk")
                 return;
 
-            Vector3 p = transform.position;
-            float rayLengthToTerrain = Vector3.Distance(hit.point, p);
+            float rayLengthToTerrain = Vector3.Distance(hit.point, creaturePos);
 
             f1 = rayLengthToTerrain;
 
             if (rayLengthToTerrain < minDistanceFromGround)
             {
-                p.y += verticalMovementSpeed * Time.deltaTime;
+                creaturePos.y += verticalMovementSpeed * Time.deltaTime;
             }
             else if (rayLengthToTerrain > maxDistanceFromGround)
             {
-                p.y -= verticalMovementSpeed * Time.deltaTime;
+                creaturePos.y -= verticalMovementSpeed * Time.deltaTime;
             }
             else
             {
-                p.y += Mathf.Sin(Time.time * verticalMovementFrequency) * verticalMovementSpeed * Time.deltaTime;
+                creaturePos.y += Mathf.Sin(Time.time * verticalMovementFrequency) * verticalMovementSpeed * Time.deltaTime;
             }
-
-
-            transform.position = p;
         }
     }
 
 
     void Start()
     {
-
     }
 
     void Update()
     {
+        playerPos = GameObject.Find("Player").transform.position;
+        creaturePos = transform.position;
+
         KeepDistanceFromTerrain();
+        Move();
+
+        transform.position = creaturePos;
+    }
+
+    private void Move()
+    {
+        if (chasePlayer)
+        {
+            Vector3 directionNormalized = playerPos - creaturePos;
+            directionNormalized.y = 0;
+
+            creaturePos.x += directionNormalized.x * Time.deltaTime * horizontalMovementSpeed;
+            creaturePos.z += directionNormalized.z * Time.deltaTime * horizontalMovementSpeed;
+        }
     }
 
     private void Dig()
