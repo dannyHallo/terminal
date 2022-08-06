@@ -27,7 +27,12 @@ public class ColourGenerator2D : MonoBehaviour
     public float f2;
     public float f3;
 
-    Texture2D texture;
+    Texture2D orignalPalette;
+    public Texture2D userTex;
+    public Texture2D orignalGrayscaleTex;
+
+    [Range(0, 0.01f)] public float mapBound;
+
     const int textureResolution = 50;
 
     public bool usePalette = false;
@@ -66,12 +71,12 @@ public class ColourGenerator2D : MonoBehaviour
 
     void UpdateShader()
     {
-        if (texture == null || texture.width != textureResolution)
-            texture = new Texture2D(textureResolution, 1, TextureFormat.RGBA32, false);
+        if (orignalPalette == null || orignalPalette.width != textureResolution)
+            orignalPalette = new Texture2D(textureResolution, 1, TextureFormat.RGBA32, false);
 
         if (gradient != null)
         {
-            Color[] colours = new Color[texture.width];
+            Color[] colours = new Color[orignalPalette.width];
             for (int i = 0; i < textureResolution; i++)
             {
                 Color gradientCol = gradient.Evaluate(i / (textureResolution - 1f));
@@ -79,8 +84,8 @@ public class ColourGenerator2D : MonoBehaviour
                 // colours[i] = allColor;
             }
 
-            texture.SetPixels(colours);
-            texture.Apply();
+            orignalPalette.SetPixels(colours);
+            orignalPalette.Apply();
         }
 
         // Testing vals
@@ -89,9 +94,12 @@ public class ColourGenerator2D : MonoBehaviour
         mat.SetFloat("f3", f3);
 
         mat.SetFloat("musicNoise", musicNoise);
+        mat.SetFloat("mapBound", mapBound);
         mat.SetFloat("musicNoiseWeight", musicNoiseWeight);
         mat.SetFloat("normalOffsetWeight", normalOffsetWeight);
-        mat.SetTexture("ramp", texture);
+        mat.SetTexture("orignalPalette", orignalPalette);
+        mat.SetTexture("orignalGrayscaleTex", orignalGrayscaleTex);
+        mat.SetTexture("userTex", userTex);
     }
 
     private void Update()
