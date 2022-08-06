@@ -1,0 +1,17 @@
+// Each #kernel tells which function to compile; you can have many kernels
+#pragma kernel CSMain
+
+// Create a RenderTexture with enableRandomWrite flag and set it
+// with cs.SetTexture
+RWTexture2D<float4> image;
+int radius;
+float4 drawColor;
+int2 origin;
+
+[numthreads(8,8,1)]
+void CSMain (uint2 id : SV_DispatchThreadID)
+{
+    if(distance(id, origin) <= radius){
+        image[id.xy] = float4(1.0,0.0,0.0,1.0);
+    }
+}

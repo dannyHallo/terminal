@@ -11,6 +11,8 @@ public class PlayerController : MonoBehaviour
 {
     public String botName;
     public TerrainMesh terrainMesh;
+    public ColourGenerator2D colourGenerator2D;
+
     public Image screenShotMask;
 
     public float walkingSpeed = 7.5f;
@@ -82,6 +84,8 @@ public class PlayerController : MonoBehaviour
         ChangeWeaponCheck();
         if (!terrainMesh)
             terrainMesh = GameObject.Find("TerrainGen").GetComponent<TerrainMesh>();
+        if (!colourGenerator2D)
+            colourGenerator2D = GameObject.Find("TerrainGen").GetComponent<ColourGenerator2D>();
 
         if (Cursor.lockState == CursorLockMode.None)
         {
@@ -151,6 +155,8 @@ public class PlayerController : MonoBehaviour
                 if (Input.GetMouseButton(0) && ableToDig)
                 {
                     terrainMesh.DrawOnChunk(hit.point, drawRange, 0);
+                    colourGenerator2D.DrawTextureOnWorldPos(colourGenerator2D.userTex, hit.point, drawRange);
+
                 }
                 else if (Input.GetMouseButton(1) && ableToDig)
                 {

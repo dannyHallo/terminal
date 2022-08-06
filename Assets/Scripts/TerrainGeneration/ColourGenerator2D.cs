@@ -8,7 +8,7 @@ public class ColourGenerator2D : MonoBehaviour
     [Header("General")]
     public Material mat;
     public float normalOffsetWeight;
-
+    public ComputeShader drawImageComputeShader;
 
     [Header("ColorPalette")]
     public Gradient gradient;
@@ -18,26 +18,34 @@ public class ColourGenerator2D : MonoBehaviour
     GradientColorKey[] colorKey;
     GradientAlphaKey[] alphaKey;
 
+    [Header("Drawing")]
+    public float strokeMul;
 
-    [Header("Test")]
+
+    [Header("Testing")]
     public float f1;
     public float f2;
     public float f3;
 
     public float minMaxBounds;
     public float offsetY;
+    public float worldPosOffset;
 
     Texture2D orignalPalette;
-    public Texture2D userTex;
-    public Texture2D originalGrayscaleTex;
+    public Texture2D blankTex;
 
-    [Range(0, 0.01f)] public float mapBound;
+    public Texture2D userTex;
+    public Texture2D metallicTex;
+    public Texture2D originalGrayscaleTex;
+    private RenderTexture universalRenderTex;
 
     const int textureResolution = 50;
 
     public bool usePalette = false;
     public bool updateRequest = false;
 
+    public bool resetTexture = true;
+    public bool dispatch = false;
 
     void UpdatePalette()
     {
@@ -89,17 +97,52 @@ public class ColourGenerator2D : MonoBehaviour
         mat.SetFloat("f2", f2);
         mat.SetFloat("f3", f3);
 
-        mat.SetFloat("mapBound", mapBound);
+        mat.SetFloat("mapBound", 1 / (2.0f * worldPosOffset));
         mat.SetFloat("normalOffsetWeight", normalOffsetWeight);
         mat.SetFloat("minMaxBounds", minMaxBounds);
         mat.SetFloat("offsetY", offsetY);
+        mat.SetFloat("worldPosOffset", worldPosOffset);
         mat.SetTexture("originalPalette", orignalPalette);
         mat.SetTexture("originalGrayscaleTex", originalGrayscaleTex);
         mat.SetTexture("userTex", userTex);
+        mat.SetTexture("metallicTex", metallicTex);
+    }
+
+    private void CreateTexture2DFromBlank(Texture2D src, out Texture2D dst)
+    {
+        dst = new Texture2D(src.width, src.height, TextureFormat.RGBA32, false);
+        // dst.SetPixels(src.GetPixels());
+        dst.Apply();
     }
 
     private void Update()
     {
+        if (!universalRenderTex)
+        {
+            universalRenderTex = new RenderTexture(userTex.width, userTex.height, 0);
+            universalRenderTex.enableRandomWrite = true;
+            universalRenderTex.Create();
+        }
+
+        if (resetTexture)
+        {
+            CreateTexture2DFromBlank(blankTex, out userTex);
+            CreateTexture2DFromBlank(blankTex, out metallicTex);
+
+            resetTexture = false;
+        }
+
+        // Test function
+        if (dispatch)
+        {
+            DrawOnTexture(userTex, (int)0, (int)0, 10);
+            DrawOnTexture(userTex, (int)1024, (int)1024, 10);
+            DrawOnTexture(userTex, (int)0, (int)1024, 10);
+            DrawOnTexture(userTex, (int)1024, (int)0, 10);
+
+            dispatch = false;
+        }
+
         if (updateRequest)
         {
             if (usePalette)
@@ -110,8 +153,45 @@ public class ColourGenerator2D : MonoBehaviour
         }
     }
 
+    public void DrawTextureOnWorldPos(Texture2D texture, Vector3 position, int radius)
+    {
+        float ratio = 1 / (2.0f * worldPosOffset);
+
+        float x = position.x;
+        float z = position.z;
+
+        x += worldPosOffset;
+        z += worldPosOffset;
+        x *= ratio * texture.width;
+        z *= ratio * texture.height;
+
+        print("Drawing origin: " + (int)x + ", " + (int)z);
+
+        DrawOnTexture(texture, (int)x, (int)z, Mathf.CeilToInt(radius * strokeMul));
+    }
+
+    private void DrawOnTexture(Texture2D texture, int originX, int originY, int radius)
+    {
+        Graphics.Blit(texture, universalRenderTex);
+
+        int[] origin = new int[2];
+        origin[0] = originX;
+        origin[1] = originY;
+
+        drawImageComputeShader.SetInt("radius", radius);
+        drawImageComputeShader.SetInts("origin", origin);
+        drawImageComputeShader.SetTexture(0, "image", universalRenderTex);
+        drawImageComputeShader.Dispatch(0, 128, 128, 1);
+
+        RenderTexture.active = universalRenderTex;
+        texture.ReadPixels(new Rect(0, 0, universalRenderTex.width, universalRenderTex.height), 0, 0);
+        texture.Apply();
+        RenderTexture.active = null;
+    }
+
     private void OnValidate()
     {
         updateRequest = true;
+        resetTexture = true;
     }
 }

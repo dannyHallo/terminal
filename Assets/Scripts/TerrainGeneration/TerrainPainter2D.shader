@@ -39,6 +39,7 @@ Shader "Custom/TerrainPainter2D"
         float musicNoise;
         float musicNoiseWeight;
         float mapBound;
+        float worldPosOffset;
 
         half _Glossiness;
         half _Metallic;
@@ -47,11 +48,14 @@ Shader "Custom/TerrainPainter2D"
         sampler2D originalGrayscaleTex;
         sampler2D originalPalette;
         sampler2D userTex;
+        sampler2D metallicTex;
 
         void surf (Input IN, inout SurfaceOutputStandard o)
         {
             // User texture
-            float3 userCol = tex2D(userTex, float2(IN.worldPos.x * mapBound, IN.worldPos.z * mapBound));
+            float3 userCol = tex2D(
+            userTex, 
+            float2((IN.worldPos.x + worldPosOffset) * mapBound, (IN.worldPos.z + worldPosOffset) * mapBound));
 
             // Load oringal texture from color palette and noise
             // float texId = tex2D(originalGrayscaleTex, float2(IN.worldPos.x * mapBound, IN.worldPos.z * mapBound)).r;
@@ -62,11 +66,11 @@ Shader "Custom/TerrainPainter2D"
             -IN.worldPos.y + 
             offsetY + 
             (abs(IN.worldNormal.x) + abs(IN.worldNormal.y) + abs(IN.worldNormal.z)) * normalOffsetWeight);
-            
+
             float3 originalCol = tex2D(originalPalette, float2(h,.5));
             
             // Blend func
-            float blendFactor = step(3.0f, dot(userCol.rgb, userCol.rgb));
+            float blendFactor = step(2.8f, dot(userCol.rgb, userCol.rgb));
             float3 finalCol = lerp(userCol, originalCol, blendFactor);
 
             o.Albedo = finalCol;
