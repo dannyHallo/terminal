@@ -147,7 +147,11 @@ public class FrequencyToColor : MonoBehaviour
         GotColor = false;
         //m_YourFirstButton.onClick.AddListener(FrequenciesToColors);
         //  FrequencyReturn();
+        if (_colorObject != null)
+        {
         _colorObject.material.SetColor("_color", Color.blue);
+        }
+
     }
 
     // Update is called once per frame
@@ -161,6 +165,18 @@ public class FrequencyToColor : MonoBehaviour
         {
             CaculateFinalColor();
             BaseColorMix();
+            if(partS!=null)
+            {
+                var partMain = partS.main;
+                var particalColor = ColorHandler.waveLengthToRGB(audioProcessor.loudestFrequency);
+                float darken = audioProcessor.GetStrengthFromSpectrumIndex(audioProcessor.loudestSpectrumBarIndex) / 100f;
+                // Debug.Log(darken+"  "+particalColor);
+
+                particalColor = ColorDarknessModifer(particalColor, darken);
+                particalColor = BaseColorMix(particalColor, baseColor, mixratio);
+                partMain.startColor = particalColor;
+            }
+
             if (_colorObject != null)
             {
 
@@ -193,16 +209,11 @@ public class FrequencyToColor : MonoBehaviour
                 }
 
                 //  Debug.Log(targetColor);
-                var partMain = partS.main;
-                var particalColor = ColorHandler.waveLengthToRGB(audioProcessor.loudestFrequency);
-                float darken = audioProcessor.GetStrengthFromSpectrumIndex(audioProcessor.loudestSpectrumBarIndex) / 100f;
-                // Debug.Log(darken+"  "+particalColor);
-
-                particalColor = ColorDarknessModifer(particalColor, darken);
-                particalColor = BaseColorMix(particalColor, baseColor, mixratio);
-                partMain.startColor = particalColor;
-                _colorObject.material.color = targetColor;
-
+                
+                if (_colorObject != null)
+                {
+                    _colorObject.material.color = targetColor;
+                }
             }
             else
             {
