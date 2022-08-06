@@ -192,7 +192,7 @@ public class FrequencyToColor : MonoBehaviour
             //可能需要优化
             float loudness = audioProcessor.beatsStrength;
             redboost = redboost + ((loudness) - .01f) * Time.deltaTime;//,-Time.deltaTime*.001f,Time.deltaTime*(loudness / 100)*.2f)     ;
-            if (red < .8f * loudness / 100)
+            if (red < .35f * loudness / 100)
             {
                 red += Mathf.Min(redboost,.6f*Time.deltaTime);
             }
