@@ -31,7 +31,8 @@ public class FrequencyToColor : MonoBehaviour
     [Header("Darkness")]
     public float colorDarknessFactor = 600f;
     public bool useDarknessFactor;
-
+    public Color HighestFrequencyColor;
+    public Color FrequencyAverageColor;
     public void FrequenciesToColors()
     {
         _int.Clear();
@@ -139,7 +140,47 @@ public class FrequencyToColor : MonoBehaviour
         return _color;
     }
 
+    public void AverageFrequencyColorDecider()
+    {
+        FrequencyAverageColor = _colorObject.material.color;
+        // Debug.Log("before" + targetColor);
+        if (redSpeedLimit)
+        {
+            FrequencyAverageColor.r += Mathf.Clamp(FinalColor.r - FrequencyAverageColor.r, Mathf.Min((FinalColor.r - FrequencyAverageColor.r) * Time.deltaTime, -maxColorChangeSpeeed * Time.deltaTime), Mathf.Max((FinalColor.r - FrequencyAverageColor.r) * Time.deltaTime, maxColorChangeSpeeed * Time.deltaTime));
+        }
+        else
+        {
+            FrequencyAverageColor.r = FinalColor.r;
+        }
+        if (blueSpeedLimit)
+        {
+            FrequencyAverageColor.b += Mathf.Clamp(FinalColor.b - FrequencyAverageColor.b, Mathf.Min((FinalColor.b - FrequencyAverageColor.b) * Time.deltaTime, -maxColorChangeSpeeed * Time.deltaTime), Mathf.Max((FinalColor.b - FrequencyAverageColor.b) * Time.deltaTime, maxColorChangeSpeeed * Time.deltaTime));
+        }
+        else
+        {
+            FrequencyAverageColor.b = FinalColor.b;
+        }
+        if (greenSpeedLimit)
+        {
+            FrequencyAverageColor.g += Mathf.Clamp(FinalColor.g - FrequencyAverageColor.g, Mathf.Min((FinalColor.g - FrequencyAverageColor.g) * Time.deltaTime, -maxColorChangeSpeeed * Time.deltaTime), Mathf.Max((FinalColor.g - FrequencyAverageColor.g) * Time.deltaTime, maxColorChangeSpeeed * Time.deltaTime));
+        }
+        else
+        {
+            FrequencyAverageColor.g = FinalColor.g;
+        }
 
+    }
+    public void HighFrequencyColorDecider()
+    {
+        HighestFrequencyColor = ColorHandler.waveLengthToRGB(audioProcessor.loudestFrequency);
+        float darken = audioProcessor.GetStrengthFromSpectrumIndex(audioProcessor.loudestSpectrumBarIndex) / 100f;
+        // Debug.Log(darken+"  "+particalColor);
+
+        HighestFrequencyColor = ColorDarknessModifer(HighestFrequencyColor, darken);
+        HighestFrequencyColor = BaseColorMix(HighestFrequencyColor, baseColor, mixratio);
+    }
+
+    
     // Start is called before the first frame update
     void Start()
     {
@@ -165,55 +206,25 @@ public class FrequencyToColor : MonoBehaviour
         {
             CaculateFinalColor();
             BaseColorMix();
-            if(partS!=null)
+            HighFrequencyColorDecider();
+            AverageFrequencyColorDecider();
+            if (partS!=null)
             {
                 var partMain = partS.main;
-                var particalColor = ColorHandler.waveLengthToRGB(audioProcessor.loudestFrequency);
-                float darken = audioProcessor.GetStrengthFromSpectrumIndex(audioProcessor.loudestSpectrumBarIndex) / 100f;
-                // Debug.Log(darken+"  "+particalColor);
-
-                particalColor = ColorDarknessModifer(particalColor, darken);
-                particalColor = BaseColorMix(particalColor, baseColor, mixratio);
-                partMain.startColor = particalColor;
+                
+                partMain.startColor = HighestFrequencyColor;
             }
 
             if (_colorObject != null)
             {
 
                 //Debug.Log("Nice"+FinalColor );
-                Color targetColor = _colorObject.material.color;
-                // Debug.Log("before" + targetColor);
-                if (redSpeedLimit)
-                {
-                    targetColor.r += Mathf.Clamp(FinalColor.r - targetColor.r, Mathf.Min((FinalColor.r - targetColor.r) * Time.deltaTime, -maxColorChangeSpeeed * Time.deltaTime), Mathf.Max((FinalColor.r - targetColor.r) * Time.deltaTime, maxColorChangeSpeeed * Time.deltaTime));
-                }
-                else
-                {
-                    targetColor.r = FinalColor.r;
-                }
-                if (blueSpeedLimit)
-                {
-                    targetColor.b += Mathf.Clamp(FinalColor.b - targetColor.b, Mathf.Min((FinalColor.b - targetColor.b) * Time.deltaTime, -maxColorChangeSpeeed * Time.deltaTime), Mathf.Max((FinalColor.b - targetColor.b) * Time.deltaTime, maxColorChangeSpeeed * Time.deltaTime));
-                }
-                else
-                {
-                    targetColor.b = FinalColor.b;
-                }
-                if (greenSpeedLimit)
-                {
-                    targetColor.g += Mathf.Clamp(FinalColor.g - targetColor.g, Mathf.Min((FinalColor.g - targetColor.g) * Time.deltaTime, -maxColorChangeSpeeed * Time.deltaTime), Mathf.Max((FinalColor.g - targetColor.g) * Time.deltaTime, maxColorChangeSpeeed * Time.deltaTime));
-                }
-                else
-                {
-                    targetColor.g = FinalColor.g;
-                }
-
+                
                 //  Debug.Log(targetColor);
                 
-                if (_colorObject != null)
-                {
-                    _colorObject.material.color = targetColor;
-                }
+
+                    _colorObject.material.color = FrequencyAverageColor;
+                
             }
             else
             {
@@ -222,5 +233,9 @@ public class FrequencyToColor : MonoBehaviour
 
 
         }
+
+
+
+
     }
 }
