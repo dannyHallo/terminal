@@ -324,6 +324,10 @@ public class PlayerController : MonoBehaviour
         }
     }
 
+    private void GreyOtherInstrumentUI(int i)
+    {
+
+    }
 
     private void TryUseInstrument(int i)
     {
@@ -354,7 +358,7 @@ public class PlayerController : MonoBehaviour
         foreach (enumToInstrument queriedInstrument in instruments)
         {
             if (queriedInstrument.e == instrument && queriedInstrument.have == true)
-            {
+            {          
                 activeInstrument = queriedInstrument.g;
                 activeInstrument.SetActive(true);
             }

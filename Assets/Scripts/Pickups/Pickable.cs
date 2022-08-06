@@ -10,6 +10,7 @@ public class Pickable : MonoBehaviour
 {
     public PlayerController.InstrumentTypes instrumentType;
     public UIManager UIManager;
+    public int _instrumentInt;
     private void Start()
     {
         UIManager = FindObjectOfType<UIManager>();
@@ -61,6 +62,7 @@ public class Pickable : MonoBehaviour
 
             Destroy(this.gameObject);
             UIManager.pickUpUI.SetActive(false);
+            UIManager.InstrumentsUI[_instrumentInt].SetActive(true);
         }
 
     }
