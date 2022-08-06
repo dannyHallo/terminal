@@ -35,13 +35,8 @@ public class PlayerController : MonoBehaviour
     [Range(1, 10)]
     public int drawRange = 5;
 
-    // Flags
-    bool startCoroutineF;
-
     // Others
     public LayerMask playerMask;
-
-    Coroutine c = null;
 
     AudioSource audioSource;
     public AudioClip Cam_35mm;
@@ -79,22 +74,7 @@ public class PlayerController : MonoBehaviour
     }
 
     // Land on planet initially
-    void TryToLand()
-    {
-        float rayLength = 2000f;
-
-        // actual Ray
-        Ray ray = new Ray(transform.position + new Vector3(0, 30f, 0), Vector3.down);
-
-        // debug Ray
-        Debug.DrawRay(ray.origin, ray.direction * rayLength, Color.green);
-
-        RaycastHit hit;
-        if (Physics.Raycast(ray, out hit, rayLength, playerMask))
-        {
-            transform.position = hit.point + new Vector3(0, 10f, 0);
-        }
-    }
+    
 
     private void Update()
     {
@@ -168,56 +148,23 @@ public class PlayerController : MonoBehaviour
         {
             if (hit.collider.tag == "Chunk")
             {
-                if (Input.GetMouseButton(0))
+                if (Input.GetMouseButton(0) && ableToDig)
                 {
-                    if (ableToDig)
-                    {
-                        terrainMesh.DrawOnChunk(hit.point, drawRange, 0);
-                        ableToDig = false;
-                        startCoroutineF = true;
-                    }
-                    else if (startCoroutineF)
-                    {
-                        RestartCoroutine();
-                    }
+                    terrainMesh.DrawOnChunk(hit.point, drawRange, 0);
                 }
-                else if (Input.GetMouseButton(1))
+                else if (Input.GetMouseButton(1) && ableToDig)
                 {
-                    if (ableToDig)
-                    {
-                        terrainMesh.DrawOnChunk(hit.point, drawRange, 1);
-                        NotifyTerrainChanged(hit.point, drawRange);
-                        ableToDig = false;
-                        startCoroutineF = true;
-                    }
-                    else if (startCoroutineF)
-                    {
-                        RestartCoroutine();
-                    }
+                    terrainMesh.DrawOnChunk(hit.point, drawRange, 1);
+                    NotifyTerrainChanged(hit.point, drawRange);
                 }
             }
         }
-    }
-
-    void RestartCoroutine()
-    {
-        startCoroutineF = false;
-        if (c != null)
-        {
-            StopCoroutine(c);
-        }
-        c = StartCoroutine(DiggingCountdown());
     }
 
     private void CheckScreenShot()
     {
         if (Input.GetKeyDown(KeyCode.F))
             StartCoroutine(TakePhoto());
-
-        if (Input.GetMouseButtonUp(0))
-        {
-            RestartCoroutine();
-        }
     }
 
     private bool PlayerWantsToLockCursor()
@@ -278,7 +225,6 @@ public class PlayerController : MonoBehaviour
         float movementDirectionY = moveDirection.y;
         moveDirection = (forward * curSpeedX) + (right * curSpeedY);
 
-        // TODO: Apply gravity
         if (!characterController.isGrounded)
         {
             moveDirection.y = movementDirectionY;
@@ -328,7 +274,7 @@ public class PlayerController : MonoBehaviour
 
     public void InstrumentUIColor(int num)
     {
-        for (int i = 0; i<uiManager.InstrumentsUI.Count; i++)
+        for (int i = 0; i < uiManager.InstrumentsUI.Count; i++)
         {
 
             if (i != num)
@@ -346,7 +292,7 @@ public class PlayerController : MonoBehaviour
 
     private void TryUseInstrument(int i)
     {
-        
+
         var instrument = instruments[i].e;
         InstrumentUIColor(i);
         if (activeInstrument == instruments[i].g)
@@ -377,7 +323,7 @@ public class PlayerController : MonoBehaviour
         foreach (enumToInstrument queriedInstrument in instruments)
         {
             if (queriedInstrument.e == instrument && queriedInstrument.have == true)
-            {          
+            {
                 activeInstrument = queriedInstrument.g;
                 activeInstrument.SetActive(true);
             }
