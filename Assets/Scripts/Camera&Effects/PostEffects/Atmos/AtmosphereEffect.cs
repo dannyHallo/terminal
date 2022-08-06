@@ -16,7 +16,7 @@ public class AtmosphereEffect
             light = GameObject.FindObjectOfType<SunShadowCaster>()?.GetComponent<Light>();
 
         if (player == null)
-            player = GameObject.FindObjectOfType<PlayerMovement>()?.gameObject;
+            player = GameObject.FindObjectOfType<PlayerController>()?.gameObject;
 
         if (light)
         {
