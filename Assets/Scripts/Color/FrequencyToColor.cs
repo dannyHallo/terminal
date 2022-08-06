@@ -33,6 +33,11 @@ public class FrequencyToColor : MonoBehaviour
     public bool useDarknessFactor;
     public Color HighestFrequencyColor;
     public Color FrequencyAverageColor;
+
+    [Header("Camera")]
+    public Camera camera;
+    public float red;
+    public float redboost;
     public void FrequenciesToColors()
     {
         _int.Clear();
@@ -180,7 +185,26 @@ public class FrequencyToColor : MonoBehaviour
         HighestFrequencyColor = BaseColorMix(HighestFrequencyColor, baseColor, mixratio);
     }
 
-    
+    public void BackgroundColor()
+    {
+        if (camera != null)
+        {
+            //可能需要优化
+            float loudness = audioProcessor.beatsStrength;
+            redboost = redboost + ((loudness) - .01f) * Time.deltaTime;//,-Time.deltaTime*.001f,Time.deltaTime*(loudness / 100)*.2f)     ;
+            if (red < .8f * loudness / 100)
+            {
+                red += Mathf.Min(redboost,.6f*Time.deltaTime);
+            }
+            else
+            {
+                red -= .2f * Time.deltaTime;
+            }
+            Color color = new Color(red, .25f,.5f,1f);
+            camera.backgroundColor = color;
+
+        }
+    }
     // Start is called before the first frame update
     void Start()
     {
@@ -192,7 +216,10 @@ public class FrequencyToColor : MonoBehaviour
         {
         _colorObject.material.SetColor("_color", Color.blue);
         }
-
+        //camera
+        camera = FindObjectOfType<Camera>();
+        redboost = 0f;
+        red = .2f;
     }
 
     // Update is called once per frame
@@ -208,6 +235,7 @@ public class FrequencyToColor : MonoBehaviour
             BaseColorMix();
             HighFrequencyColorDecider();
             AverageFrequencyColorDecider();
+            BackgroundColor();
             if (partS!=null)
             {
                 var partMain = partS.main;
