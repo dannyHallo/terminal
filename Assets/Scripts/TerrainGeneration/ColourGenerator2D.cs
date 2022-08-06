@@ -8,9 +8,6 @@ public class ColourGenerator2D : MonoBehaviour
     [Header("General")]
     public Material mat;
     public float normalOffsetWeight;
-    public float musicNoise;
-    public float musicNoiseWeight;
-    public Color allColor;
 
 
     [Header("ColorPalette")]
@@ -27,9 +24,12 @@ public class ColourGenerator2D : MonoBehaviour
     public float f2;
     public float f3;
 
-    Texture2D orignalPalette;
+    public float minMaxBounds;
+    public float offsetY;
+
+    public Texture2D orignalPalette;
     public Texture2D userTex;
-    public Texture2D orignalGrayscaleTex;
+    public Texture2D originalGrayscaleTex;
 
     [Range(0, 0.01f)] public float mapBound;
 
@@ -38,10 +38,6 @@ public class ColourGenerator2D : MonoBehaviour
     public bool usePalette = false;
     public bool updateRequest = false;
 
-    private void Awake()
-    {
-        allColor = Color.black;
-    }
 
     void UpdatePalette()
     {
@@ -93,12 +89,12 @@ public class ColourGenerator2D : MonoBehaviour
         mat.SetFloat("f2", f2);
         mat.SetFloat("f3", f3);
 
-        mat.SetFloat("musicNoise", musicNoise);
         mat.SetFloat("mapBound", mapBound);
-        mat.SetFloat("musicNoiseWeight", musicNoiseWeight);
         mat.SetFloat("normalOffsetWeight", normalOffsetWeight);
-        mat.SetTexture("orignalPalette", orignalPalette);
-        mat.SetTexture("orignalGrayscaleTex", orignalGrayscaleTex);
+        mat.SetFloat("minMaxBounds", minMaxBounds);
+        mat.SetFloat("offsetY", offsetY);
+        mat.SetTexture("originalPalette", orignalPalette);
+        mat.SetTexture("originalGrayscaleTex", originalGrayscaleTex);
         mat.SetTexture("userTex", userTex);
     }
 
