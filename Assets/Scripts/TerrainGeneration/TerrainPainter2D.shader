@@ -3,7 +3,6 @@ Shader "Custom/TerrainPainter2D"
     Properties
     {
         _Color ("Color", Color) = (1,1,1,1)
-        _BoundTest("Bound", Range(0,0.01)) = 0.01
         _MainTex ("Albedo (RGB)", 2D) = "white" {}
         _Glossiness ("Smoothness", Range(0,1)) = 0.5
         _Metallic ("Metallic", Range(0,1)) = 0.0
@@ -33,24 +32,44 @@ Shader "Custom/TerrainPainter2D"
         float f2;
         float f3;
 
-        float bound;
+        float minMaxBounds;
+        float offsetY;
+
         float normalOffsetWeight;
         float musicNoise;
         float musicNoiseWeight;
+        float mapBound;
 
-        float _BoundTest;
         half _Glossiness;
         half _Metallic;
         fixed4 _Color;
-        sampler2D ramp;
+        
+        sampler2D originalGrayscaleTex;
+        sampler2D originalPalette;
+        sampler2D userTex;
 
         void surf (Input IN, inout SurfaceOutputStandard o)
         {
-            // Load 1bit texture
-            float texId = tex2D(_MainTex, float2(IN.worldPos.x * _BoundTest, IN.worldPos.z * _BoundTest)).r;
-            float3 tex = tex2D(ramp, float2(texId,.5));
+            // User texture
+            // float3 userCol = tex2D(userTex, float2(IN.worldPos.x * mapBound, IN.worldPos.z * mapBound));
+
+            // Load oringal texture from color palette and noise
+            // float texId = tex2D(originalGrayscaleTex, float2(IN.worldPos.x * mapBound, IN.worldPos.z * mapBound)).r;
+
+            float h = smoothstep(  
+            -minMaxBounds, 
+            minMaxBounds, 
+            -IN.worldPos.y + 
+            offsetY + 
+            (abs(IN.worldNormal.x) + abs(IN.worldNormal.y) + abs(IN.worldNormal.z)) * normalOffsetWeight);
+
+            float3 originalCol = tex2D(originalPalette, float2(h,.5));
             
-            o.Albedo = tex;
+            // // Blend func
+            // float blendFactor = step(3.0f, dot(userCol.rgb, userCol.rgb));
+            // float3 finalCol = lerp(userCol, originalCol, blendFactor);
+
+            o.Albedo = originalCol;
             // Metallic and smoothness come from slider variables
             o.Metallic = _Metallic;
             o.Smoothness = _Glossiness;

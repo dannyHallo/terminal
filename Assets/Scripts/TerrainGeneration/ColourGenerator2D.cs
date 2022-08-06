@@ -8,9 +8,6 @@ public class ColourGenerator2D : MonoBehaviour
     [Header("General")]
     public Material mat;
     public float normalOffsetWeight;
-    public float musicNoise;
-    public float musicNoiseWeight;
-    public Color allColor;
 
 
     [Header("ColorPalette")]
@@ -27,16 +24,20 @@ public class ColourGenerator2D : MonoBehaviour
     public float f2;
     public float f3;
 
-    Texture2D texture;
+    public float minMaxBounds;
+    public float offsetY;
+
+    public Texture2D orignalPalette;
+    public Texture2D userTex;
+    public Texture2D originalGrayscaleTex;
+
+    [Range(0, 0.01f)] public float mapBound;
+
     const int textureResolution = 50;
 
     public bool usePalette = false;
     public bool updateRequest = false;
 
-    private void Awake()
-    {
-        allColor = Color.black;
-    }
 
     void UpdatePalette()
     {
@@ -66,12 +67,12 @@ public class ColourGenerator2D : MonoBehaviour
 
     void UpdateShader()
     {
-        if (texture == null || texture.width != textureResolution)
-            texture = new Texture2D(textureResolution, 1, TextureFormat.RGBA32, false);
+        if (orignalPalette == null || orignalPalette.width != textureResolution)
+            orignalPalette = new Texture2D(textureResolution, 1, TextureFormat.RGBA32, false);
 
         if (gradient != null)
         {
-            Color[] colours = new Color[texture.width];
+            Color[] colours = new Color[orignalPalette.width];
             for (int i = 0; i < textureResolution; i++)
             {
                 Color gradientCol = gradient.Evaluate(i / (textureResolution - 1f));
@@ -79,8 +80,8 @@ public class ColourGenerator2D : MonoBehaviour
                 // colours[i] = allColor;
             }
 
-            texture.SetPixels(colours);
-            texture.Apply();
+            orignalPalette.SetPixels(colours);
+            orignalPalette.Apply();
         }
 
         // Testing vals
@@ -88,10 +89,13 @@ public class ColourGenerator2D : MonoBehaviour
         mat.SetFloat("f2", f2);
         mat.SetFloat("f3", f3);
 
-        mat.SetFloat("musicNoise", musicNoise);
-        mat.SetFloat("musicNoiseWeight", musicNoiseWeight);
+        mat.SetFloat("mapBound", mapBound);
         mat.SetFloat("normalOffsetWeight", normalOffsetWeight);
-        mat.SetTexture("ramp", texture);
+        mat.SetFloat("minMaxBounds", minMaxBounds);
+        mat.SetFloat("offsetY", offsetY);
+        mat.SetTexture("originalPalette", orignalPalette);
+        mat.SetTexture("originalGrayscaleTex", originalGrayscaleTex);
+        mat.SetTexture("userTex", userTex);
     }
 
     private void Update()
