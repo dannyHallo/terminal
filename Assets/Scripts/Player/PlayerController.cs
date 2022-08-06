@@ -74,14 +74,14 @@ public class PlayerController : MonoBehaviour
     }
 
     // Land on planet initially
-    
+
 
     private void Update()
     {
         CheckRay();
         ChangeWeaponCheck();
         if (!terrainMesh)
-            terrainMesh = GameObject.Find("PlanetGenerator").GetComponent<TerrainMesh>();
+            terrainMesh = GameObject.Find("TerrainGen").GetComponent<TerrainMesh>();
 
         if (Cursor.lockState == CursorLockMode.None)
         {

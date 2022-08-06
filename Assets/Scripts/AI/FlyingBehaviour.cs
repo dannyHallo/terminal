@@ -34,8 +34,12 @@ public class FlyingBehaviour : MonoBehaviour
         RaycastHit hit;
         if (Physics.Raycast(ray, out hit, rayLength, ~creatureMask))
         {
+            // It is buried! Get up!
             if (hit.collider.tag != "Chunk")
+            {
+                creaturePos.y += verticalMovementSpeed * Time.deltaTime;
                 return;
+            }
 
             float rayLengthToTerrain = Vector3.Distance(hit.point, creaturePos);
 
