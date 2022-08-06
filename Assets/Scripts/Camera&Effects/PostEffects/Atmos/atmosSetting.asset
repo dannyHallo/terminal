@@ -20,9 +20,9 @@ MonoBehaviour:
   wavelengths: {x: 700, y: 610, z: 440}
   densityFalloff: 1
   scatteringStrength: 100
-  scatteringIntensity: 1.46
+  scatteringIntensity: 1.61
   totalIntensity: 0.83
-  planetRadius: 339
+  planetRadius: 400
   bottomOffset: 0
   atmosHeight: 182
   startTimeOfDay: 0.325
