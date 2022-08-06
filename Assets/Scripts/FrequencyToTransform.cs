@@ -6,7 +6,7 @@ public class FrequencyToTransform : MonoBehaviour
 {
     public Transform controlledObject;
     public AudioProcessor audioProcessor;
-    public int frequencyInt;
+    [Range(0,1)] public int frequencyInt;
     // Start is called before the first frame update
     
 
