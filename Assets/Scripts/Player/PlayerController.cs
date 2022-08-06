@@ -330,12 +330,13 @@ public class PlayerController : MonoBehaviour
         var instrument = instruments[i].e;
         if (activeInstrument == instruments[i].g)
         {
-            if (activeInstrument)
+            if (activeInstrument.activeInHierarchy)
             {
                 activeInstrument.SetActive(false);
             }
             else
             {
+                Debug.Log("!");
                 activeInstrument.SetActive(true);
             }
         }

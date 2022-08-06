@@ -111,7 +111,7 @@ MeshCollider:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1821412513824127026}
   m_Material: {fileID: 0}
-  m_IsTrigger: 1
+  m_IsTrigger: 0
   m_Enabled: 1
   serializedVersion: 4
   m_Convex: 1
@@ -129,6 +129,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: bf60283aa0e39dc44a521361de263584, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  instrumentType: 0
+  UIManager: {fileID: 0}
 --- !u!65 &4541621779387629328
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -137,8 +139,8 @@ BoxCollider:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1821412513824127026}
   m_Material: {fileID: 0}
-  m_IsTrigger: 0
+  m_IsTrigger: 1
   m_Enabled: 1
   serializedVersion: 2
-  m_Size: {x: 0.009241534, y: 0.026600635, z: 0.030158475}
+  m_Size: {x: 0.05, y: 0.05, z: 0.05}
   m_Center: {x: 0.00016465547, y: 0.0006298864, z: 0.0021214564}

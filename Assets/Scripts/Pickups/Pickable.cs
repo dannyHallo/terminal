@@ -40,7 +40,9 @@ public class Pickable : MonoBehaviour
     }
     private void OnTriggerStay(Collider other)
     {
-        if (Input.GetKeyDown(KeyCode.E))
+        if (other.gameObject.tag != "Player")
+        { return; }
+            if (Input.GetKeyDown(KeyCode.E))
         {
             GameObject player = GameObject.Find("Player");
             // PlayerController.InstrumentTypes instrumentType = PlayerController.InstrumentTypes.Guitar;
@@ -57,7 +59,7 @@ public class Pickable : MonoBehaviour
             
             player.GetComponent<PlayerController>().UseInstrument(instrumentType);
 
-            Destroy(gameObject);
+            Destroy(this.gameObject);
             UIManager.pickUpUI.SetActive(false);
         }
 
