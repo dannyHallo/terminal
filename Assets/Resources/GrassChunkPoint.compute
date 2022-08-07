@@ -22,8 +22,14 @@ float3 centre;
 float3 offset;
 float grassSpacing;
 float meshSpacing;
+float4 requiredColor;
+
+float ratio;
+float worldPosOffset;
+float textureSize;
 
 float _DisplacementStrength;
+RWTexture2D<float4> image;
 
 int indexFromCoord(uint x, uint y, uint z) {
     return z * numPointsPerAxis * numPointsPerAxis + y * numPointsPerAxis + x;
@@ -56,7 +62,23 @@ void InitializeGrassChunk(int3 id : SV_DispatchThreadID) {
     if (id.x >= numGrassesPerAxis || id.y >= numGrassesPerAxis) {
         return;
     }
+    
     GrassData grass;
+
+    float3 worldPos = centre + id * meshSpacing - chunkBoundSize / 2;
+    float x = worldPos.x;
+    float z = worldPos.z;
+    x += worldPosOffset;
+    z += worldPosOffset;
+    x *= ratio * textureSize;
+    z *= ratio * textureSize;
+
+    if(image[float2(x, z)].y == 1.0f){
+        grass.enable = true;
+        }else{
+        grass.enable = false;
+    }
+
     float groundLevel1, groundLevel2, groundLevel3, groundLevel4;
     float heightMapStep, grassMapStep;
     heightMapStep = 1.0f / float(numPointsPerAxis - 1);
@@ -103,7 +125,6 @@ void InitializeGrassChunk(int3 id : SV_DispatchThreadID) {
     pos.z += lerp(-1.0f, 1.0f, randValue(abs(pos.x) * 73247 + abs(pos.z) * 1237)) * grassSpacing * 0.5f;
     
     grass.position = pos;
-    grass.enable = true;
 
     _GrassDataBuffer[id.x + id.y * numGrassesPerAxis] = grass;
 }
