@@ -54,7 +54,7 @@ Shader "Custom/ModelGrass" {
             sampler2D _WindTex;
             float4 _Albedo1, _Albedo2, _AOColor, _TipColor, _FogColor;
             StructuredBuffer<GrassData> positionBuffer;
-            float verticalStretchDueToHeight, _Droop, _FogDensity, _FogOffset;
+            float verticalStretchDueToHeight, _Droop, _FogDensity, _FogOffset, windStrength;
             float overallScale, verticalScale;
             float bottomThickness;
             
@@ -110,10 +110,10 @@ Shader "Custom/ModelGrass" {
                 float windScale = 0.2f;         // Wind effect area
                 float numOctaves = 4;
                 float amplitude = 1;
-                float persistence = 0.6f;
+                float persistence = 0.4f;
                 float lacunarity = 1.4f;
 
-                float windStrength = 0;
+                // Wind strength by perlin noise
                 for(int j = 0; j < numOctaves; j++){
                     float n = abs(snoise(float3(
                     (grassPosition.x * windScale + _Time.y), 
@@ -125,6 +125,7 @@ Shader "Custom/ModelGrass" {
                     amplitude *= persistence;
                     windScale *= lacunarity;
                 }
+
                 float2 windDirection = 0.0f;
                 float windChangeFrequency = 0.02f;
                 windDirection.x = snoise(float3(_Time.y * windChangeFrequency, 0 , 0));

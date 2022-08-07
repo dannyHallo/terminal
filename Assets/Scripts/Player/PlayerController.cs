@@ -5,7 +5,6 @@ using System.Collections.Generic;
 using UnityEngine.UI;
 
 [RequireComponent(typeof(AudioSource))]
-[RequireComponent(typeof(AudioListener))]
 [RequireComponent(typeof(CharacterController))]
 public class PlayerController : MonoBehaviour
 {
@@ -20,7 +19,6 @@ public class PlayerController : MonoBehaviour
     public float jumpSpeed = 8.0f;
     public float flySpeed = 0.1f;
     public float gravity = 20.0f;
-    // public Camera playerCamera;
     public AudioListener audioListener;
     public float lookSpeed = 2.0f;
     public float lookYLimit = 45.0f;
@@ -36,9 +34,6 @@ public class PlayerController : MonoBehaviour
 
     [Range(1, 10)]
     public int drawRange = 5;
-
-    // Others
-    public LayerMask playerMask;
 
     AudioSource audioSource;
     public AudioClip Cam_35mm;

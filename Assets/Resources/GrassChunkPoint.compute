@@ -58,22 +58,23 @@ void CalculateGrassPos(int3 id : SV_DispatchThreadID) {
 #pragma kernel InitializeGrassChunk
 
 [numthreads(8,8,1)]
-void InitializeGrassChunk(int3 id : SV_DispatchThreadID) {
+void InitializeGrassChunk(int2 id : SV_DispatchThreadID) {
     if (id.x >= numGrassesPerAxis || id.y >= numGrassesPerAxis) {
         return;
     }
     
     GrassData grass;
+    
+    float3 id223 = float3(id.x, 0, id.y);
+    float3 worldPos = centre + id223 * grassSpacing - chunkBoundSize * 0.5f; // no y
+    float2 textureSamplePoint;
 
-    float3 worldPos = centre + id * meshSpacing - chunkBoundSize / 2;
-    float x = worldPos.x;
-    float z = worldPos.z;
-    x += worldPosOffset;
-    z += worldPosOffset;
-    x *= ratio * textureSize;
-    z *= ratio * textureSize;
+    textureSamplePoint.x = worldPos.x;
+    textureSamplePoint.y = worldPos.z;
+    textureSamplePoint += worldPosOffset;
+    textureSamplePoint *= ratio * textureSize;
 
-    if(image[float2(x, z)].y == 1.0f){
+    if(image[textureSamplePoint].a > 0.1f && image[textureSamplePoint].r < 0.8f){
         grass.enable = true;
         }else{
         grass.enable = false;
@@ -118,7 +119,7 @@ void InitializeGrassChunk(int3 id : SV_DispatchThreadID) {
     pos.w = 0.0f;       // Out of order
     pos.x = centre.x - chunkBoundSize * 0.5f + id.x * grassSpacing;
     pos.z = centre.z - chunkBoundSize * 0.5f + id.y * grassSpacing;
-    pos.y = height + 1.0f;
+    pos.y = height;
 
     // Offset slightly
     pos.x += lerp(-1.0f, 1.0f, randValue(abs(pos.x) * 45623 + abs(pos.z) * 3461)) * grassSpacing * 0.5f;

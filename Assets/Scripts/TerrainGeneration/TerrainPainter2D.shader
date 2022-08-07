@@ -74,7 +74,7 @@ Shader "Custom/TerrainPainter2D"
             float blendFactor = userCol.a;
             o.Albedo = lerp(originalCol, userCol, blendFactor);
 
-            float metallicFac = userCol.r;
+            float metallicFac = step(0.8f, userCol.r);
             o.Metallic = lerp(0, _Metallic, metallicFac);
             o.Smoothness = lerp(0, _Glossiness, metallicFac);
         }

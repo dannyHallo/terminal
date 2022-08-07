@@ -237,7 +237,7 @@ public class ModelGrass : MonoBehaviour
         cullGrassShader.Dispatch(3, numThreadGroups, 1, 1);
     }
 
-    public void DrawAllGrass(List<Chunk> chunks)
+    public void DrawAllGrass(List<Chunk> chunks, float windStrength)
     {
         Matrix4x4 P = Camera.main.projectionMatrix;
         Matrix4x4 V = Camera.main.transform.worldToLocalMatrix;
@@ -247,12 +247,12 @@ public class ModelGrass : MonoBehaviour
         {
             if (chunk.argsBuffer != null)
             {
-                DrawGrassOnChunk(chunk, VP);
+                DrawGrassOnChunk(chunk, VP, windStrength);
             }
         }
     }
 
-    private void DrawGrassOnChunk(Chunk chunk, Matrix4x4 VP)
+    private void DrawGrassOnChunk(Chunk chunk, Matrix4x4 VP, float windStrength)
     {
         float dist = Vector3.Distance(Camera.main.transform.position, CentreFromCoord(chunk.coord));
         bool noLOD = dist < lodCutoff;
@@ -264,6 +264,8 @@ public class ModelGrass : MonoBehaviour
             Vector3.zero,
             new Vector3(float.MaxValue, float.MaxValue, float.MaxValue)
         );
+
+        chunk.grassMaterial.SetFloat("windStrength", windStrength);
 
         if (noLOD)
             Graphics.DrawMeshInstancedIndirect(

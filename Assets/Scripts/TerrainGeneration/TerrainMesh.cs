@@ -7,6 +7,9 @@ public class TerrainMesh : MonoBehaviour
     const int threadGroupSize = 8;
     public NoiseDensity noiseDensity;
     public ModelGrass modelGrass;
+    public AudioProcessor audioProcessor;
+    public float windWeight;
+
 
     [Header("General Settings")]
     public bool fixedMapSize;
@@ -132,7 +135,7 @@ public class TerrainMesh : MonoBehaviour
         {
             if (drawGrass)
             {
-                modelGrass.DrawAllGrass(activeChunks);
+                modelGrass.DrawAllGrass(activeChunks, audioProcessor.loudness * windWeight);
             }
             return;
         }
@@ -141,7 +144,7 @@ public class TerrainMesh : MonoBehaviour
         {
             UpdateSurroundingChunks();
             if (drawGrass)
-                modelGrass.DrawAllGrass(activeChunks);
+                modelGrass.DrawAllGrass(activeChunks, audioProcessor.loudness * windWeight);
             return;
         }
     }

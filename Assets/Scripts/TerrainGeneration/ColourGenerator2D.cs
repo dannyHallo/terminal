@@ -46,8 +46,8 @@ public class ColourGenerator2D : MonoBehaviour
     public bool updateRequest = false;
     public bool dispatch = false;
 
-    public static readonly float[] metalColor = { 1.0f, 1.0f, 0.0f, 1.0f };
-    public static readonly float[] natureColor = { 0.0f, 1.0f, 0.0f, 1.0f };
+    public static readonly float[] metalColor = { 255.0f / 255.0f, 244.0f / 255.0f, 230.0f / 255.0f, 1.0f };
+    public static readonly float[] natureColor = { 160.0f / 255.0f, 224.0f / 255.0f, 77.0f / 255.0f, 1.0f };
 
     void UpdatePalette()
     {

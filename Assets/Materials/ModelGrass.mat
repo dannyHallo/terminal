@@ -83,12 +83,12 @@ Material:
     - _ZWrite: 1
     - bottomThickness: 3
     - overallScale: 1
-    - verticalScale: 2.4
-    - verticalStretchDueToHeight: 0.5
+    - verticalScale: 2.9
+    - verticalStretchDueToHeight: 0.573
     m_Colors:
-    - _AOColor: {r: 0.0785961, g: 0.5754717, b: 0.06786222, a: 1}
+    - _AOColor: {r: 0.3119883, g: 0.735849, b: 0.3019758, a: 1}
     - _Albedo: {r: 0.84029955, g: 1, b: 0.740566, a: 1}
-    - _Albedo1: {r: 0.27348268, g: 0.7735849, b: 0.11311854, a: 1}
+    - _Albedo1: {r: 0.6469845, g: 1, b: 0.5330188, a: 1}
     - _Albedo2: {r: 0.66465926, g: 1, b: 0.25943398, a: 1}
     - _Color: {r: 1, g: 1, b: 1, a: 1}
     - _EmissionColor: {r: 0, g: 0, b: 0, a: 1}
