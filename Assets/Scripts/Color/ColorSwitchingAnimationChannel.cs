@@ -2,7 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class ColorSwitchingAnimation : ColorChannel
+public class ColorSwitchingAnimationChannel : ColorChannel
 {
     bool ToSecondColor;
     public ColorChannel InputChannelTwo;
