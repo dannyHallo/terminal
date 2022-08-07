@@ -49,6 +49,8 @@ public class TerrainMesh : MonoBehaviour
     ComputeBuffer triCountBuffer;
 
     [Range(0, 1.0f)] public float meshPaintingFac = 0.1f;
+    private float meshPaintingFinal = 0.1f;
+
     bool settingsUpdated;
     int maxChunksInViewHoriDisappear;
     int maxChunksInViewVertDisappear;
@@ -414,24 +416,23 @@ public class TerrainMesh : MonoBehaviour
             float[] chunkVolumeData = new float[numPoints];
             existingChunkVolumeData.Add(chunkCoord, chunkVolumeData);
         }
-        existingChunkVolumeData[chunkCoord][id] += meshPaintingFac * rangeFactor;
+        existingChunkVolumeData[chunkCoord][id] += meshPaintingFinal * rangeFactor;
     }
 
     public void DrawOnChunk(
         Vector3 hitPoint,   // The directional hit piont
         int range,          // Affact range
         float strength,
-        int drawType,
-        bool onlyRegenerateGrass
+        int drawType
     ) // 0: dig, 1: add
     {
         if (drawType == 0)
         {
-            meshPaintingFac = -Mathf.Abs(meshPaintingFac * strength);
+            meshPaintingFinal = -Mathf.Abs(meshPaintingFac * strength);
         }
         else if (drawType == 1)
         {
-            meshPaintingFac = Mathf.Abs(meshPaintingFac * strength);
+            meshPaintingFinal = Mathf.Abs(meshPaintingFac * strength);
         }
 
         int numPointsPerAxis = lodSetup.numPointsPerAxis;

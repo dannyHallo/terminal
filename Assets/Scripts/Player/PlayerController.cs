@@ -19,7 +19,6 @@ public class PlayerController : MonoBehaviour
     public float jumpSpeed = 8.0f;
     public float flySpeed = 0.1f;
     public float gravity = 20.0f;
-    public AudioListener audioListener;
     public float lookSpeed = 2.0f;
     public float lookYLimit = 45.0f;
 
@@ -34,6 +33,7 @@ public class PlayerController : MonoBehaviour
 
     [Range(1, 10)]
     public int drawRange = 5;
+    public float digStrength = 1.0f;
 
     AudioSource audioSource;
     public AudioClip Cam_35mm;
@@ -150,13 +150,13 @@ public class PlayerController : MonoBehaviour
                 if (Input.GetMouseButton(0) && ableToDig)
                 {
                     colourGenerator2D.DrawTextureOnWorldPos(colourGenerator2D.userTex, hit.point, drawRange, true);
-                    terrainMesh.DrawOnChunk(hit.point, drawRange, 1.0f, 0, false);
+                    terrainMesh.DrawOnChunk(hit.point, drawRange, digStrength, 0);
                 }
                 else if (Input.GetMouseButton(1) && ableToDig)
                 {
                     colourGenerator2D.DrawTextureOnWorldPos(colourGenerator2D.userTex, hit.point, drawRange, false);
                     NotifyTerrainChanged(hit.point, drawRange);
-                    terrainMesh.DrawOnChunk(hit.point, drawRange, 1.0f, 1, false);
+                    terrainMesh.DrawOnChunk(hit.point, drawRange, digStrength, 1);
                 }
             }
         }
