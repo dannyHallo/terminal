@@ -10,6 +10,27 @@ public class ColorChannel : MonoBehaviour
     public ColorChannel mainInputChannel;
 
 
+    public Color ChangeColorToward(Color colorNow, Color targetColor, float maxSpeed)
+    {
+        Color _color;
+        float largestDifference = Mathf.Max(Mathf.Abs(colorNow.r - targetColor.r), Mathf.Abs(colorNow.b - targetColor.b), Mathf.Abs(colorNow.g - targetColor.g));
+        _color.r = RGBFloatTargetClampChange(colorNow.r, targetColor.r, Mathf.Abs(colorNow.r - targetColor.r) / largestDifference * maxSpeed * Time.deltaTime);
+        _color.b = RGBFloatTargetClampChange(colorNow.b, targetColor.b, Mathf.Abs(colorNow.b - targetColor.b) / largestDifference * maxSpeed * Time.deltaTime);
+        _color.g = RGBFloatTargetClampChange(colorNow.g, targetColor.g, Mathf.Abs(colorNow.g - targetColor.g) / largestDifference * maxSpeed * Time.deltaTime);
+        _color.a = RGBFloatTargetClampChange(colorNow.a, targetColor.a, Mathf.Abs(colorNow.a - targetColor.a) / largestDifference * maxSpeed * Time.deltaTime);
+        return _color;
+    }
+
+    float RGBFloatTargetClampChange(float valueNow, float targetvalue, float maxSpeed)
+    {
+        float _value;
+        _value = valueNow + Mathf.Clamp(targetvalue - valueNow, -maxSpeed, maxSpeed);
+        return _value;
+    }
+
+
+
+
 
     public Color BaseColorMix(Color baseColor, Color mixColor, float mixratio)
     {
