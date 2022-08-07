@@ -22,8 +22,8 @@ public class ColourGenerator2D : MonoBehaviour
 
 
     [Header("Source Textures - READONLY")]
-    public Texture2D blankTex;
-    public Texture2D originalGrayscaleTex;
+    [HideInInspector] public Texture2D blankTex;
+    [HideInInspector] public Texture2D originalGrayscaleTex;
 
 
     [Header("Drawing")]
@@ -120,22 +120,32 @@ public class ColourGenerator2D : MonoBehaviour
         dst.Apply();
     }
 
-    private void Update()
+    public void CreateTextureIfNeeded()
     {
         if (!universalRenderTex)
         {
+            CreateTexture2DFromBlank(blankTex, out userTex);
+            CreateTexture2DFromBlank(blankTex, out metallicTex);
+
             universalRenderTex = new RenderTexture(userTex.width, userTex.height, 0);
             universalRenderTex.enableRandomWrite = true;
             universalRenderTex.Create();
         }
+    }
 
+    private void Awake()
+    {
+        updateRequest = true;
+    }
+
+    private void Update()
+    {
         if (updateRequest)
         {
+            CreateTextureIfNeeded();
+
             if (usePalette)
                 UpdatePalette();
-
-            CreateTexture2DFromBlank(blankTex, out userTex);
-            CreateTexture2DFromBlank(blankTex, out metallicTex);
 
             UpdateShader();
             updateRequest = false;
@@ -196,7 +206,6 @@ public class ColourGenerator2D : MonoBehaviour
             drawColor = fillColor(metalColor);
         else
             drawColor = fillColor(grassColor);
-
 
         drawImageComputeShader.SetFloats("drawColor", drawColor);
         drawImageComputeShader.SetInt("radius", radius);

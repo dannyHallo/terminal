@@ -149,10 +149,14 @@ MonoBehaviour:
   verticalMovementSpeed: 2
   horizontalMovementSpeed: 0.6
   verticalMovementFrequency: 5
-  rotateSpeed: 0.21
+  stopChasingThrehold: 2
+  rotateSpeed: 4
+  drawRange: 4
+  digStrength: 0.1
   chasePlayer: 1
   leavePlayer: 0
   f1: 0
+  hitTerrainPos: {x: 0, y: 0, z: 0}
 --- !u!1 &7658946284533550954
 GameObject:
   m_ObjectHideFlags: 0

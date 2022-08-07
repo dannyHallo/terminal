@@ -4,14 +4,24 @@ using UnityEngine;
 
 public class FlyingBehaviour : MonoBehaviour
 {
+    private GameObject terrainGen
+    {
+        get
+        {
+            return GameObject.Find("TerrainGen");
+        }
+    }
+
+    [Header("Settings")]
     public float minDistanceFromGround;
     public float maxDistanceFromGround;
     public float verticalMovementSpeed;
     public float horizontalMovementSpeed;
     public float verticalMovementFrequency;
-
+    public float stopChasingThrehold;
     public float rotateSpeed;
-
+    public int drawRange;
+    public float digStrength;
     public bool chasePlayer;
     public bool leavePlayer;
 
@@ -20,6 +30,7 @@ public class FlyingBehaviour : MonoBehaviour
 
     private Vector3 playerPos;
     private Vector3 creaturePos;
+    public Vector3 hitTerrainPos;
 
     private void KeepDistanceFromTerrain()
     {
@@ -43,6 +54,7 @@ public class FlyingBehaviour : MonoBehaviour
                 return;
             }
 
+            hitTerrainPos = hit.point;
             float rayLengthToTerrain = Vector3.Distance(hit.point, creaturePos);
 
             f1 = rayLengthToTerrain;
@@ -67,16 +79,33 @@ public class FlyingBehaviour : MonoBehaviour
         playerPos = GameObject.Find("Player").transform.position;
         creaturePos = transform.position;
 
-        KeepDistanceFromTerrain();
-        Move();
+        KeepDistanceFromTerrain();  // Vertically
+        Move();                     // Horizontally
+        DrawGrass();
 
+    }
+
+    private void GetStatus()
+    {
+        if (Vector3.Distance(playerPos, creaturePos) < stopChasingThrehold)
+        {
+            chasePlayer = false;
+        }
+    }
+
+    private void DrawGrass()
+    {
+        // Draw on texture when it exists
+        terrainGen.GetComponent<ColourGenerator2D>().CreateTextureIfNeeded();
+        terrainGen.GetComponent<TerrainMesh>().DrawOnChunk(hitTerrainPos, drawRange, digStrength, 0);
+        terrainGen.GetComponent<ColourGenerator2D>().DrawTextureOnWorldPos(
+            terrainGen.GetComponent<ColourGenerator2D>().userTex, hitTerrainPos, drawRange, false);
     }
 
     private void Move()
     {
         if (chasePlayer)
         {
-
             Vector3 directionNormalized = playerPos - creaturePos;
             directionNormalized.y = 0;
 
@@ -93,7 +122,6 @@ public class FlyingBehaviour : MonoBehaviour
 
             transform.rotation = Quaternion.Lerp(fromRotation, toRotation, rotateSpeed * Time.deltaTime);
             transform.position = creaturePos;
-
         }
     }
 
