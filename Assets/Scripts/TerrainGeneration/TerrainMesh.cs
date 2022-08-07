@@ -66,8 +66,6 @@ public class TerrainMesh : MonoBehaviour
 
     private void Awake()
     {
-        modelGrass.Init(boundSize, lodSetup.numPointsPerAxis);
-
         if (Application.isPlaying)
         {
             DestroyOldChunks();
@@ -109,8 +107,6 @@ public class TerrainMesh : MonoBehaviour
         // Editor update
         else if (settingsUpdated)
         {
-            modelGrass.Init(boundSize, lodSetup.numPointsPerAxis);
-
             if (!Application.isPlaying)
                 RequestMeshUpdate();
 
@@ -1026,7 +1022,6 @@ public class TerrainMesh : MonoBehaviour
     void OnDestroy()
     {
         ReleaseBuffers();
-        modelGrass.ClearGrassBufferIfNeeded();
     }
 
     void CreateBuffers()
@@ -1070,6 +1065,7 @@ public class TerrainMesh : MonoBehaviour
 
     void ReleaseBuffers()
     {
+        modelGrass.ClearGrassBufferIfNeeded();
         ReleaseExistingChunkBuffers();
 
         if (triangleBuffer != null)
