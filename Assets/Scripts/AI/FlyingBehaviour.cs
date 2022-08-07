@@ -12,7 +12,7 @@ public class FlyingBehaviour : MonoBehaviour
         }
     }
 
-    [Header("Settings")]
+    [Header("Creature Normal Settings")]
     public float minDistanceFromGround;
     public float maxDistanceFromGround;
     public float verticalMovementSpeed;
@@ -22,15 +22,50 @@ public class FlyingBehaviour : MonoBehaviour
     public float rotateSpeed;
     public int drawRange;
     public float digStrength;
+    public float growSpeed;
+    public float maxToMinScaleRatio;
+
+
+    [Header("Preferance")]
+    [Range(0, 1)] public float age_weight;
+    [Range(0, 1)] public float do_something_weight;
+    [Range(0, 1)] public float player_weight;
+    [Range(0, 1)] public float env_change_weight;
+    [Range(0, 1)] public float attack_weight;
+
+
+    [Header("Read-onlys")]
+    public float age_score;
+    public float do_something_score;
+    public float player_score;
+    public float env_change_score;
+    public float attack_score;
+
+    public bool do_something;
     public bool chasePlayer;
-    public bool leavePlayer;
+    public bool env_change;
+    public bool attack;
+
 
     [Header("debug")]
     public float f1;
 
     private Vector3 playerPos;
     private Vector3 creaturePos;
-    public Vector3 hitTerrainPos;
+    private Vector3 hitTerrainPos;
+    private float currentScale;
+    private float initScale;
+
+    private void GrowupIfNotMaximized()
+    {
+        if (currentScale >= maxToMinScaleRatio * initScale)
+            return;
+
+        currentScale += growSpeed * Time.deltaTime;
+        age_score += age_weight * Time.deltaTime;
+
+        transform.localScale = new Vector3(currentScale, currentScale, currentScale);
+    }
 
     private void KeepDistanceFromTerrain()
     {
@@ -74,15 +109,22 @@ public class FlyingBehaviour : MonoBehaviour
         }
     }
 
+    private void Awake()
+    {
+        initScale = transform.localScale.x;
+        currentScale = initScale;
+    }
+
     void Update()
     {
         playerPos = GameObject.Find("Player").transform.position;
         creaturePos = transform.position;
 
+        GrowupIfNotMaximized();
         KeepDistanceFromTerrain();  // Vertically
+        GetStatus();
         Move();                     // Horizontally
-        DrawGrass();
-
+        DrawGrass(true);
     }
 
     private void GetStatus()
@@ -93,13 +135,15 @@ public class FlyingBehaviour : MonoBehaviour
         }
     }
 
-    private void DrawGrass()
+    private void DrawGrass(bool positiveToAdd)
     {
-        // Draw on texture when it exists
+        // Draw grass
         terrainGen.GetComponent<ColourGenerator2D>().CreateTextureIfNeeded();
-        terrainGen.GetComponent<TerrainMesh>().DrawOnChunk(hitTerrainPos, drawRange, digStrength, 0);
         terrainGen.GetComponent<ColourGenerator2D>().DrawTextureOnWorldPos(
             terrainGen.GetComponent<ColourGenerator2D>().userTex, hitTerrainPos, drawRange, false);
+
+        // Change env
+        terrainGen.GetComponent<TerrainMesh>().DrawOnChunk(hitTerrainPos, drawRange, 0, positiveToAdd ? 1 : 0, false);
     }
 
     private void Move()
@@ -123,10 +167,5 @@ public class FlyingBehaviour : MonoBehaviour
             transform.rotation = Quaternion.Lerp(fromRotation, toRotation, rotateSpeed * Time.deltaTime);
             transform.position = creaturePos;
         }
-    }
-
-    private void Dig()
-    {
-
     }
 }

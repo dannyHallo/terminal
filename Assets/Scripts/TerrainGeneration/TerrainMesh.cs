@@ -131,12 +131,9 @@ public class TerrainMesh : MonoBehaviour
             printActiveChunk = false;
         }
 
-        if (fixedMapSize)
+        if (fixedMapSize && drawGrass)
         {
-            if (drawGrass)
-            {
-                modelGrass.DrawAllGrass(activeChunks, audioProcessor.loudness * windWeight);
-            }
+            modelGrass.DrawAllGrass(activeChunks, audioProcessor.loudness * windWeight);
             return;
         }
 
@@ -424,7 +421,8 @@ public class TerrainMesh : MonoBehaviour
         Vector3 hitPoint,   // The directional hit piont
         int range,          // Affact range
         float strength,
-        int drawType
+        int drawType,
+        bool onlyRegenerateGrass
     ) // 0: dig, 1: add
     {
         if (drawType == 0)
