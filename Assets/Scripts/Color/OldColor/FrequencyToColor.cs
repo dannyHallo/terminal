@@ -35,7 +35,7 @@ public class FrequencyToColor : MonoBehaviour
     public Color FrequencyAverageColor;
 
     [Header("Camera")]
-    public Camera camera;
+    public Camera _camera;
     public float red;
     public float redboost;
     public void FrequenciesToColors()
@@ -187,7 +187,7 @@ public class FrequencyToColor : MonoBehaviour
 
     public void BackgroundColor()
     {
-        if (camera != null)
+        if (_camera != null)
         {
             //可能需要优化
             float loudness = audioProcessor.beatsStrength;
@@ -201,7 +201,7 @@ public class FrequencyToColor : MonoBehaviour
                 red -= .2f * Time.deltaTime;
             }
             Color color = new Color(red, .25f,.5f,1f);
-            camera.backgroundColor = color;
+            _camera.backgroundColor = color;
 
         }
     }
@@ -216,8 +216,8 @@ public class FrequencyToColor : MonoBehaviour
         {
         _colorObject.material.SetColor("_color", Color.blue);
         }
-        //camera
-        camera = FindObjectOfType<Camera>();
+        //_camera
+        _camera = FindObjectOfType<Camera>();
         redboost = 0f;
         red = .2f;
     }

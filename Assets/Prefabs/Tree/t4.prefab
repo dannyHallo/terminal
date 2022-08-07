@@ -11,6 +11,10 @@ GameObject:
   - component: {fileID: -4439817347798368879}
   - component: {fileID: -9098531302112557834}
   - component: {fileID: 7096664124164742918}
+  - component: {fileID: 2795645052125777855}
+  - component: {fileID: 968359765422613603}
+  - component: {fileID: 1769156500713126721}
+  - component: {fileID: 3829102254648094303}
   m_Layer: 0
   m_Name: "\u5BF9\u8C61077"
   m_TagString: Untagged
@@ -83,6 +87,82 @@ MeshRenderer:
   m_SortingLayer: 0
   m_SortingOrder: 0
   m_AdditionalVertexStreams: {fileID: 0}
+--- !u!114 &2795645052125777855
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: -9143738685270063026}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 13c2d82f1d882ba46ae81bc5982e96e7, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  mainInputChannel: {fileID: 0}
+  outputfloat: 0
+  outputColor: {r: 0, g: 0, b: 0, a: 0}
+  baseColor: {r: 0, g: 0, b: 0, a: 0}
+  randomlizeRed: 1
+  randomlizeBlue: 1
+  randomlizeGreen: 1
+  startRangeColor: {r: 0, g: 0, b: 0, a: 1}
+  endRangeColor: {r: 1, g: 1, b: 1, a: 1}
+--- !u!114 &968359765422613603
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: -9143738685270063026}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 13c2d82f1d882ba46ae81bc5982e96e7, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  mainInputChannel: {fileID: 0}
+  outputfloat: 0
+  outputColor: {r: 0, g: 0, b: 0, a: 0}
+  baseColor: {r: 0, g: 0, b: 0, a: 0}
+  randomlizeRed: 1
+  randomlizeBlue: 1
+  randomlizeGreen: 1
+  startRangeColor: {r: 0, g: 0, b: 0, a: 1}
+  endRangeColor: {r: 1, g: 1, b: 1, a: 1}
+--- !u!114 &1769156500713126721
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: -9143738685270063026}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2368415b440ad10408e6584a39ad6ef8, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  mainInputChannel: {fileID: 968359765422613603}
+  outputfloat: 0
+  outputColor: {r: 0, g: 0, b: 0, a: 0}
+  InputChannelTwo: {fileID: 2795645052125777855}
+  changeSpeed: 0.1
+--- !u!114 &3829102254648094303
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: -9143738685270063026}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 173600403fadcba4bb83eebb0601a071, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  mainInputChannel: {fileID: 1769156500713126721}
+  outputfloat: 0
+  outputColor: {r: 0, g: 0, b: 0, a: 0}
+  gameObj: {fileID: 0}
+  particleSystem: {fileID: 0}
 --- !u!1 &-7802054281909578267
 GameObject:
   m_ObjectHideFlags: 0
@@ -94,6 +174,10 @@ GameObject:
   - component: {fileID: -2848352324735195984}
   - component: {fileID: -6985136772957267676}
   - component: {fileID: -8130107181898492659}
+  - component: {fileID: 3582621641973194496}
+  - component: {fileID: 6157554032497665828}
+  - component: {fileID: 5021373162843437856}
+  - component: {fileID: 534285397333832139}
   m_Layer: 0
   m_Name: "\u5BF9\u8C61076"
   m_TagString: Untagged
@@ -166,6 +250,82 @@ MeshRenderer:
   m_SortingLayer: 0
   m_SortingOrder: 0
   m_AdditionalVertexStreams: {fileID: 0}
+--- !u!114 &3582621641973194496
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: -7802054281909578267}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 13c2d82f1d882ba46ae81bc5982e96e7, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  mainInputChannel: {fileID: 0}
+  outputfloat: 0
+  outputColor: {r: 0, g: 0, b: 0, a: 0}
+  baseColor: {r: 0, g: 0, b: 0, a: 0}
+  randomlizeRed: 1
+  randomlizeBlue: 1
+  randomlizeGreen: 1
+  startRangeColor: {r: 0, g: 0, b: 0, a: 1}
+  endRangeColor: {r: 1, g: 1, b: 1, a: 1}
+--- !u!114 &6157554032497665828
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: -7802054281909578267}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 13c2d82f1d882ba46ae81bc5982e96e7, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  mainInputChannel: {fileID: 0}
+  outputfloat: 0
+  outputColor: {r: 0, g: 0, b: 0, a: 0}
+  baseColor: {r: 0, g: 0, b: 0, a: 0}
+  randomlizeRed: 1
+  randomlizeBlue: 1
+  randomlizeGreen: 1
+  startRangeColor: {r: 0, g: 0, b: 0, a: 1}
+  endRangeColor: {r: 1, g: 1, b: 1, a: 1}
+--- !u!114 &5021373162843437856
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: -7802054281909578267}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2368415b440ad10408e6584a39ad6ef8, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  mainInputChannel: {fileID: 3582621641973194496}
+  outputfloat: 0
+  outputColor: {r: 0, g: 0, b: 0, a: 0}
+  InputChannelTwo: {fileID: 6157554032497665828}
+  changeSpeed: 0.2
+--- !u!114 &534285397333832139
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: -7802054281909578267}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 173600403fadcba4bb83eebb0601a071, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  mainInputChannel: {fileID: 5021373162843437856}
+  outputfloat: 0
+  outputColor: {r: 0, g: 0, b: 0, a: 0}
+  gameObj: {fileID: 0}
+  particleSystem: {fileID: 0}
 --- !u!1 &6195501051464991150
 GameObject:
   m_ObjectHideFlags: 0
