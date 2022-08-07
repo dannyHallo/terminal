@@ -17,6 +17,7 @@ public class StageManagement : MonoBehaviour
     public Vector3 thirdPosition;
     public GameObject FourthItem;
     public Vector3 fourthPosition;
+    public GameObject _space;
     public int stageInt;
     public float _countDown;
     private float rotateTime = 8f;
@@ -27,6 +28,7 @@ public class StageManagement : MonoBehaviour
     {
         _cameraControl = FindObjectOfType<CameraControl>();
         orginalPlane.transform.position = new Vector3(0,20,0);
+        _space.transform.localScale = Vector3.zero;
     }
 
 
@@ -100,7 +102,7 @@ public class StageManagement : MonoBehaviour
             if (orginalPlane.transform.position.y > -5)
             {
                 orginalPlane.transform.position += Vector3.down * 2 * Time.deltaTime;
-                WorldEdge.transform.position += Vector3.up * .5f * Time.deltaTime;
+                WorldEdge.transform.position += Vector3.up * 4 * Time.deltaTime;
             }
             else
             {
@@ -111,7 +113,7 @@ public class StageManagement : MonoBehaviour
                     else
                 {
                     
-                    StageSwitch(3);
+                    //StageSwitch(3);
                 }
             }
 
@@ -131,6 +133,10 @@ public class StageManagement : MonoBehaviour
         }
         if (stageInt == 4)
         {
+            if (_space.transform.localScale.y <= 0.1f)
+            {
+                _space.transform.localScale += Vector3.one * 0.005f * Time.deltaTime;
+            }
 
 
         }

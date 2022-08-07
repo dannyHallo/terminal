@@ -15,6 +15,7 @@ GameObject:
   - component: {fileID: 334071016}
   - component: {fileID: 334071014}
   - component: {fileID: 4541621779387629328}
+  - component: {fileID: 861976776}
   m_Layer: 0
   m_Name: PK_guitar
   m_TagString: Untagged
@@ -101,7 +102,7 @@ Rigidbody:
   m_UseGravity: 1
   m_IsKinematic: 0
   m_Interpolate: 0
-  m_Constraints: 0
+  m_Constraints: 90
   m_CollisionDetection: 0
 --- !u!64 &334071016
 MeshCollider:
@@ -114,7 +115,7 @@ MeshCollider:
   m_IsTrigger: 0
   m_Enabled: 1
   serializedVersion: 4
-  m_Convex: 1
+  m_Convex: 0
   m_CookingOptions: 30
   m_Mesh: {fileID: -5495902117074765545, guid: 30b95de13f2a2854e8612ded554145b3, type: 3}
 --- !u!114 &334071014
@@ -131,6 +132,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   instrumentType: 0
   UIManager: {fileID: 0}
+  _instrumentInt: 0
+  stageManagement: {fileID: 0}
 --- !u!65 &4541621779387629328
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -142,5 +145,19 @@ BoxCollider:
   m_IsTrigger: 1
   m_Enabled: 1
   serializedVersion: 2
-  m_Size: {x: 0.05, y: 0.05, z: 0.05}
-  m_Center: {x: 0.00016465547, y: 0.0006298864, z: 0.0021214564}
+  m_Size: {x: 0.06248066, y: 0.06955382, z: 0.0681696}
+  m_Center: {x: -0.00022014107, y: -0.00046598623, z: 0.0038153967}
+--- !u!114 &861976776
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1821412513824127026}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 549b455b74ddb9a438539737317a2c98, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  rotationDirection: 1
+  rotationVector: {x: 0, y: 0, z: 0}

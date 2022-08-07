@@ -4,11 +4,32 @@ using UnityEngine;
 
 public class Itemdift : MonoBehaviour
 {
-
+    public enum XYZ { X,Y,Z};
+    public XYZ rotationDirection;
+    [HideInInspector]public Vector3 rotationVector;
     private Vector3 orginalPosition;
     // Start is called before the first frame update
     void Start()
     {
+        switch (rotationDirection)
+        {
+            case XYZ.X:
+                rotationVector = Vector3.right;
+                break;
+            case XYZ.Y:
+                rotationVector = Vector3.up;
+                break;
+
+
+
+
+            case XYZ.Z:
+                rotationVector = Vector3.forward;
+                break;
+        }
+
+
+
         orginalPosition = gameObject.transform.position;
     }
 
@@ -17,6 +38,6 @@ public class Itemdift : MonoBehaviour
     {
        // if
 
-        gameObject.transform.eulerAngles += Vector3.up *50f* Time.deltaTime;
+        gameObject.transform.eulerAngles += rotationVector * 50f* Time.deltaTime;
     }
 }
