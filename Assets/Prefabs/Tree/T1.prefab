@@ -198,6 +198,7 @@ GameObject:
   - component: {fileID: 5209712512524206822}
   - component: {fileID: 2974846940486323186}
   - component: {fileID: 560043984127268715}
+  - component: {fileID: 3081148708568314669}
   m_Layer: 0
   m_Name: "\u5BF9\u8C61061"
   m_TagString: Untagged
@@ -314,10 +315,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 2368415b440ad10408e6584a39ad6ef8, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  mainInputChannel: {fileID: 8381743392178224465}
+  mainInputChannel: {fileID: 5209712512524206822}
   outputfloat: 0
   outputColor: {r: 0, g: 0, b: 0, a: 0}
-  InputChannelTwo: {fileID: 5209712512524206822}
+  InputChannelTwo: {fileID: 8381743392178224465}
   changeSpeed: 0.1
 --- !u!114 &560043984127268715
 MonoBehaviour:
@@ -331,8 +332,24 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 173600403fadcba4bb83eebb0601a071, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  mainInputChannel: {fileID: 2974846940486323186}
+  mainInputChannel: {fileID: 3081148708568314669}
   outputfloat: 0
   outputColor: {r: 0, g: 0, b: 0, a: 0}
   gameObj: {fileID: 0}
   particleSystem: {fileID: 0}
+--- !u!114 &3081148708568314669
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7611582084088841825}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fd0051ebd6af2a148a74c86231288f14, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  mainInputChannel: {fileID: 2974846940486323186}
+  outputfloat: 0
+  outputColor: {r: 0, g: 0, b: 0, a: 0}
+  darkenFactor: 0.4
