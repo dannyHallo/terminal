@@ -113,7 +113,7 @@ public class TerrainMesh : MonoBehaviour
 
             if (!Application.isPlaying)
                 RequestMeshUpdate();
-                
+
             settingsUpdated = false;
         }
     }
@@ -136,11 +136,6 @@ public class TerrainMesh : MonoBehaviour
         {
             if (drawGrass)
             {
-                // TODO: 
-                foreach (Chunk chunk in activeChunks)
-                {
-                    modelGrass.CalculateGrassPos(chunk);
-                }
                 modelGrass.DrawAllGrass(activeChunks);
             }
             return;
@@ -492,14 +487,17 @@ public class TerrainMesh : MonoBehaviour
                     );
 
                     float rangeFactor =
-                        range
-                        - (
-                            (currentVector + chunkOffsetVector * (numPointsPerAxis - 1)) - IdVector
-                        ).magnitude;
+                        range - ((currentVector + chunkOffsetVector * (numPointsPerAxis - 1)) - IdVector).magnitude;
+
                     if (rangeFactor >= 0)
                     {
                         Vector3Int currentProcessingCoord =
                             originalHittingCoord + chunkOffsetVector;
+
+                        if (!existingChunks.ContainsKey(currentProcessingCoord))
+                        {
+                            continue;
+                        }
 
                         // Add chunk in update list
                         if (!chunksNeedToBeUpdated.Contains(currentProcessingCoord))

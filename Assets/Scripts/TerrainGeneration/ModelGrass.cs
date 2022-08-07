@@ -153,8 +153,16 @@ public class ModelGrass : MonoBehaviour
         chunk.grassMaterial.SetBuffer("positionBuffer", chunk.culledPositionsBuffer);
     }
 
+    public void ResetGrassChunkGroundLevelDataBuffer(Chunk chunk)
+    {
+
+    }
+
+
     public void CalculateGrassPos(Chunk chunk)
     {
+        grassChunkPointShader.SetBuffer(0, "GroundLevelDataBuffer", chunk.groundLevelDataBuffer);
+
         int threadGroupNum = Mathf.CeilToInt(numGrassesPerAxis / (float)8);
         grassChunkPointShader.Dispatch(0, threadGroupNum, threadGroupNum, 1);
     }
