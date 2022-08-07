@@ -93,7 +93,7 @@ GameObject:
   m_Component:
   - component: {fileID: 4010318240279059558}
   - component: {fileID: 6961505647392189955}
-  - component: {fileID: 3491528812964807385}
+  - component: {fileID: 343086684436555882}
   m_Layer: 0
   m_Name: T5
   m_TagString: Untagged
@@ -132,10 +132,10 @@ Rigidbody:
   m_UseGravity: 1
   m_IsKinematic: 0
   m_Interpolate: 0
-  m_Constraints: 112
+  m_Constraints: 122
   m_CollisionDetection: 0
---- !u!64 &3491528812964807385
-MeshCollider:
+--- !u!136 &343086684436555882
+CapsuleCollider:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
@@ -144,10 +144,10 @@ MeshCollider:
   m_Material: {fileID: 0}
   m_IsTrigger: 0
   m_Enabled: 1
-  serializedVersion: 4
-  m_Convex: 0
-  m_CookingOptions: 30
-  m_Mesh: {fileID: 0}
+  m_Radius: 0.7
+  m_Height: 12
+  m_Direction: 1
+  m_Center: {x: 0, y: 4, z: 0}
 --- !u!1 &7505306769770755648
 GameObject:
   m_ObjectHideFlags: 0
