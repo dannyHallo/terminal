@@ -11,8 +11,10 @@ public class Pickable : MonoBehaviour
     public PlayerController.InstrumentTypes instrumentType;
     public UIManager UIManager;
     public int _instrumentInt;
+    public StageManagement stageManagement;
     private void Start()
     {
+        stageManagement = FindObjectOfType<StageManagement>();
         UIManager = FindObjectOfType<UIManager>();
     }
 
@@ -41,6 +43,10 @@ public class Pickable : MonoBehaviour
     }
     private void OnTriggerStay(Collider other)
     {
+        if (instrumentType == PlayerController.InstrumentTypes.Guitar)
+        {
+            stageManagement. StageSwitch(1);
+        }
         if (other.gameObject.tag != "Player")
         { return; }
             if (Input.GetKeyDown(KeyCode.E))
