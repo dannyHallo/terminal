@@ -12,6 +12,6 @@ int2 origin;
 void CSMain (uint2 id : SV_DispatchThreadID)
 {
     if(distance(id, origin) <= radius){
-        image[id.xy] = float4(1.0,0.0,0.0,1.0);
+        image[id.xy] = drawColor;
     }
 }

@@ -43,9 +43,10 @@ public class ColourGenerator2D : MonoBehaviour
 
     public bool usePalette = false;
     public bool updateRequest = false;
-
-    public bool resetTexture = true;
     public bool dispatch = false;
+
+    public static readonly float[] metalColor = { 1.0f, 1.0f, 0.0f, 1.0f };
+    public static readonly float[] natureColor = { 0.0f, 1.0f, 0.0f, 1.0f };
 
     void UpdatePalette()
     {
@@ -85,7 +86,6 @@ public class ColourGenerator2D : MonoBehaviour
             {
                 Color gradientCol = gradient.Evaluate(i / (textureResolution - 1f));
                 colours[i] = gradientCol;
-                // colours[i] = allColor;
             }
 
             orignalPalette.SetPixels(colours);
@@ -124,36 +124,33 @@ public class ColourGenerator2D : MonoBehaviour
             universalRenderTex.Create();
         }
 
-        if (resetTexture)
-        {
-            CreateTexture2DFromBlank(blankTex, out userTex);
-            CreateTexture2DFromBlank(blankTex, out metallicTex);
-
-            resetTexture = false;
-        }
-
-        // Test function
-        if (dispatch)
-        {
-            DrawOnTexture(userTex, (int)0, (int)0, 10);
-            DrawOnTexture(userTex, (int)1024, (int)1024, 10);
-            DrawOnTexture(userTex, (int)0, (int)1024, 10);
-            DrawOnTexture(userTex, (int)1024, (int)0, 10);
-
-            dispatch = false;
-        }
-
         if (updateRequest)
         {
             if (usePalette)
                 UpdatePalette();
 
+            CreateTexture2DFromBlank(blankTex, out userTex);
+            CreateTexture2DFromBlank(blankTex, out metallicTex);
+
             UpdateShader();
             updateRequest = false;
         }
+
+        // Test function
+        if (dispatch)
+        {
+            DrawOnTexture(userTex, (int)0, (int)0, 10, true);
+            DrawOnTexture(userTex, (int)1024, (int)1024, 10, true);
+            DrawOnTexture(userTex, (int)0, (int)1024, 10, true);
+            DrawOnTexture(userTex, (int)1024, (int)0, 10, true);
+
+            dispatch = false;
+        }
+
+
     }
 
-    public void DrawTextureOnWorldPos(Texture2D texture, Vector3 position, int radius)
+    public void DrawTextureOnWorldPos(Texture2D texture, Vector3 position, int radius, bool isMetal)
     {
         float ratio = 1 / (2.0f * worldPosOffset);
 
@@ -167,10 +164,10 @@ public class ColourGenerator2D : MonoBehaviour
 
         // print("Drawing origin: " + (int)x + ", " + (int)z);
 
-        DrawOnTexture(texture, (int)x, (int)z, Mathf.CeilToInt(radius * strokeMul));
+        DrawOnTexture(texture, (int)x, (int)z, Mathf.CeilToInt(radius * strokeMul), isMetal);
     }
 
-    private void DrawOnTexture(Texture2D texture, int originX, int originY, int radius)
+    private void DrawOnTexture(Texture2D texture, int originX, int originY, int radius, bool isMetal)
     {
         Graphics.Blit(texture, universalRenderTex);
 
@@ -178,8 +175,16 @@ public class ColourGenerator2D : MonoBehaviour
         origin[0] = originX;
         origin[1] = originY;
 
+        float[] drawColor;
+
+        if (isMetal)
+            drawColor = metalColor;
+        else
+            drawColor = natureColor;
+
         drawImageComputeShader.SetInt("radius", radius);
         drawImageComputeShader.SetInts("origin", origin);
+        drawImageComputeShader.SetFloats("drawColor", drawColor);
         drawImageComputeShader.SetTexture(0, "image", universalRenderTex);
         drawImageComputeShader.Dispatch(0, 128, 128, 1);
 
@@ -192,6 +197,5 @@ public class ColourGenerator2D : MonoBehaviour
     private void OnValidate()
     {
         updateRequest = true;
-        resetTexture = true;
     }
 }
