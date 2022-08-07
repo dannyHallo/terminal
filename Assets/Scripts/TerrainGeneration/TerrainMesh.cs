@@ -48,7 +48,7 @@ public class TerrainMesh : MonoBehaviour
     ComputeBuffer additionalPointsBuffer;
     ComputeBuffer triCountBuffer;
 
-    float changeFactor = -0.6f;
+    [Range(0, 1.0f)] public float meshPaintingChangeFactor = -0.1f;
     bool settingsUpdated;
     int maxChunksInViewHoriDisappear;
     int maxChunksInViewVertDisappear;
@@ -417,7 +417,7 @@ public class TerrainMesh : MonoBehaviour
             float[] chunkVolumeData = new float[numPoints];
             existingChunkVolumeData.Add(chunkCoord, chunkVolumeData);
         }
-        existingChunkVolumeData[chunkCoord][id] += changeFactor * rangeFactor;
+        existingChunkVolumeData[chunkCoord][id] += meshPaintingChangeFactor * rangeFactor;
     }
 
     public void DrawOnChunk(
@@ -428,11 +428,11 @@ public class TerrainMesh : MonoBehaviour
     {
         if (drawType == 0)
         {
-            changeFactor = -Mathf.Abs(changeFactor);
+            meshPaintingChangeFactor = -Mathf.Abs(meshPaintingChangeFactor);
         }
         else if (drawType == 1)
         {
-            changeFactor = Mathf.Abs(changeFactor);
+            meshPaintingChangeFactor = Mathf.Abs(meshPaintingChangeFactor);
         }
 
         int numPointsPerAxis = lodSetup.numPointsPerAxis;

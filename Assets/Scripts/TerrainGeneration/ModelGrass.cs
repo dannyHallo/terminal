@@ -192,7 +192,7 @@ public class ModelGrass : MonoBehaviour
         int meshThreadGroupNum = Mathf.CeilToInt(numPointsPerAxis / 8.0f);
         int grassThreadGroupNum = Mathf.CeilToInt(numGrassesPerAxis / 8.0f);
 
-        grassChunkPointShader.SetFloats("requiredColor", ColourGenerator2D.natureColor);
+        grassChunkPointShader.SetFloats("requiredColor", colourGenerator2D.fillColor(colourGenerator2D.grassColor));
         grassChunkPointShader.Dispatch(0, meshThreadGroupNum, meshThreadGroupNum, meshThreadGroupNum);
         grassChunkPointShader.Dispatch(1, grassThreadGroupNum, grassThreadGroupNum, 1);
     }

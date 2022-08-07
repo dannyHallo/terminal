@@ -35,6 +35,13 @@ int indexFromCoord(uint x, uint y, uint z) {
     return z * numPointsPerAxis * numPointsPerAxis + y * numPointsPerAxis + x;
 }
 
+// return: 0 - false, 1 - true
+int colorCmp(float4 col1, float4 col2){
+    float threhold = 0.01f;
+    return 1 - step(threhold, distance(col1.rgb, col2.rgb));
+}
+
+
 #pragma kernel CalculateGrassPos
 
 [numthreads(8,8,8)]
@@ -74,11 +81,7 @@ void InitializeGrassChunk(int2 id : SV_DispatchThreadID) {
     textureSamplePoint += worldPosOffset;
     textureSamplePoint *= ratio * textureSize;
 
-    if(image[textureSamplePoint].a > 0.1f && image[textureSamplePoint].r < 0.8f){
-        grass.enable = true;
-        }else{
-        grass.enable = false;
-    }
+    grass.enable = colorCmp(requiredColor, image[textureSamplePoint]);
 
     float groundLevel1, groundLevel2, groundLevel3, groundLevel4;
     float heightMapStep, grassMapStep;
@@ -104,6 +107,19 @@ void InitializeGrassChunk(int2 id : SV_DispatchThreadID) {
     heightMapPointTemp.y = ceil (id.y * float(numPointsPerAxis - 1) / float(numGrassesPerAxis));
     groundLevel4 = GroundLevelDataBuffer[heightMapPointTemp.x + heightMapPointTemp.y * numPointsPerAxis].twodeeHeight;
     
+    float max12 = max(groundLevel1, groundLevel2);
+    float max34 = max(groundLevel3, groundLevel4);
+    float max1234 = max(max12, max34);
+
+    float min12 = min(groundLevel1, groundLevel2);
+    float min34 = min(groundLevel3, groundLevel4);
+    float min1234 = min(min12, min34);
+    
+    // Restrict 'k'
+    if(max1234 - min1234 > meshSpacing * 1.2f){
+        grass.enable = false;
+    }
+
     float testHeight1 = GroundLevelDataBuffer[id.x + id.y * numPointsPerAxis].twodeeHeight;
     float testHeight2 = 0.0f;
     
