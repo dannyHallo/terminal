@@ -33,6 +33,7 @@ float3 worldSize;
 float3 offset;
 float spacing;
 bool closeEdges;
+bool grassEnabled;
 
 int indexFromCoord(uint x, uint y, uint z) {
     return z * numPointsPerAxis * numPointsPerAxis + y * numPointsPerAxis + x;
@@ -85,7 +86,7 @@ void Density (int3 id : SV_DispatchThreadID)
     // float finalVal = (radius - distance(float3(0,0,0), pos)) * heightGredient + floorOffset + noise;
     float finalVal = -pos.y * heightGredient + floorOffset + noise;
 
-    if(id.y == 0){
+    if(grassEnabled && id.y == 0){
         GroundLevelDataBuffer[id.x + id.z * numPointsPerAxis].twodeeHeight = 
         (noise + floorOffset) / heightGredient;
     }
@@ -95,6 +96,8 @@ void Density (int3 id : SV_DispatchThreadID)
         float edgeWeight = saturate(sign(max(max(edgeOffset.x,edgeOffset.y),edgeOffset.z)));
         finalVal = finalVal * (1-edgeWeight) - 100 * edgeWeight;
     }
+
+    
 
     if(finalVal + manualData[index] - isoLevel > 0)
     pointsStatus[0] = 1;

@@ -62,12 +62,12 @@ public class TerrainMesh : MonoBehaviour
         public int numPointsPerAxis;
         public int viewDistanceHori;
         public int viewDistanceVert;
-        public int fixedDistanceHori;
-        public int fixedDistanceVert;
     }
 
     private void Awake()
     {
+        modelGrass.Init(boundSize, lodSetup.numPointsPerAxis);
+
         if (Application.isPlaying)
         {
             DestroyOldChunks();
@@ -76,12 +76,10 @@ public class TerrainMesh : MonoBehaviour
 
             if (fixedMapSize)
             {
-                modelGrass.Init(boundSize, lodSetup.numPointsPerAxis);
                 CreateBuffers();
                 LoadBoundedChunks();
             }
         }
-
     }
 
     void DestroyOldChunks()
@@ -111,8 +109,11 @@ public class TerrainMesh : MonoBehaviour
         // Editor update
         else if (settingsUpdated)
         {
+            modelGrass.Init(boundSize, lodSetup.numPointsPerAxis);
+
             if (!Application.isPlaying)
                 RequestMeshUpdate();
+                
             settingsUpdated = false;
         }
     }
@@ -123,7 +124,7 @@ public class TerrainMesh : MonoBehaviour
 
         if (printActiveChunk)
         {
-            foreach(Chunk chunk in activeChunks)
+            foreach (Chunk chunk in activeChunks)
             {
                 print(chunk);
             }
@@ -924,11 +925,8 @@ public class TerrainMesh : MonoBehaviour
         ComputeBuffer pointsStatus = new ComputeBuffer(2, sizeof(int));
         pointsStatus.SetData(pointStatusData);
 
-        if (drawGrass && Application.isPlaying)
-        {
-            // Chunk grass is not initialized yet (not in registery)
-            modelGrass.InitializeGrassChunkIfNeeded(chunk, centre, numPointsPerAxis);
-        }
+        // Chunk grass is not initialized yet (not in registery)
+        modelGrass.InitializeGrassChunkIfNeeded(chunk, centre, numPointsPerAxis);
 
         Vector3 worldSize = new Vector3(numChunks.x, numChunks.y, numChunks.z) * boundSize;
 
@@ -1032,10 +1030,7 @@ public class TerrainMesh : MonoBehaviour
         if (Application.isPlaying)
         {
             ReleaseBuffers();
-            if (drawGrass)
-            {
-                modelGrass.ClearGrassBufferIfNeeded();
-            }
+            modelGrass.ClearGrassBufferIfNeeded();
         }
     }
 

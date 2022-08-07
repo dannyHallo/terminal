@@ -39,12 +39,12 @@ public class RandomForestGenerator : MonoBehaviour
         float blankSpaceEndZ;
         Vector2 blankSpaceCenter;
         float blankSpaceRadius;
-        
-         blankSpaceStartX=Random.Range(startX, startX + .8f*forestSize);
-        blankSpaceEndX = blankSpaceStartX + Random.Range(.2f * forestSize, .7f*forestSize);
+
+        blankSpaceStartX = Random.Range(startX, startX + .8f * forestSize);
+        blankSpaceEndX = blankSpaceStartX + Random.Range(.2f * forestSize, .7f * forestSize);
         blankSpaceStartZ = Random.Range(startZ, startZ + .8f * forestSize);
         blankSpaceEndZ = blankSpaceStartZ + Random.Range(.2f * forestSize, .7f * forestSize);
-        blankSpaceCenter= new Vector2(Random.Range(startX, startX + forestSize), Random.Range(startZ, startZ + forestSize));
+        blankSpaceCenter = new Vector2(Random.Range(startX, startX + forestSize), Random.Range(startZ, startZ + forestSize));
         blankSpaceRadius = Random.Range(.2f * forestSize, .4f * forestSize);
 
 
@@ -54,75 +54,75 @@ public class RandomForestGenerator : MonoBehaviour
 
         // Loop through all the positions within our forest boundary.
         for (int x = startX; x < startX + forestSize; x += elementSpacing)
+        {
+            for (int z = startZ; z < startZ + forestSize; z += elementSpacing)
             {
-                for (int z = startZ; z < startZ + forestSize; z += elementSpacing)
-                {
-                bool blankCheck=false;
+                bool blankCheck = false;
                 if (x <= blankSpaceEndX && x >= blankSpaceStartX && z <= blankSpaceEndZ && z >= blankSpaceStartZ)
                 {
-                    blankCheck=true;
+                    blankCheck = true;
                 }
                 Vector2 positionV2 = new Vector2(x, z);
                 Vector2 distance = positionV2 - blankSpaceCenter;
                 if (distance.magnitude < blankSpaceRadius)
                 {
-                    blankCheck=true;
+                    blankCheck = true;
                 }
 
                 // For each position, loop through each element...
-                if (blankCheck!=true)
+                if (blankCheck != true)
                 {
 
-               
-                for (int i = 0; i < elements.Length; i++)
-                {
 
-                    // Get the current element.
-                    Element element = elements[i];
-
-
-                    // Check if the element can be placed.
-                    if (element.CanPlace())
+                    for (int i = 0; i < elements.Length; i++)
                     {
-                        //Debug.Log("what");
-                        // Add random elements to element placement.
-                        Vector3 position = new Vector3(x, 0f, z);
-                        Vector3 offset = new Vector3(Random.Range(-0.75f, 0.75f), 0f, Random.Range(-0.75f, 0.75f));
-                        Vector3 rotation = new Vector3(Random.Range(0, 5f), Random.Range(0, 360f), Random.Range(0, 5f));
-                        Vector3 scale = Vector3.one * Random.Range(0.75f, 1.25f);
 
-                        // Instantiate and place element in world.
-                        Ray ray = new Ray(position + offset + RayCastHeight, Vector3.down);
+                        // Get the current element.
+                        Element element = elements[i];
 
-                        Debug.DrawRay(ray.origin, ray.direction * 120f, Color.green);
 
-                        RaycastHit hit;
-                        Vector3 spawnPoint = position + offset;
-                        if (Physics.Raycast(ray, out hit, 150f))
+                        // Check if the element can be placed.
+                        if (element.CanPlace())
                         {
-                            //Debug.Log("hit " + hit.point.ToString());
-                            Debug.Log(hit.collider);
-                            Debug.Log("hit " + hit.point.ToString());
-                            spawnPoint = hit.point;
+                            //Debug.Log("what");
+                            // Add random elements to element placement.
+                            Vector3 position = new Vector3(x, 0f, z);
+                            Vector3 offset = new Vector3(Random.Range(-0.75f, 0.75f), 0f, Random.Range(-0.75f, 0.75f));
+                            Vector3 rotation = new Vector3(Random.Range(0, 5f), Random.Range(0, 360f), Random.Range(0, 5f));
+                            Vector3 scale = Vector3.one * Random.Range(0.75f, 1.25f);
+
+                            // Instantiate and place element in world.
+                            Ray ray = new Ray(position + offset + RayCastHeight, Vector3.down);
+
+                            Debug.DrawRay(ray.origin, ray.direction * 120f, Color.green);
+
+                            RaycastHit hit;
+                            Vector3 spawnPoint = position + offset;
+                            if (Physics.Raycast(ray, out hit, 150f))
+                            {
+                                //Debug.Log("hit " + hit.point.ToString());
+                                // Debug.Log(hit.collider);
+                                // Debug.Log("hit " + hit.point.ToString());
+                                spawnPoint = hit.point;
 
 
+
+                            }
+
+
+
+
+
+                            GameObject newElement = Instantiate(element.GetRandom());
+                            newElement.transform.SetParent(transform);
+                            newElement.transform.position = spawnPoint;
+                            newElement.transform.eulerAngles = rotation;
+                            newElement.transform.localScale = scale;
+
+                            // Break out of this for loop to ensure we don't place another element at this position.
+                            break;
 
                         }
-
-
-
-
-
-                        GameObject newElement = Instantiate(element.GetRandom());
-                        newElement.transform.SetParent(transform);
-                        newElement.transform.position = spawnPoint;
-                        newElement.transform.eulerAngles = rotation;
-                        newElement.transform.localScale = scale;
-
-                        // Break out of this for loop to ensure we don't place another element at this position.
-                        break;
-
-                    }
                     }
 
                 }
