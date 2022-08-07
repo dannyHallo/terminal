@@ -124,14 +124,8 @@ public class NoiseDensity : MonoBehaviour
 
         noiseDensityShader.SetBuffer(0, "points", pointsBuffer);
         noiseDensityShader.SetBuffer(0, "manualData", additionalPointsBuffer);
-        
-        if (chunk.groundLevelDataBuffer != null)
-        {
-            noiseDensityShader.SetBuffer(0, "GroundLevelDataBuffer", chunk.groundLevelDataBuffer);
-            noiseDensityShader.SetBool("grassEnabled", true);
-        }
-        else
-            noiseDensityShader.SetBool("grassEnabled", false);
+
+        noiseDensityShader.SetBuffer(0, "GroundLevelDataBuffer", chunk.groundLevelDataBuffer);
 
         noiseDensityShader.SetBuffer(0, "pointsStatus", pointsStatus);
         noiseDensityShader.SetInt("numPointsPerAxis", numPointsPerAxis);
