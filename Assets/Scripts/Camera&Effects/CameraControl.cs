@@ -35,7 +35,7 @@ public class CameraControl : MonoBehaviour
 
 
 
-    private bool isFollowingPlayer
+    public bool isFollowingPlayer
     {
         get
         {
@@ -43,7 +43,7 @@ public class CameraControl : MonoBehaviour
         }
     }
 
-    private bool isOrbitingPlayer
+    public bool isOrbitingPlayer
     {
         get
         {

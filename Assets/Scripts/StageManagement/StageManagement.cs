@@ -17,7 +17,7 @@ public class StageManagement : MonoBehaviour
         if (SwitchCount == 1)
         {
 
-           if(_cameraControl.isFollowingPlayer) _cameraControl.OrbitPlayer();
+            if (_cameraControl.isFollowingPlayer) _cameraControl.OrbitPlayer();
             StageSwitch(2);
 
         }
