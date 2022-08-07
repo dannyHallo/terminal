@@ -11,6 +11,8 @@ GameObject:
   - component: {fileID: -1992101726088094977}
   - component: {fileID: 8568333645224393121}
   - component: {fileID: -3402141499473594065}
+  - component: {fileID: 7661359122082595133}
+  - component: {fileID: 8311402188428275854}
   m_Layer: 0
   m_Name: "\u5BF9\u8C61068"
   m_TagString: Untagged
@@ -83,6 +85,39 @@ MeshRenderer:
   m_SortingLayer: 0
   m_SortingOrder: 0
   m_AdditionalVertexStreams: {fileID: 0}
+--- !u!114 &7661359122082595133
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: -2529032399605243408}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 173600403fadcba4bb83eebb0601a071, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  mainInputChannel: {fileID: 8311402188428275854}
+  outputfloat: 0
+  outputColor: {r: 0, g: 0, b: 0, a: 0}
+  gameObj: {fileID: 0}
+  particleSystem: {fileID: 0}
+--- !u!114 &8311402188428275854
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: -2529032399605243408}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4f5f87ef41890b24b981ff856e91bb53, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  mainInputChannel: {fileID: 0}
+  outputfloat: 0
+  outputColor: {r: 0, g: 0, b: 0, a: 0}
+  SelectColor: {r: 0.4716981, g: 0.2745575, b: 0, a: 1}
 --- !u!1 &1335951266537536947
 GameObject:
   m_ObjectHideFlags: 0
@@ -160,6 +195,7 @@ GameObject:
   - component: {fileID: -6613587570183894092}
   - component: {fileID: 6975582351308474283}
   - component: {fileID: 8381743392178224465}
+  - component: {fileID: 5209712512524206822}
   - component: {fileID: 2974846940486323186}
   - component: {fileID: 560043984127268715}
   m_Layer: 0
@@ -249,7 +285,23 @@ MonoBehaviour:
   mainInputChannel: {fileID: 0}
   outputfloat: 0
   outputColor: {r: 0, g: 0, b: 0, a: 0}
-  SelectColor: {r: 0.28309473, g: 0.46226418, b: 0.25947848, a: 0}
+  SelectColor: {r: 0.28309473, g: 0.46226418, b: 0.25947848, a: 1}
+--- !u!114 &5209712512524206822
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7611582084088841825}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4f5f87ef41890b24b981ff856e91bb53, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  mainInputChannel: {fileID: 0}
+  outputfloat: 0
+  outputColor: {r: 0, g: 0, b: 0, a: 0}
+  SelectColor: {r: 0.27887955, g: 0.754717, b: 0, a: 1}
 --- !u!114 &2974846940486323186
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -262,11 +314,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 2368415b440ad10408e6584a39ad6ef8, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  mainInputChannel: {fileID: 0}
+  mainInputChannel: {fileID: 8381743392178224465}
   outputfloat: 0
   outputColor: {r: 0, g: 0, b: 0, a: 0}
-  InputChannelTwo: {fileID: 0}
-  changeSpeed: 0
+  InputChannelTwo: {fileID: 5209712512524206822}
+  changeSpeed: 0.1
 --- !u!114 &560043984127268715
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -279,7 +331,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 173600403fadcba4bb83eebb0601a071, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  mainInputChannel: {fileID: 8381743392178224465}
+  mainInputChannel: {fileID: 2974846940486323186}
   outputfloat: 0
   outputColor: {r: 0, g: 0, b: 0, a: 0}
   gameObj: {fileID: 0}

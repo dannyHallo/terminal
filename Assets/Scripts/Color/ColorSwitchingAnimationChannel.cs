@@ -6,7 +6,7 @@ public class ColorSwitchingAnimationChannel : ColorChannel
 {
     bool ToSecondColor;
     public ColorChannel InputChannelTwo;
-    public float changeSpeed;
+    public float changeSpeed=.1f;
     Color inputColorTarget
     {
         get { return InputChannelTwo.outputColor; }
