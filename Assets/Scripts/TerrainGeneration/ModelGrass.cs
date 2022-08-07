@@ -14,7 +14,6 @@ public class ModelGrass : MonoBehaviour
 
     [Range(0, 1000.0f)]
     public float lodCutoff = 1000.0f;
-    private float chunkBoundsize;
 
     private ComputeShader grassChunkPointShader, cullGrassShader;
     private ComputeBuffer voteBuffer,
@@ -45,13 +44,29 @@ public class ModelGrass : MonoBehaviour
 
     Bounds fieldBounds;
 
-    public void InitIfNeeded(float chunkBoundsize, int numPointsPerAxis)
+    float chunkBoundsSize;
+    int numPointsPerAxis;
+
+    public void Init(float chunkBoundsize, int numPointsPerAxis)
     {
+        this.chunkBoundsSize = chunkBoundsize;
+        this.numPointsPerAxis = numPointsPerAxis;
+    }
+
+    public void InitIfNeeded()
+    {
+        if (chunkBoundsSize == 0 || numPointsPerAxis == 0)
+        {
+            print("plz init first!");
+            return;
+        }
+
         if (voteBuffer != null)
             return;
 
-        this.chunkBoundsize = chunkBoundsize;
-        float spacing = chunkBoundsize / numGrassesPerAxis;
+        print("vote buffer created");
+
+        float spacing = chunkBoundsSize / numGrassesPerAxis;
         numGrassesPerChunk = numGrassesPerAxis * numGrassesPerAxis;
         numThreadGroups = Mathf.CeilToInt(numGrassesPerChunk / 128.0f);
 
@@ -81,7 +96,7 @@ public class ModelGrass : MonoBehaviour
         groupSumArrayBuffer = new ComputeBuffer(numThreadGroups, 4);
         scannedGroupSumBuffer = new ComputeBuffer(numThreadGroups, 4);
 
-        grassChunkPointShader.SetFloat("chunkBoundSize", chunkBoundsize);
+        grassChunkPointShader.SetFloat("chunkBoundSize", chunkBoundsSize);
         grassChunkPointShader.SetFloat("spacing", spacing);
 
         grassChunkPointShader.SetInt("numGrassesPerAxis", numGrassesPerAxis);
@@ -101,14 +116,11 @@ public class ModelGrass : MonoBehaviour
 
     }
 
-
-
     public void InitializeGrassChunkIfNeeded(Chunk chunk, Vector3 centre, int numPointsPerAxis)
     {
         if (voteBuffer == null)
         {
-            print("Init votebuffer!");
-            return;
+            InitIfNeeded();
         }
 
         chunk.FreeBuffers();
@@ -235,13 +247,15 @@ public class ModelGrass : MonoBehaviour
 
     Vector3 CentreFromCoord(Vector3Int coord)
     {
-        return new Vector3(coord.x, coord.y, coord.z) * chunkBoundsize;
+        return new Vector3(coord.x, coord.y, coord.z) * chunkBoundsSize;
     }
 
     public void ClearGrassBufferIfNeeded()
     {
         if (voteBuffer == null)
             return;
+
+        print("vote buffer destroyed");
 
         voteBuffer.Release();
         voteBuffer = null;
