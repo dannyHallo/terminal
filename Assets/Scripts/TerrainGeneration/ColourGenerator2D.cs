@@ -140,10 +140,10 @@ public class ColourGenerator2D : MonoBehaviour
         // Test function
         if (dispatch)
         {
-            DrawOnTexture(userTex, (int)0, (int)0, 10, true);
-            DrawOnTexture(userTex, (int)1024, (int)1024, 10, true);
-            DrawOnTexture(userTex, (int)0, (int)1024, 10, true);
-            DrawOnTexture(userTex, (int)1024, (int)0, 10, true);
+            // DrawOnTexture(userTex, (int)0, (int)0, 10, true);
+            // DrawOnTexture(userTex, (int)1024, (int)1024, 10, true);
+            // DrawOnTexture(userTex, (int)0, (int)1024, 10, true);
+            // DrawOnTexture(userTex, (int)1024, (int)0, 10, true);
 
             dispatch = false;
         }
