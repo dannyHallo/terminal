@@ -118,6 +118,7 @@ MonoBehaviour:
   outputfloat: 0
   outputColor: {r: 0, g: 0, b: 0, a: 0}
   SelectColor: {r: 0.4716981, g: 0.2745575, b: 0, a: 1}
+  mainInputChannel: {fileID: 0}
 --- !u!1 &1335951266537536947
 GameObject:
   m_ObjectHideFlags: 0
@@ -287,6 +288,7 @@ MonoBehaviour:
   outputfloat: 0
   outputColor: {r: 0, g: 0, b: 0, a: 0}
   SelectColor: {r: 0.28309473, g: 0.46226418, b: 0.25947848, a: 1}
+  mainInputChannel: {fileID: 0}
 --- !u!114 &5209712512524206822
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -303,6 +305,7 @@ MonoBehaviour:
   outputfloat: 0
   outputColor: {r: 0, g: 0, b: 0, a: 0}
   SelectColor: {r: 0.27887955, g: 0.754717, b: 0, a: 1}
+  mainInputChannel: {fileID: 0}
 --- !u!114 &2974846940486323186
 MonoBehaviour:
   m_ObjectHideFlags: 0

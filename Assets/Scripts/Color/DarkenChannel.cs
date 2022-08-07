@@ -4,8 +4,21 @@ using UnityEngine;
 
 public class DarkenChannel : ColorChannel
 {
+    public ColorChannel darkenfactorInput;
+    public bool darkenFactorInputSwitch;
     // Start is called before the first frame update
-    public float darkenFactor;
+    public float darkenFactor { 
+    get { if (darkenFactorInputSwitch)
+            {
+                return darkenfactorInput.outputfloat;
+            }
+            else
+            {
+                return darkenFactor;
+            }
+        }
+    }
+        
 
     Color ColorDarknessModifer(Color orginalColor, float lightness)
     {
