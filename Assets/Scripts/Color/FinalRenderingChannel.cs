@@ -19,7 +19,7 @@ public class FinalRenderingChannel : ColorChannel
     private void Update()
     {
         if (gameObjectRenderer)
-            gameObjectRenderer.material.SetColor("_color", mainInputColor);
+            gameObjectRenderer.material.color = mainInputColor;
         if (_particleSystem)
             mainModule.startColor = mainInputColor;
     }

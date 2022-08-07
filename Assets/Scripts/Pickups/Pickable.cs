@@ -43,14 +43,16 @@ public class Pickable : MonoBehaviour
     }
     private void OnTriggerStay(Collider other)
     {
-        if (instrumentType == PlayerController.InstrumentTypes.Guitar)
-        {
-            stageManagement. StageSwitch(1);
-        }
+
         if (other.gameObject.tag != "Player")
         { return; }
-            if (Input.GetKeyDown(KeyCode.E))
+
+        if (Input.GetKeyDown(KeyCode.E))
         {
+            if (instrumentType == PlayerController.InstrumentTypes.Guitar)
+            {
+                stageManagement.StageSwitch(1);
+            }
             GameObject player = GameObject.Find("Player");
             // PlayerController.InstrumentTypes instrumentType = PlayerController.InstrumentTypes.Guitar;
             List<PlayerController.enumToInstrument> playerInstuments = player.GetComponent<PlayerController>().instruments;
