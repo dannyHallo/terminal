@@ -7,8 +7,14 @@ public class DarkenChannel : ColorChannel
     public ColorChannel darkenfactorInput;
     public bool darkenFactorInputSwitch;
     // Start is called before the first frame update
-    public float darkenFactor { 
-    get { if (darkenFactorInputSwitch)
+
+    public float darkenFactor;
+    private float _darkenFactor
+    {
+
+        get
+        {
+            if (darkenFactorInputSwitch==true&&darkenfactorInput!=null)
             {
                 return darkenfactorInput.outputfloat;
             }
@@ -18,7 +24,7 @@ public class DarkenChannel : ColorChannel
             }
         }
     }
-        
+
 
     Color ColorDarknessModifer(Color orginalColor, float lightness)
     {
@@ -34,7 +40,7 @@ public class DarkenChannel : ColorChannel
     void Update()
     {
         if (mainInputChannel)
-            outputColor = ColorDarknessModifer(mainInputColor, darkenFactor);
+            outputColor = ColorDarknessModifer(mainInputColor, _darkenFactor);
 
 
     }

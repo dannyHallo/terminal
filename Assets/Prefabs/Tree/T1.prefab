@@ -322,6 +322,7 @@ MonoBehaviour:
   outputColor: {r: 0, g: 0, b: 0, a: 0}
   darkenfactorInput: {fileID: 0}
   darkenFactorInputSwitch: 0
+  darkenFactor: 1
 --- !u!114 &7471100584156716054
 MonoBehaviour:
   m_ObjectHideFlags: 0
