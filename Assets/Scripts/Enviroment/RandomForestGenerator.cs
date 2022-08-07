@@ -109,23 +109,12 @@ public class RandomForestGenerator : MonoBehaviour
 
                             }
 
-
-<<<<<<< Updated upstream
-=======
                         GameObject newElement = Instantiate(element.GetRandom());
                         newElement.transform.SetParent(transform);
-                        newElement.transform.position = position + offset + RayCastHeight;
+                        newElement.transform.position = spawnPoint;
                         newElement.transform.eulerAngles = rotation;
                         newElement.transform.localScale = scale;
->>>>>>> Stashed changes
 
-
-
-                            GameObject newElement = Instantiate(element.GetRandom());
-                            newElement.transform.SetParent(transform);
-                            newElement.transform.position = spawnPoint;
-                            newElement.transform.eulerAngles = rotation;
-                            newElement.transform.localScale = scale;
 
                             // Break out of this for loop to ensure we don't place another element at this position.
                             break;
