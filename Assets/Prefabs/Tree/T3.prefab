@@ -11,6 +11,10 @@ GameObject:
   - component: {fileID: -3493424051987241408}
   - component: {fileID: -439469988458125018}
   - component: {fileID: -1012298683765431713}
+  - component: {fileID: 4601601272191292885}
+  - component: {fileID: 3628166563708323734}
+  - component: {fileID: 4957240473756577471}
+  - component: {fileID: 2233119698258701188}
   m_Layer: 0
   m_Name: "\u5BF9\u8C61075"
   m_TagString: Untagged
@@ -83,6 +87,68 @@ MeshRenderer:
   m_SortingLayer: 0
   m_SortingOrder: 0
   m_AdditionalVertexStreams: {fileID: 0}
+--- !u!114 &4601601272191292885
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: -6534483214336618082}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 173600403fadcba4bb83eebb0601a071, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  mainInputChannel: {fileID: 2233119698258701188}
+  outputfloat: 0
+  outputColor: {r: 0, g: 0, b: 0, a: 0}
+  gameObj: {fileID: 0}
+  _particleSystem: {fileID: 0}
+--- !u!114 &3628166563708323734
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: -6534483214336618082}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2cada1ae06795f34fad287832a597bee, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+--- !u!114 &4957240473756577471
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: -6534483214336618082}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4f5f87ef41890b24b981ff856e91bb53, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  mainInputChannel: {fileID: 0}
+  outputfloat: 0
+  outputColor: {r: 0, g: 0, b: 0, a: 0}
+  SelectColor: {r: 0.7345418, g: 0.9811321, b: 0.059238106, a: 0}
+--- !u!114 &2233119698258701188
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: -6534483214336618082}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 70e45672e15d7ac4e8a4547016b30ecb, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  mainInputChannel: {fileID: 4957240473756577471}
+  outputfloat: 0
+  outputColor: {r: 0, g: 0, b: 0, a: 0}
+  SelectColor: {r: 0, g: 0.7075472, b: 0.47396863, a: 0}
+  selectMixRatio: 0.64
 --- !u!1 &5217782106265811430
 GameObject:
   m_ObjectHideFlags: 0
