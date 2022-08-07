@@ -18,6 +18,7 @@ public class ColourGenerator2D : MonoBehaviour
     GradientColorKey[] colorKey;
     GradientAlphaKey[] alphaKey;
 
+
     [Header("Drawing")]
     public float strokeMul;
 

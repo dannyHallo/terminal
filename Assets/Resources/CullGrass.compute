@@ -8,6 +8,7 @@
 
 struct GrassData {
     float4 position;
+    bool enable;
 };
 
 RWStructuredBuffer<uint> _ArgsBuffer;
@@ -43,7 +44,7 @@ void Vote(uint3 id : SV_DispatchThreadID) {
     bool inView = clipspace.x < -0.2f || clipspace.x > 1.2f || clipspace.z <= -0.1f ? 0 : 1;
     bool withinDistance = distance(_CameraPosition, position.xyz) < _Distance;
 
-    _VoteBuffer[id.x] = inView * withinDistance;
+    _VoteBuffer[id.x] = inView * withinDistance * _GrassDataBuffer[id.x].enable;
 }
 
 // From GPU Gems Chapter 39 'Parallel Prefix Sum (Scan) with CUDA'

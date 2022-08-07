@@ -48,6 +48,7 @@ Shader "Custom/ModelGrass" {
 
             struct GrassData {
                 float4 position;
+                bool enable;
             };
 
             sampler2D _WindTex;
