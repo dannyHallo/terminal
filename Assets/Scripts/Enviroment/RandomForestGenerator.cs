@@ -103,7 +103,7 @@ public class RandomForestGenerator : MonoBehaviour
                                 //Debug.Log("hit " + hit.point.ToString());
                                 // Debug.Log(hit.collider);
                                 // Debug.Log("hit " + hit.point.ToString());
-                                spawnPoint = hit.point;
+                                spawnPoint = hit.point+new Vector3(0,8f,0);
 
 
 
