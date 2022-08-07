@@ -16,7 +16,11 @@ public class StageManagement : MonoBehaviour
 
 
 
-
+    private void Start()
+    {
+        _cameraControl = FindObjectOfType<CameraControl>();
+        orginalPlane.transform.position = new Vector3(0,20,0);
+    }
 
 
 
@@ -73,10 +77,14 @@ public class StageManagement : MonoBehaviour
         }
         if (stageInt == 2)
         {
+            _cameraControl.CameraShake(20);
+            WorldEdge.transform.position -= Vector3.down *2* Time.deltaTime;
+                orginalPlane.transform.position -= Vector3.down *2* Time.deltaTime;
+            if (orginalPlane.transform.position.y < -20)
+            {
 
-            WorldEdge.transform.position -= Vector3.down * Time.deltaTime;
-                orginalPlane.transform.position -= Vector3.down * Time.deltaTime;
-
+                StageSwitch(3);
+            }
         }
         if (stageInt == 3)
         {
