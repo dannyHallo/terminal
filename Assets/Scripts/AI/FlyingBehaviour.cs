@@ -10,6 +10,8 @@ public class FlyingBehaviour : MonoBehaviour
     public float horizontalMovementSpeed;
     public float verticalMovementFrequency;
 
+    public float rotateSpeed;
+
     public bool chasePlayer;
     public bool leavePlayer;
 
@@ -60,11 +62,6 @@ public class FlyingBehaviour : MonoBehaviour
         }
     }
 
-
-    void Start()
-    {
-    }
-
     void Update()
     {
         playerPos = GameObject.Find("Player").transform.position;
@@ -73,18 +70,30 @@ public class FlyingBehaviour : MonoBehaviour
         KeepDistanceFromTerrain();
         Move();
 
-        transform.position = creaturePos;
     }
 
     private void Move()
     {
         if (chasePlayer)
         {
+
             Vector3 directionNormalized = playerPos - creaturePos;
             directionNormalized.y = 0;
 
             creaturePos.x += directionNormalized.x * Time.deltaTime * horizontalMovementSpeed;
             creaturePos.z += directionNormalized.z * Time.deltaTime * horizontalMovementSpeed;
+
+
+            // Vector3 playerP = new Vector3(playerPos.x, creaturePos.y, playerPos.z);
+            Vector3 direction = playerPos - transform.position;
+            Quaternion fromRotation = transform.rotation;
+            transform.LookAt(playerPos, Vector3.up);
+            Quaternion toRotation = transform.rotation;
+            transform.rotation = fromRotation;
+
+            transform.rotation = Quaternion.Lerp(fromRotation, toRotation, rotateSpeed * Time.deltaTime);
+            transform.position = creaturePos;
+
         }
     }
 
