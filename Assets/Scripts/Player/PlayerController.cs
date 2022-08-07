@@ -149,14 +149,14 @@ public class PlayerController : MonoBehaviour
             {
                 if (Input.GetMouseButton(0) && ableToDig)
                 {
-                    terrainMesh.DrawOnChunk(hit.point, drawRange, 1.0f, 0);
                     colourGenerator2D.DrawTextureOnWorldPos(colourGenerator2D.userTex, hit.point, drawRange, true);
+                    terrainMesh.DrawOnChunk(hit.point, drawRange, 1.0f, 0, false);
                 }
                 else if (Input.GetMouseButton(1) && ableToDig)
                 {
-                    terrainMesh.DrawOnChunk(hit.point, drawRange, 1.0f, 1);
                     colourGenerator2D.DrawTextureOnWorldPos(colourGenerator2D.userTex, hit.point, drawRange, false);
                     NotifyTerrainChanged(hit.point, drawRange);
+                    terrainMesh.DrawOnChunk(hit.point, drawRange, 1.0f, 1, false);
                 }
             }
         }

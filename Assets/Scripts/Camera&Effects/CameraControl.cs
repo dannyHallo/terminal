@@ -7,10 +7,6 @@ public class CameraControl : MonoBehaviour
 {
     public CinemachineVirtualCamera normalFollowingCam;
     public CinemachineVirtualCamera orbitalCam;
-    public Transform cameraLookAtItem;
-
-    public float cameraVerticalOffset;
-    private bool settingsChanged = false;
 
     private CinemachineComposer normalFollowingCamComposer;
     private Cinemachine3rdPersonFollow normalFollowingCamFollower;
@@ -70,8 +66,6 @@ public class CameraControl : MonoBehaviour
         FollowPlayer();
         normalFollowingCam.GetCinemachineComponent<CinemachineBasicMultiChannelPerlin>().m_AmplitudeGain = 0;
         normalFollowingCam.GetCinemachineComponent<CinemachineBasicMultiChannelPerlin>().m_FrequencyGain = 1;
-        // Ask for a update
-        settingsChanged = true;
     }
 
     private void Update()
