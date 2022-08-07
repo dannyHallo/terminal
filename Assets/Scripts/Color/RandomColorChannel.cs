@@ -4,6 +4,7 @@ using UnityEngine;
 
 public class RandomColorChannel : ColorChannel
 {
+    
     public Color baseColor;
     public bool randomlizeRed = true, randomlizeBlue = true, randomlizeGreen = true;
     public Color startRangeColor = Color.black;
@@ -11,6 +12,7 @@ public class RandomColorChannel : ColorChannel
     // Start is called before the first frame update
     void Start()
     {
+        Random.seed = GetInstanceID();
         if (mainInputChannel)
             baseColor = mainInputColor;
         else

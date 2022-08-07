@@ -35,6 +35,7 @@ public class StageManagement : MonoBehaviour
         }
         if (SwitchCount == 2)
         {
+            _cameraControl.CameraShake(20);
             stageInt = SwitchCount;
         }
         if (SwitchCount == 3)
@@ -77,9 +78,11 @@ public class StageManagement : MonoBehaviour
         }
         if (stageInt == 2)
         {
-            _cameraControl.CameraShake(20);
-            WorldEdge.transform.position -= Vector3.down *2* Time.deltaTime;
-                orginalPlane.transform.position -= Vector3.down *2* Time.deltaTime;
+            if(WorldEdge.transform.position.y > 40)
+                {
+                WorldEdge.transform.position += Vector3.down * 2 * Time.deltaTime; }
+
+                orginalPlane.transform.position += Vector3.down *2* Time.deltaTime;
             if (orginalPlane.transform.position.y < -20)
             {
 
@@ -114,6 +117,10 @@ public class StageManagement : MonoBehaviour
 
     private void Update()
     {
+        if (Time.frameCount == 30)
+        {
+            StageSwitch(1);
+        }
         StageAnimation();
     }
 
