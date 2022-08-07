@@ -4,6 +4,7 @@
 
 struct GrassData {
     float4 position;
+    bool enable;
 };
 
 struct GroundLevelData
@@ -11,8 +12,6 @@ struct GroundLevelData
     float twodeeHeight;
     bool isDirt;
 };
-
-
 
 RWStructuredBuffer<GrassData> _GrassDataBuffer;
 RWStructuredBuffer<GroundLevelData> GroundLevelDataBuffer;
@@ -104,6 +103,7 @@ void InitializeGrassChunk(int3 id : SV_DispatchThreadID) {
     pos.z += lerp(-1.0f, 1.0f, randValue(abs(pos.x) * 73247 + abs(pos.z) * 1237)) * grassSpacing * 0.5f;
     
     grass.position = pos;
+    grass.enable = true;
 
     _GrassDataBuffer[id.x + id.y * numGrassesPerAxis] = grass;
 }

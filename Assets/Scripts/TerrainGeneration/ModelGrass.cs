@@ -31,8 +31,9 @@ public class ModelGrass : MonoBehaviour
 
     private struct GrassData
     {
-        public Vector4 position;
-    }
+        Vector4 position;
+        bool enable;
+    };
 
     public struct GroundLevelData
     {
