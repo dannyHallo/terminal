@@ -891,17 +891,7 @@ public class TerrainMesh : MonoBehaviour
         for (int i = 0; i < chunksNeedToBeUpdated.Count; i++)
         {
             additionalPointsBuffer.SetData(existingChunkVolumeData[chunksNeedToBeUpdated[i]]);
-
-            if (onlyRegenerateGrass && drawGrass)
-            {
-                // Dispatch grass chunk point shader
-                modelGrass.CalculateChunkGrassPos(existingChunks[chunksNeedToBeUpdated[i]]);
-            }
-            else
-            {
-                UpdateChunkMesh(existingChunks[chunksNeedToBeUpdated[i]], additionalPointsBuffer);
-
-            }
+            UpdateChunkMesh(existingChunks[chunksNeedToBeUpdated[i]], additionalPointsBuffer);
         }
         additionalPointsBuffer.Release();
     }

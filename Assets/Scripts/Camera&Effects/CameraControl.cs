@@ -64,6 +64,11 @@ public class CameraControl : MonoBehaviour
         orbitalCamTransposer = orbitalCam.GetCinemachineComponent<CinemachineOrbitalTransposer>();
 
         FollowPlayer();
+        normalFollowingCam.TryGetComponent<CinemachineBasicMultiChannelPerlin>(out var perlin);
+        if (!perlin)
+        {
+            normalFollowingCam.AddCinemachineComponent<CinemachineBasicMultiChannelPerlin>();
+        }
         normalFollowingCam.GetCinemachineComponent<CinemachineBasicMultiChannelPerlin>().m_AmplitudeGain = 0;
         normalFollowingCam.GetCinemachineComponent<CinemachineBasicMultiChannelPerlin>().m_FrequencyGain = 1;
     }
@@ -90,15 +95,18 @@ public class CameraControl : MonoBehaviour
             }
         }
 
-        if (Input.GetKey(KeyCode.R))
+        if (Input.GetKeyDown(KeyCode.R))
         {
-            if (isFollowingPlayer) CameraShake(20);
+            if (isFollowingPlayer) OrbitPlayer();
+            else FollowPlayer();
         }
 
         if (Input.GetKey(KeyCode.T))
         {
             if (isFollowingPlayer) CameraShakeStop();
         }
+
+        //Can be transform into Shake function
         if (_cameraShakeBool)
         {
             _Countdown -= Time.deltaTime;
