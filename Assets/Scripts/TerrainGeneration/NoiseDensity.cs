@@ -125,6 +125,18 @@ public class NoiseDensity : MonoBehaviour
         noiseDensityShader.SetBuffer(0, "points", pointsBuffer);
         noiseDensityShader.SetBuffer(0, "manualData", additionalPointsBuffer);
 
+        // ModelGrass.GroundLevelData[] groundLevelDatas = 
+        //     new ModelGrass.GroundLevelData[numPointsPerAxis * numPointsPerAxis * numPointsPerAxis];
+        // ModelGrass.GroundLevelData empty = new ModelGrass.GroundLevelData();
+        // empty.twodeeHeight = 0;
+        // empty.isDirt = -1;
+        // chunk.groundLevelDataBuffer.SetData(groundLevelDatas);
+
+        // for (int i = 0; i < groundLevelDatas.Length; i++)
+        // {
+        //     groundLevelDatas[i] = empty;
+        // }
+
         noiseDensityShader.SetBuffer(0, "GroundLevelDataBuffer", chunk.groundLevelDataBuffer);
 
         noiseDensityShader.SetBuffer(0, "pointsStatus", pointsStatus);

@@ -924,7 +924,7 @@ public class TerrainMesh : MonoBehaviour
         pointsStatus.SetData(pointStatusData);
 
         // Chunk grass is not initialized yet (not in registery)
-        modelGrass.InitializeGrassChunkIfNeeded(chunk, centre, numPointsPerAxis);
+        modelGrass.InitializeGrassChunkIfNeeded(chunk, centre, numPointsPerAxis, offset, pointSpacing);
 
         Vector3 worldSize = new Vector3(numChunks.x, numChunks.y, numChunks.z) * boundSize;
 
@@ -997,7 +997,7 @@ public class TerrainMesh : MonoBehaviour
         if (drawGrass && Application.isPlaying)
         {
             // Dispatch grass chunk point shader
-            modelGrass.CalculateGrassPos(chunk);
+            modelGrass.CalculateChunkGrassPos(chunk);
         }
 
         return 1;
@@ -1025,11 +1025,8 @@ public class TerrainMesh : MonoBehaviour
 
     void OnDestroy()
     {
-        if (Application.isPlaying)
-        {
-            ReleaseBuffers();
-            modelGrass.ClearGrassBufferIfNeeded();
-        }
+        ReleaseBuffers();
+        modelGrass.ClearGrassBufferIfNeeded();
     }
 
     void CreateBuffers()

@@ -44,6 +44,8 @@ public class Chunk : MonoBehaviour
         if (positionsBuffer == null)
             return;
 
+        print("FREEED!");
+
         positionsBuffer.Release();
         positionsBuffer = null;
 

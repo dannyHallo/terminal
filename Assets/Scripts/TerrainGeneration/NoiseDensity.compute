@@ -4,8 +4,10 @@
 
 static const int numThreads = 8;
 
-struct GroundLevelData{
+struct GroundLevelData
+{
     float twodeeHeight;
+    bool isDirt;
 };
 
 // Noise settings
@@ -89,10 +91,12 @@ void Density (int3 id : SV_DispatchThreadID)
     float heightOnThisPos = (floorOffset + noise + manualData[index]) / heightGredient;
     float heightOnThisPosWithoutManual = (noise + floorOffset) / heightGredient;
     
-    if(id.y == 0){
-        GroundLevelDataBuffer[id.x + id.z * numPointsPerAxis].twodeeHeight = 
-        heightOnThisPos;
-    }
+    // A bad method
+    // if(id.y == 0){
+        //     // 3D -> 2D buffer
+        //     GroundLevelDataBuffer[id.x + id.z * numPointsPerAxis].twodeeHeight = 
+        //     heightOnThisPos;
+    // }
 
     if (closeEdges) {
         float3 edgeOffset = abs(pos*2)-worldSize + spacing/2;
@@ -100,12 +104,14 @@ void Density (int3 id : SV_DispatchThreadID)
         finalVal = finalVal * (1-edgeWeight) - 100 * edgeWeight;
     }
 
+    if(finalVal + manualData[index] > 0){
+        pointsStatus[0] = 1;
+        GroundLevelDataBuffer[index].isDirt = true;
+        }else{
+        pointsStatus[1] = 1;
+        GroundLevelDataBuffer[index].isDirt = false;
+    }
     
-
-    if(finalVal + manualData[index] - isoLevel > 0)
-    pointsStatus[0] = 1;
-    if(finalVal + manualData[index] - isoLevel < 0)
-    pointsStatus[1] = 1;
     // This index list can be used in marchingcubes.compute
     points[index] = float4(pos, finalVal + manualData[index]);
 }

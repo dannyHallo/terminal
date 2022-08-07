@@ -1,4 +1,3 @@
-#pragma kernel InitializeGrassChunk
 
 #include "Assets/Scripts/Compute/Includes/Noise.compute"
 #include "Assets/Resources/Random.cginc"
@@ -7,9 +6,13 @@ struct GrassData {
     float4 position;
 };
 
-struct GroundLevelData{
+struct GroundLevelData
+{
     float twodeeHeight;
+    bool isDirt;
 };
+
+
 
 RWStructuredBuffer<GrassData> _GrassDataBuffer;
 RWStructuredBuffer<GroundLevelData> GroundLevelDataBuffer;
@@ -18,9 +21,36 @@ int _Dimension, numGrassesPerAxis, numPointsPerAxis;
 float chunkBoundSize;
 float3 centre;
 float3 offset;
-float spacing;
+float grassSpacing;
+float meshSpacing;
 
 float _DisplacementStrength;
+
+int indexFromCoord(uint x, uint y, uint z) {
+    return z * numPointsPerAxis * numPointsPerAxis + y * numPointsPerAxis + x;
+}
+
+#pragma kernel CalculateGrassPos
+
+[numthreads(8,8,8)]
+void CalculateGrassPos(int3 id : SV_DispatchThreadID) {
+    if(id.y <= 0){
+        return;
+    }
+
+    int index = indexFromCoord(id.x,id.y,id.z);
+    int below_index = indexFromCoord(id.x,id.y - 1,id.z);
+
+    if(!GroundLevelDataBuffer[index].isDirt && GroundLevelDataBuffer[below_index].isDirt){
+        float posY1 = centre.y + id.y * meshSpacing - chunkBoundSize / 2;
+        float posY2 = centre.y + (id.y - 1) * meshSpacing - chunkBoundSize / 2;
+        float posY = (posY1 + posY1) / 2;
+
+        GroundLevelDataBuffer[id.x + id.z * numPointsPerAxis].twodeeHeight = posY;
+    }
+}
+
+#pragma kernel InitializeGrassChunk
 
 [numthreads(8,8,1)]
 void InitializeGrassChunk(int3 id : SV_DispatchThreadID) {
@@ -65,13 +95,13 @@ void InitializeGrassChunk(int3 id : SV_DispatchThreadID) {
 
     float4 pos = 0.0f;
     pos.w = 0.0f;       // Out of order
-    pos.x = centre.x - chunkBoundSize * 0.5f + id.x * spacing;
-    pos.z = centre.z - chunkBoundSize * 0.5f + id.y * spacing;
-    pos.y = height + 2.5f;
+    pos.x = centre.x - chunkBoundSize * 0.5f + id.x * grassSpacing;
+    pos.z = centre.z - chunkBoundSize * 0.5f + id.y * grassSpacing;
+    pos.y = height + 1.0f;
 
     // Offset slightly
-    pos.x += lerp(-1.0f, 1.0f, randValue(abs(pos.x) * 45623 + abs(pos.z) * 3461)) * spacing * 0.5f;
-    pos.z += lerp(-1.0f, 1.0f, randValue(abs(pos.x) * 73247 + abs(pos.z) * 1237)) * spacing * 0.5f;
+    pos.x += lerp(-1.0f, 1.0f, randValue(abs(pos.x) * 45623 + abs(pos.z) * 3461)) * grassSpacing * 0.5f;
+    pos.z += lerp(-1.0f, 1.0f, randValue(abs(pos.x) * 73247 + abs(pos.z) * 1237)) * grassSpacing * 0.5f;
     
     grass.position = pos;
 
