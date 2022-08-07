@@ -8,6 +8,7 @@ public class StageManagement : MonoBehaviour
     public CinemachineVirtualCamera orbitCam;
     public GameObject WorldEdge;
     public GameObject orginalPlane;
+    public CameraControl _cameraControl;
 
 
 
@@ -15,6 +16,9 @@ public class StageManagement : MonoBehaviour
     {
         if (SwitchCount == 1)
         {
+
+           if(_cameraControl.isFollowingPlayer) _cameraControl.OrbitPlayer();
+            StageSwitch(2);
 
         }
         if (SwitchCount == 2)
