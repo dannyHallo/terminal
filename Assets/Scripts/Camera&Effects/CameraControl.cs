@@ -32,7 +32,8 @@ public class CameraControl : MonoBehaviour
     [Header("Sensitivity")]
     [Range(0, 0.1f)] public float mouseYSensitivity = 0.03f;
     [Range(0.5f, 1.5f)] public float scrollingSensitivity = 1.0f;
-
+    private float _Countdown;
+    private bool _cameraShakeBool;
 
 
     public bool isFollowingPlayer
@@ -67,7 +68,8 @@ public class CameraControl : MonoBehaviour
         orbitalCamTransposer = orbitalCam.GetCinemachineComponent<CinemachineOrbitalTransposer>();
 
         FollowPlayer();
-
+        normalFollowingCam.GetCinemachineComponent<CinemachineBasicMultiChannelPerlin>().m_AmplitudeGain = 0;
+        normalFollowingCam.GetCinemachineComponent<CinemachineBasicMultiChannelPerlin>().m_FrequencyGain = 1;
         // Ask for a update
         settingsChanged = true;
     }
@@ -94,11 +96,35 @@ public class CameraControl : MonoBehaviour
             }
         }
 
-        if (Input.GetKeyDown(KeyCode.R))
+        if (Input.GetKey(KeyCode.R))
         {
-            if (isFollowingPlayer) OrbitPlayer();
-            else FollowPlayer();
+            if (isFollowingPlayer) CameraShake(20);
         }
+
+        if (Input.GetKey(KeyCode.T))
+        {
+            if (isFollowingPlayer) CameraShakeStop();
+        }
+        if (_cameraShakeBool)
+        {
+            _Countdown -= Time.deltaTime;
+            if (_Countdown > 2f)
+            {
+                normalFollowingCam.GetCinemachineComponent<CinemachineBasicMultiChannelPerlin>().m_AmplitudeGain += 1f * Time.deltaTime;
+            }
+            else
+            {
+                normalFollowingCam.GetCinemachineComponent<CinemachineBasicMultiChannelPerlin>().m_AmplitudeGain -= 2.5f * Time.deltaTime;
+                if (normalFollowingCam.GetCinemachineComponent<CinemachineBasicMultiChannelPerlin>().m_AmplitudeGain <= 0)
+                {
+                    normalFollowingCam.GetCinemachineComponent<CinemachineBasicMultiChannelPerlin>().m_AmplitudeGain = 0;
+                    _cameraShakeBool = false;
+                }
+            }
+
+
+        }
+
     }
 
     private void HandleMouseYMovement()
@@ -130,4 +156,20 @@ public class CameraControl : MonoBehaviour
         normalFollowingCam.Priority = 20;
         orbitalCam.Priority = 15;
     }
+    public void CameraShake(float time)
+    {
+
+        _cameraShakeBool = true;
+        _Countdown = time - 2;
+        //normalFollowingCam.GetCinemachineComponent<CinemachineBasicMultiChannelPerlin>().m_FrequencyGain = 1;
+    }
+
+    public void CameraShakeStop()
+    {
+        normalFollowingCam.GetCinemachineComponent<CinemachineBasicMultiChannelPerlin>().m_AmplitudeGain -= 2.5f * Time.deltaTime;
+        // normalFollowingCam.GetCinemachineComponent<CinemachineBasicMultiChannelPerlin>().m_FrequencyGain = 1;
+    }
+
+
+
 }
