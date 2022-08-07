@@ -45,27 +45,26 @@ public class ModelGrass : MonoBehaviour
 
     Bounds fieldBounds;
 
-    float chunkBoundSize;
-    int numPointsPerAxis;
-
-    public void Init(float chunkBoundsize, int numPointsPerAxis)
+    float chunkBoundSize
     {
-        this.chunkBoundSize = chunkBoundsize;
-        this.numPointsPerAxis = numPointsPerAxis;
+        get
+        {
+            return gameObject.GetComponent<TerrainMesh>().boundSize;
+        }
+    }
+
+    int numPointsPerAxis
+    {
+        get
+        {
+            return gameObject.GetComponent<TerrainMesh>().lodSetup.numPointsPerAxis;
+        }
     }
 
     public void InitIfNeeded()
     {
-        if (chunkBoundSize == 0 || numPointsPerAxis == 0)
-        {
-            print("plz init first!");
-            return;
-        }
-
         if (voteBuffer != null)
             return;
-
-        print("vote buffer created");
 
         float grassSpacing = chunkBoundSize / numGrassesPerAxis;
         numGrassesPerChunk = numGrassesPerAxis * numGrassesPerAxis;
@@ -263,8 +262,6 @@ public class ModelGrass : MonoBehaviour
     {
         if (voteBuffer == null)
             return;
-
-        print("vote buffer destroyed");
 
         voteBuffer.Release();
         voteBuffer = null;
