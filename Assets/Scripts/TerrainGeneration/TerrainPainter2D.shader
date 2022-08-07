@@ -41,6 +41,8 @@ Shader "Custom/TerrainPainter2D"
         float mapBound;
         float worldPosOffset;
 
+        float4 metalColor;
+        float4 grassColor;
         half _Glossiness;
         half _Metallic;
         fixed4 _Color;
@@ -49,6 +51,12 @@ Shader "Custom/TerrainPainter2D"
         sampler2D originalPalette;
         sampler2D userTex;
         sampler2D metallicTex;
+
+        // return: 0 - false, 1 - true
+        int colorCmp(float4 col1, float4 col2){
+            float threhold = 0.01f;
+            return 1 - step(threhold, distance(col1.rgb, col2.rgb));
+        }
 
         void surf (Input IN, inout SurfaceOutputStandard o)
         {
@@ -74,7 +82,7 @@ Shader "Custom/TerrainPainter2D"
             float blendFactor = userCol.a;
             o.Albedo = lerp(originalCol, userCol, blendFactor);
 
-            float metallicFac = step(0.8f, userCol.r);
+            float metallicFac = colorCmp(metalColor, userCol);
             o.Metallic = lerp(0, _Metallic, metallicFac);
             o.Smoothness = lerp(0, _Glossiness, metallicFac);
         }

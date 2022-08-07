@@ -5,49 +5,51 @@ using UnityEngine;
 [ExecuteInEditMode]
 public class ColourGenerator2D : MonoBehaviour
 {
-    [Header("General")]
+    [Header("Dependencies")]
     public Material mat;
-    public float normalOffsetWeight;
     public ComputeShader drawImageComputeShader;
 
-    [Header("ColorPalette")]
+
+    [Header("Pallete Rules")]
     public Gradient gradient;
-    [SerializeField, Range(2, 6)] int colorNum;
-    [SerializeField] Texture2D colorPalette;
-    Color[] colorsInPalette;
-    GradientColorKey[] colorKey;
-    GradientAlphaKey[] alphaKey;
+    [SerializeField, Range(2, 6)] private int colorNum;
+    [SerializeField] private Texture2D colorPalette;
+    public float minMaxBounds;
+    public float offsetY;
+    public float worldPosOffset;
+    public float normalOffsetWeight;
+    public bool usePalette = false;
+
+
+    [Header("Source Textures - READONLY")]
+    public Texture2D blankTex;
+    public Texture2D originalGrayscaleTex;
 
 
     [Header("Drawing")]
+    public Color metalColor = new Color();
+    public Color grassColor = new Color();
     public float strokeMul;
 
 
-    [Header("Testing")]
+    [Header("Debug")]
+    public bool updateRequest = false;
+    public bool dispatch = false;
     public float f1;
     public float f2;
     public float f3;
 
-    public float minMaxBounds;
-    public float offsetY;
-    public float worldPosOffset;
-
-    Texture2D orignalPalette;
-    public Texture2D blankTex;
-
-    public Texture2D userTex;
-    public Texture2D metallicTex;
-    public Texture2D originalGrayscaleTex;
-    private RenderTexture universalRenderTex;
 
     const int textureResolution = 50;
 
-    public bool usePalette = false;
-    public bool updateRequest = false;
-    public bool dispatch = false;
+    private Color[] colorsInPalette;
+    private GradientColorKey[] colorKey;
+    private GradientAlphaKey[] alphaKey;
 
-    public static readonly float[] metalColor = { 255.0f / 255.0f, 244.0f / 255.0f, 230.0f / 255.0f, 1.0f };
-    public static readonly float[] natureColor = { 160.0f / 255.0f, 224.0f / 255.0f, 77.0f / 255.0f, 1.0f };
+    [HideInInspector] public Texture2D userTex;
+    [HideInInspector] public Texture2D metallicTex;
+    private RenderTexture universalRenderTex;
+    private Texture2D orignalPalette;
 
     void UpdatePalette()
     {
@@ -98,6 +100,8 @@ public class ColourGenerator2D : MonoBehaviour
         mat.SetFloat("f2", f2);
         mat.SetFloat("f3", f3);
 
+        mat.SetColor("metalColor", metalColor);
+        mat.SetColor("grassColor", grassColor);
         mat.SetFloat("mapBound", 1 / (2.0f * worldPosOffset));
         mat.SetFloat("normalOffsetWeight", normalOffsetWeight);
         mat.SetFloat("minMaxBounds", minMaxBounds);
@@ -168,6 +172,16 @@ public class ColourGenerator2D : MonoBehaviour
         DrawOnTexture(texture, (int)x, (int)z, Mathf.CeilToInt(radius * strokeMul), isMetal);
     }
 
+    public float[] fillColor(Color color)
+    {
+        float[] colorArray = new float[4];
+        colorArray[0] = color.r;
+        colorArray[1] = color.g;
+        colorArray[2] = color.b;
+        colorArray[3] = 1.0f;
+        return colorArray;
+    }
+
     private void DrawOnTexture(Texture2D texture, int originX, int originY, int radius, bool isMetal)
     {
         Graphics.Blit(texture, universalRenderTex);
@@ -176,16 +190,17 @@ public class ColourGenerator2D : MonoBehaviour
         origin[0] = originX;
         origin[1] = originY;
 
-        float[] drawColor;
+        float[] drawColor = new float[4];
 
         if (isMetal)
-            drawColor = metalColor;
+            drawColor = fillColor(metalColor);
         else
-            drawColor = natureColor;
+            drawColor = fillColor(grassColor);
 
+
+        drawImageComputeShader.SetFloats("drawColor", drawColor);
         drawImageComputeShader.SetInt("radius", radius);
         drawImageComputeShader.SetInts("origin", origin);
-        drawImageComputeShader.SetFloats("drawColor", drawColor);
         drawImageComputeShader.SetTexture(0, "image", universalRenderTex);
         drawImageComputeShader.Dispatch(0, 128, 128, 1);
 
