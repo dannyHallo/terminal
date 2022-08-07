@@ -4,6 +4,9 @@ using UnityEngine;
 
 public class ColorChannel : MonoBehaviour
 {
+    /// <summary>
+    /// input both float and Color
+    /// </summary>
     public ColorChannel mainInputChannel;
 
 
@@ -17,8 +20,15 @@ public class ColorChannel : MonoBehaviour
         _color.a = baseColor.a * (1 - mixratio) + mixColor.a * mixratio;
         return _color;
     }
-    public Color mainInputColor { 
-        get { return mainInputChannel.outputColor; }    
+
+    public float inputfloat
+    {
+        get { return mainInputChannel.outputfloat; }
+    }
+    public float outputfloat;
+    public Color mainInputColor
+    {
+        get { return mainInputChannel.outputColor; }
     }
 
 
