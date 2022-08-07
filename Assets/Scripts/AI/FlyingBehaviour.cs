@@ -143,7 +143,7 @@ public class FlyingBehaviour : MonoBehaviour
             terrainGen.GetComponent<ColourGenerator2D>().userTex, hitTerrainPos, drawRange, false);
 
         // Change env
-        terrainGen.GetComponent<TerrainMesh>().DrawOnChunk(hitTerrainPos, drawRange, 0, positiveToAdd ? 1 : 0, true);
+        terrainGen.GetComponent<TerrainMesh>().DrawOnChunk(hitTerrainPos, drawRange, 0, positiveToAdd ? 1 : 0, false);
     }
 
     private void Move()

@@ -64,6 +64,11 @@ public class CameraControl : MonoBehaviour
         orbitalCamTransposer = orbitalCam.GetCinemachineComponent<CinemachineOrbitalTransposer>();
 
         FollowPlayer();
+        normalFollowingCam.TryGetComponent<CinemachineBasicMultiChannelPerlin>(out var perlin);
+        if (!perlin)
+        {
+            normalFollowingCam.AddCinemachineComponent<CinemachineBasicMultiChannelPerlin>();
+        }
         normalFollowingCam.GetCinemachineComponent<CinemachineBasicMultiChannelPerlin>().m_AmplitudeGain = 0;
         normalFollowingCam.GetCinemachineComponent<CinemachineBasicMultiChannelPerlin>().m_FrequencyGain = 1;
     }
