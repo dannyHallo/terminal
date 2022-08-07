@@ -176,7 +176,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1536731158131553527}
   - component: {fileID: 3964336535934730494}
-  - component: {fileID: -1271027184849034958}
+  - component: {fileID: 8004973552875408980}
   m_Layer: 0
   m_Name: T3
   m_TagString: Untagged
@@ -215,10 +215,10 @@ Rigidbody:
   m_UseGravity: 1
   m_IsKinematic: 0
   m_Interpolate: 0
-  m_Constraints: 112
+  m_Constraints: 122
   m_CollisionDetection: 0
---- !u!64 &-1271027184849034958
-MeshCollider:
+--- !u!136 &8004973552875408980
+CapsuleCollider:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
@@ -227,7 +227,7 @@ MeshCollider:
   m_Material: {fileID: 0}
   m_IsTrigger: 0
   m_Enabled: 1
-  serializedVersion: 4
-  m_Convex: 0
-  m_CookingOptions: 30
-  m_Mesh: {fileID: 0}
+  m_Radius: 0.92
+  m_Height: 15.553477
+  m_Direction: 1
+  m_Center: {x: 0, y: 4.816996, z: 0}
