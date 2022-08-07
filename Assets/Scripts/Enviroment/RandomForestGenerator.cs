@@ -33,19 +33,47 @@ public class RandomForestGenerator : MonoBehaviour
     }
     private void SpawnForest()
     {
-        Vector3 BlankSpaceStart;
+        float blankSpaceStartX;
+        float blankSpaceEndX;
+        float blankSpaceStartZ;
+        float blankSpaceEndZ;
+        Vector2 blankSpaceCenter;
+        float blankSpaceRadius;
         
+         blankSpaceStartX=Random.Range(startX, startX + .8f*forestSize);
+        blankSpaceEndX = blankSpaceStartX + Random.Range(.2f * forestSize, .7f*forestSize);
+        blankSpaceStartZ = Random.Range(startZ, startZ + .8f * forestSize);
+        blankSpaceEndZ = blankSpaceStartZ + Random.Range(.2f * forestSize, .7f * forestSize);
+        blankSpaceCenter= new Vector2(Random.Range(startX, startX + forestSize), Random.Range(startZ, startZ + forestSize));
+        blankSpaceRadius = Random.Range(.2f * forestSize, .4f * forestSize);
 
-       
 
-            // Loop through all the positions within our forest boundary.
-            for (int x = startX; x < startX + forestSize; x += elementSpacing)
+
+
+
+
+        // Loop through all the positions within our forest boundary.
+        for (int x = startX; x < startX + forestSize; x += elementSpacing)
             {
                 for (int z = startZ; z < startZ + forestSize; z += elementSpacing)
                 {
+                bool blankCheck=false;
+                if (x <= blankSpaceEndX && x >= blankSpaceStartX && z <= blankSpaceEndZ && z >= blankSpaceStartZ)
+                {
+                    blankCheck=true;
+                }
+                Vector2 positionV2 = new Vector2(x, z);
+                Vector2 distance = positionV2 - blankSpaceCenter;
+                if (distance.magnitude < blankSpaceRadius)
+                {
+                    blankCheck=true;
+                }
 
                 // For each position, loop through each element...
+                if (blankCheck!=true)
+                {
 
+               
                 for (int i = 0; i < elements.Length; i++)
                 {
 
@@ -94,6 +122,7 @@ public class RandomForestGenerator : MonoBehaviour
                         // Break out of this for loop to ensure we don't place another element at this position.
                         break;
 
+                    }
                     }
 
                 }
