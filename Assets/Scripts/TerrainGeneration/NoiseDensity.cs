@@ -28,6 +28,8 @@ public class NoiseDensity : MonoBehaviour
     public float multiFractalWeight = 1;
     public float planetRadius = 50;
     public float noiseWeight = 1;
+    public bool closeEdges;
+
     public bool b1;
     public bool b2;
     public float f1;
@@ -63,7 +65,8 @@ public class NoiseDensity : MonoBehaviour
         Vector3 centre,
         Vector3 offset,
         float spacing,
-        float isoLevel
+        float isoLevel,
+        Vector3 worldSize
     )
     {
         int numPoints = numPointsPerAxis * numPointsPerAxis * numPointsPerAxis;
@@ -100,6 +103,7 @@ public class NoiseDensity : MonoBehaviour
 
         // Original: Vector4, found it useless
         noiseDensityShader.SetVector("centre", new Vector3(centre.x, centre.y, centre.z));
+        noiseDensityShader.SetVector("worldSize", worldSize);
         noiseDensityShader.SetInt("octaves", Mathf.Max(1, numOctaves));
         noiseDensityShader.SetFloat("lacunarity", lacunarity);
         noiseDensityShader.SetFloat("persistence", persistence);
@@ -107,6 +111,7 @@ public class NoiseDensity : MonoBehaviour
         noiseDensityShader.SetFloat("noiseWeight", noiseWeight);
         noiseDensityShader.SetBool("b1", b1);
         noiseDensityShader.SetBool("b2", b2);
+        noiseDensityShader.SetBool("closeEdges", closeEdges);
         noiseDensityShader.SetFloat("f1", f1);
         noiseDensityShader.SetFloat("f2", f2);
         noiseDensityShader.SetFloat("f3", f3);

@@ -72,12 +72,11 @@ Shader "Custom/TerrainPainter2D"
             // Blend func
             // float blendFactor = step(2.8f, dot(userCol.rgb, userCol.rgb));
             float blendFactor = userCol.a;
-            float3 finalCol = lerp(originalCol, userCol, blendFactor);
+            o.Albedo = lerp(originalCol, userCol, blendFactor);
 
-            o.Albedo = finalCol;
-            // Use values when painted
-            o.Metallic = lerp(0, _Metallic, blendFactor);
-            o.Smoothness = lerp(0, _Glossiness, blendFactor);
+            float metallicFac = userCol.r;
+            o.Metallic = lerp(0, _Metallic, metallicFac);
+            o.Smoothness = lerp(0, _Glossiness, metallicFac);
         }
         ENDCG
     }

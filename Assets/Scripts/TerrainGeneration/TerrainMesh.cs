@@ -908,6 +908,7 @@ public class TerrainMesh : MonoBehaviour
             modelGrass.InitializeGrassChunkIfNeeded(chunk, centre, numPointsPerAxis);
         }
 
+        Vector3 worldSize = new Vector3(numChunks.x, numChunks.y, numChunks.z) * boundSize;
 
         // Gerenate individual noise value using compute shader， modifies pointsBuffer
         noiseDensity.Generate(
@@ -920,7 +921,8 @@ public class TerrainMesh : MonoBehaviour
             centre,
             offset,
             pointSpacing,
-            isoLevel
+            isoLevel,
+            worldSize
         );
         pointsStatus.GetData(pointStatusData);
         pointsStatus.Release();
