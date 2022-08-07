@@ -53,6 +53,18 @@ public class Pickable : MonoBehaviour
             {
                 stageManagement.StageSwitch(1);
             }
+            if (instrumentType == PlayerController.InstrumentTypes.Sax)
+            {
+                stageManagement.StageSwitch(3);
+            }
+            if (instrumentType == PlayerController.InstrumentTypes.Dudelsa)
+            {
+                //stageManagement.StageSwitch(3);
+            }
+            if (instrumentType == PlayerController.InstrumentTypes.Mic)
+            {
+               // stageManagement.StageSwitch(3);
+            }
             GameObject player = GameObject.Find("Player");
             // PlayerController.InstrumentTypes instrumentType = PlayerController.InstrumentTypes.Guitar;
             List<PlayerController.enumToInstrument> playerInstuments = player.GetComponent<PlayerController>().instruments;

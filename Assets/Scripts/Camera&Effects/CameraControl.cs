@@ -64,11 +64,11 @@ public class CameraControl : MonoBehaviour
         orbitalCamTransposer = orbitalCam.GetCinemachineComponent<CinemachineOrbitalTransposer>();
 
         FollowPlayer();
-        normalFollowingCam.TryGetComponent<CinemachineBasicMultiChannelPerlin>(out var perlin);
-        if (!perlin)
-        {
-            normalFollowingCam.AddCinemachineComponent<CinemachineBasicMultiChannelPerlin>();
-        }
+        //normalFollowingCam.TryGetComponent<CinemachineBasicMultiChannelPerlin>(out var perlin);
+        //if (!perlin)
+        //{
+        //    normalFollowingCam.AddCinemachineComponent<CinemachineBasicMultiChannelPerlin>();
+        //}
         normalFollowingCam.GetCinemachineComponent<CinemachineBasicMultiChannelPerlin>().m_AmplitudeGain = 0;
         normalFollowingCam.GetCinemachineComponent<CinemachineBasicMultiChannelPerlin>().m_FrequencyGain = 1;
     }
@@ -112,10 +112,15 @@ public class CameraControl : MonoBehaviour
             _Countdown -= Time.deltaTime;
             if (_Countdown > 2f)
             {
-                normalFollowingCam.GetCinemachineComponent<CinemachineBasicMultiChannelPerlin>().m_AmplitudeGain += 1f * Time.deltaTime;
+                if (normalFollowingCam.GetCinemachineComponent<CinemachineBasicMultiChannelPerlin>().m_AmplitudeGain <= 1.5f)
+                {
+
+                    normalFollowingCam.GetCinemachineComponent<CinemachineBasicMultiChannelPerlin>().m_AmplitudeGain += 1f * Time.deltaTime;
+                }
             }
             else
             {
+                Debug.Log("!!");
                 normalFollowingCam.GetCinemachineComponent<CinemachineBasicMultiChannelPerlin>().m_AmplitudeGain -= 2.5f * Time.deltaTime;
                 if (normalFollowingCam.GetCinemachineComponent<CinemachineBasicMultiChannelPerlin>().m_AmplitudeGain <= 0)
                 {

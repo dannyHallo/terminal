@@ -42,7 +42,10 @@ public class PlayerController : MonoBehaviour
     public enum InstrumentTypes
     {
         Guitar,
-        Violin
+        Violin,
+        Sax,
+        Dudelsa,
+        Mic
     };
     public List<enumToInstrument> instruments;
     private GameObject activeInstrument;
