@@ -24,6 +24,8 @@ public class FlyingBehaviour : MonoBehaviour
     public float digStrength;
     public float growSpeed;
     public float maxToMinScaleRatio;
+    private int frameCount = 0;
+    [Range(1, 20)] public int skipFrameNum;
 
 
     [Header("Preferance")]
@@ -119,12 +121,18 @@ public class FlyingBehaviour : MonoBehaviour
     {
         playerPos = GameObject.Find("Player").transform.position;
         creaturePos = transform.position;
+        frameCount++;
 
         GrowupIfNotMaximized();
         KeepDistanceFromTerrain();  // Vertically
         GetStatus();
         Move();                     // Horizontally
-        DrawGrass(true);
+
+        if (frameCount % skipFrameNum == 0)
+        {
+            DrawGrass(true);
+            frameCount = 0;
+        }
     }
 
     private void GetStatus()
@@ -140,10 +148,11 @@ public class FlyingBehaviour : MonoBehaviour
         // Draw grass
         terrainGen.GetComponent<ColourGenerator2D>().CreateTextureIfNeeded();
         terrainGen.GetComponent<ColourGenerator2D>().DrawTextureOnWorldPos(
-            terrainGen.GetComponent<ColourGenerator2D>().userTex, hitTerrainPos, drawRange, false);
+            terrainGen.GetComponent<ColourGenerator2D>().userTex, hitTerrainPos, (int)(drawRange * (1 + age_score)), false);
 
         // Change env
-        terrainGen.GetComponent<TerrainMesh>().DrawOnChunk(hitTerrainPos, drawRange, 0, positiveToAdd ? 1 : 0, false);
+        terrainGen.GetComponent<TerrainMesh>().DrawOnChunk(
+            hitTerrainPos, (int)(drawRange * (1 + age_score)), digStrength * skipFrameNum, positiveToAdd ? 1 : 0);
     }
 
     private void Move()
