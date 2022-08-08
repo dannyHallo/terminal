@@ -154,28 +154,35 @@ MonoBehaviour:
   rotateSpeed: 5
   digStrength: 0.003
   growRequiredTime: 60
-  maxToMinScaleRatio: 10
-  skipFrameNum: 40
+  maxToMinScaleRatio: 16
+  minSkipFrameNum: 7
+  maxSkipFrameNum: 200
+  skipFrameNumIncreasement: 0.008
   noiseChangeFac: 0.01
+  seed: 29.9
   initDrawRange: 1
   maxDrawRange: 8
+  digIn: 0
+  drawMetal: 0
   ability_weight: 0.1
   do_something_weight: 0.256
   player_weight: 0.213
   env_change_weight: 0
   attack_weight: 0
-  ability_score: 5.4019494
+  ability_score: 11.027026
   do_something_score: 3.28
   player_score: 8.53
   env_change_score: 4.33
   attack_score: 7.63
-  currentDrawRange: 6
+  currentDrawRange: 8
   wander: 1
   chasePlayer: 0
   env_change: 0
   attack: 0
+  isAboveTerrain: 1
+  skipFrameNum: 27
   f1: 5.977993
-  v1: {x: -0.63183093, y: 0, z: -0.7751062}
+  v1: {x: -0.94198835, y: 0, z: -0.33564556}
 --- !u!1 &7658946284533550954
 GameObject:
   m_ObjectHideFlags: 0

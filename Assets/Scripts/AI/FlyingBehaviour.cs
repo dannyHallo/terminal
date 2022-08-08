@@ -28,14 +28,21 @@ public class FlyingBehaviour : MonoBehaviour
     public float digStrength;
     public float growRequiredTime;
     public float maxToMinScaleRatio;
+
     private int frameCount = 0;
-    [Range(1, 100)] public int skipFrameNum;
+    [Range(1, 100)] public int minSkipFrameNum;
+    [Range(1, 800)] public int maxSkipFrameNum;
+    public float skipFrameNumIncreasement = 10;
+
     public float noiseChangeFac = 0.1f;
+    public float seed;
 
 
     [Header("Drawing")]
     [Range(1, 10)] public float initDrawRange = 1.0f;
     [Range(1, 10)] public float maxDrawRange = 10.0f;
+    public bool digIn = false;
+    public bool drawMetal = false;
 
 
     [Header("Preferance")]
@@ -58,6 +65,8 @@ public class FlyingBehaviour : MonoBehaviour
     public bool chasePlayer;
     public bool env_change;
     public bool attack;
+    public bool isAboveTerrain;
+    public int skipFrameNum;
 
 
     [Header("debug")]
@@ -69,6 +78,10 @@ public class FlyingBehaviour : MonoBehaviour
     private Vector3 hitTerrainPos;
     private float currentScale;
     private float initScale;
+
+    const float worldBound = 160;
+    private int xSign = 1;
+    private int zSign = 1;
 
     private void GrowupIfNotMaximized()
     {
@@ -99,14 +112,14 @@ public class FlyingBehaviour : MonoBehaviour
             // It is buried! Get up!
             if (hit.collider.tag != "Chunk")
             {
+                isAboveTerrain = false;
                 creaturePos.y += verticalMovementSpeed * Time.deltaTime;
                 return;
             }
 
+            isAboveTerrain = true;
             hitTerrainPos = hit.point;
             float rayLengthToTerrain = Vector3.Distance(hit.point, creaturePos);
-
-            f1 = rayLengthToTerrain;
 
             if (rayLengthToTerrain < minDistanceFromGround)
             {
@@ -120,6 +133,10 @@ public class FlyingBehaviour : MonoBehaviour
             {
                 creaturePos.y += Mathf.Sin(Time.time * verticalMovementFrequency) * verticalMovementSpeed * Time.deltaTime;
             }
+        }
+        else
+        {
+            isAboveTerrain = false;
         }
     }
 
@@ -136,16 +153,41 @@ public class FlyingBehaviour : MonoBehaviour
         creaturePos = transform.position;
         frameCount++;
 
+        GetSkipFrameNumThisFrame();
         GrowupIfNotMaximized();
         KeepDistanceFromTerrain();  // Vertically
         GetStatus();
+
+        ReverseSignIfOurOfBound();
         Move();                     // Horizontally
 
-        if (frameCount % skipFrameNum == 0)
+        if (frameCount % skipFrameNum == 0 && isAboveTerrain)
         {
-            DrawGrass(true);
+            DrawGrass(digIn, drawMetal);
             frameCount = 0;
         }
+    }
+
+    void ReverseSignIfOurOfBound()
+    {
+        if (Mathf.Abs(creaturePos.x) > worldBound)
+            xSign = flipSign(xSign);
+
+        if (Mathf.Abs(creaturePos.z) > worldBound)
+            zSign = flipSign(zSign);
+    }
+
+    int flipSign(int i)
+    {
+        return i == 1 ? -1 : 1;
+    }
+
+    int GetSkipFrameNumThisFrame()
+    {
+        skipFrameNum = (int)(minSkipFrameNum + Mathf.Pow(Vector3.Distance(creaturePos, playerPos), 2) * skipFrameNumIncreasement);
+        skipFrameNum = Mathf.Clamp(skipFrameNum, minSkipFrameNum, maxSkipFrameNum);
+
+        return skipFrameNum;
     }
 
     private void GetStatus()
@@ -156,18 +198,19 @@ public class FlyingBehaviour : MonoBehaviour
         }
     }
 
-    private void DrawGrass(bool positiveToAdd)
+    private void DrawGrass(bool digIn, bool drawMetal)
     {
         currentDrawRange = (int)Mathf.Clamp(initDrawRange * (1 + ability_score), 0, maxDrawRange);
 
-        // Draw grass
+
+        // Draw texture
         terrainGen.GetComponent<ColourGenerator2D>().CreateTextureIfNeeded();
         terrainGen.GetComponent<ColourGenerator2D>().DrawTextureOnWorldPos(
-            terrainGen.GetComponent<ColourGenerator2D>().userTex, hitTerrainPos, currentDrawRange, false);
+            terrainGen.GetComponent<ColourGenerator2D>().userTex, hitTerrainPos, currentDrawRange, drawMetal);
 
         // Change env
         terrainGen.GetComponent<TerrainMesh>().DrawOnChunk(
-            hitTerrainPos, currentDrawRange, digStrength * skipFrameNum, positiveToAdd ? 1 : 0);
+            hitTerrainPos, currentDrawRange, digStrength * skipFrameNum, digIn ? 0 : 1);
     }
 
     private void Move()
@@ -179,7 +222,6 @@ public class FlyingBehaviour : MonoBehaviour
 
             creaturePos.x += directionNormalized.x * Time.deltaTime * horizontalMovementSpeed;
             creaturePos.z += directionNormalized.z * Time.deltaTime * horizontalMovementSpeed;
-
 
             // Vector3 playerP = new Vector3(playerPos.x, creaturePos.y, playerPos.z);
             Vector3 direction = playerPos - transform.position;
@@ -195,8 +237,8 @@ public class FlyingBehaviour : MonoBehaviour
 
         if (wander)
         {
-            float seed1 = (Time.time) * noiseChangeFac * randomDecisionSpeedUp;
-            float seed2 = (Time.time - 10.0f) * noiseChangeFac * randomDecisionSpeedUp;
+            float seed1 = (Time.time + seed * 1000.0f) * noiseChangeFac * randomDecisionSpeedUp;
+            float seed2 = (Time.time - 289.0f + seed * 2000.0f) * noiseChangeFac * randomDecisionSpeedUp;
 
             double xComponent = customPerlin.GetValue(seed1, seed2, seed1);
             double yComponent = customPerlin.GetValue(seed2, seed2, seed1);
@@ -204,8 +246,8 @@ public class FlyingBehaviour : MonoBehaviour
             Vector3 directionNormalized = new Vector3((float)xComponent, 0, (float)yComponent).normalized;
             v1 = directionNormalized;
 
-            creaturePos.x += directionNormalized.x * Time.deltaTime * horizontalMovementSpeed * randomDecisionSpeedUp;
-            creaturePos.z += directionNormalized.z * Time.deltaTime * horizontalMovementSpeed * randomDecisionSpeedUp;
+            creaturePos.x += xSign * directionNormalized.x * Time.deltaTime * horizontalMovementSpeed * randomDecisionSpeedUp;
+            creaturePos.z += zSign * directionNormalized.z * Time.deltaTime * horizontalMovementSpeed * randomDecisionSpeedUp;
 
             transform.LookAt(new Vector3(creaturePos.x, transform.position.y, creaturePos.z), Vector3.up);
 

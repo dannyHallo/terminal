@@ -164,6 +164,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 3175274898167262328}
+  - component: {fileID: 1451328513}
   m_Layer: 0
   m_Name: metalAg
   m_TagString: Untagged
@@ -188,6 +189,57 @@ Transform:
   m_Father: {fileID: 0}
   m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1451328513
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2835868219209234114}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a83f71ea0f87d534493e1ce984d16122, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  minDistanceFromGround: 3
+  maxDistanceFromGround: 6
+  verticalMovementSpeed: 4
+  horizontalMovementSpeed: 2
+  randomDecisionSpeedUp: 1
+  verticalMovementFrequency: 6
+  stopChasingThrehold: 3
+  rotateSpeed: 5
+  digStrength: 0.003
+  growRequiredTime: 60
+  maxToMinScaleRatio: 16
+  minSkipFrameNum: 7
+  maxSkipFrameNum: 200
+  skipFrameNumIncreasement: 0.008
+  noiseChangeFac: 0.01
+  seed: 40
+  initDrawRange: 1
+  maxDrawRange: 8
+  digIn: 1
+  drawMetal: 1
+  ability_weight: 0.1
+  do_something_weight: 0.256
+  player_weight: 0.213
+  env_change_weight: 0
+  attack_weight: 0
+  ability_score: 11.027026
+  do_something_score: 3.28
+  player_score: 8.53
+  env_change_score: 4.33
+  attack_score: 7.63
+  currentDrawRange: 8
+  wander: 1
+  chasePlayer: 0
+  env_change: 0
+  attack: 0
+  isAboveTerrain: 1
+  skipFrameNum: 27
+  f1: 5.977993
+  v1: {x: -0.94198835, y: 0, z: -0.33564556}
 --- !u!1 &3437144737143962040
 GameObject:
   m_ObjectHideFlags: 0
