@@ -62,12 +62,19 @@ public class RandomForestGenerator : MonoBehaviour
                 {
                     blankCheck = true;
                 }
+
+                if (x <= 10f && x >= -10f && z <= 10 && z >= -10f)
+                {
+                    blankCheck = true;
+                }
                 Vector2 positionV2 = new Vector2(x, z);
                 Vector2 distance = positionV2 - blankSpaceCenter;
                 if (distance.magnitude < blankSpaceRadius)
                 {
                     blankCheck = true;
                 }
+
+
 
                 // For each position, loop through each element...
                 if (blankCheck != true)

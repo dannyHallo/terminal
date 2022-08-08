@@ -45,16 +45,16 @@ public class StageManagement : MonoBehaviour
     private void Start()
     {
         _cameraControl = FindObjectOfType<CameraControl>();
-        orginalPlane.transform.position = new Vector3(0,20,0);
+        orginalPlane.transform.position = new Vector3(0, 20, 0);
         _space.transform.localScale = Vector3.zero;
         randomForestGenerator = FindObjectOfType<RandomForestGenerator>();
-        f2b.loop =true;
-        
+        f2b.loop = true;
+
 
     }
 
 
-    public void StageSwitch (int SwitchCount)
+    public void StageSwitch(int SwitchCount)
     {
         if (SwitchCount == 1)
         {
@@ -77,7 +77,7 @@ public class StageManagement : MonoBehaviour
         {
 
             skydown.Play();
-            Destroy(orginalPlane);
+
             if (_cameraControl.isFollowingPlayer) _cameraControl.OrbitPlayer();
             _countDown = rotateTime;
             stageInt = SwitchCount;
@@ -114,7 +114,7 @@ public class StageManagement : MonoBehaviour
         {
             stageInt = SwitchCount;
         }
-        
+
     }
 
     public void StageAnimation()
@@ -122,7 +122,7 @@ public class StageManagement : MonoBehaviour
         if (stageInt == 1)
         {
             greybackgroundmusic.volume -= Time.deltaTime;
-            
+
             _countDown -= Time.deltaTime;
             if (_countDown <= 0)
             {
@@ -132,33 +132,38 @@ public class StageManagement : MonoBehaviour
         }
         if (stageInt == 2)
         {
-
-            if (orginalPlane.transform.position.y > -5)
+            if (orginalPlane)
             {
-                orginalPlane.transform.position += Vector3.down * 2 * Time.deltaTime;
+                if (orginalPlane.transform.position.y > -10)
+                {
+                    orginalPlane.transform.position += Vector3.down * 2 * Time.deltaTime;
+
+                }
+                else
+                {
+                    if (orginalPlane) Destroy(orginalPlane);
+                }
+            }
+
+            if (WorldEdge.transform.position.y < 34)
+            {
                 WorldEdge.transform.position += Vector3.up * 4 * Time.deltaTime;
             }
             else
             {
-                if (WorldEdge.transform.position.y < 40)
+                earthquake.volume -= Time.deltaTime;
+                //StageSwitch(3);
+                if (_cameraControl.normalFollowingCam.GetCinemachineComponent<CinemachineBasicMultiChannelPerlin>().m_AmplitudeGain >= 0)
                 {
-                    WorldEdge.transform.position += Vector3.up * 6 * Time.deltaTime;
+                    _cameraControl.CameraShakeStop();
                 }
-                    else
-                {
-                    earthquake.volume -= Time.deltaTime;
-                    //StageSwitch(3);
-                    if (_cameraControl.normalFollowingCam.GetCinemachineComponent<CinemachineBasicMultiChannelPerlin>().m_AmplitudeGain >= 0)
-                    {
-                   _cameraControl.CameraShakeStop();
-                    }
 
-                }
             }
-
-
-            
         }
+
+
+
+
         if (stageInt == 3)
         {
 
@@ -175,7 +180,7 @@ public class StageManagement : MonoBehaviour
             _countDown += Time.deltaTime;
             if (_space.transform.localScale.y <= 0.1f)
             {
-                _space.transform.localScale = Vector3.one * 0.0000000000001f * _countDown * _countDown * _countDown * _countDown * _countDown *_countDown * _countDown *_countDown * _countDown;
+                _space.transform.localScale = Vector3.one * 0.0000000000001f * _countDown * _countDown * _countDown * _countDown * _countDown * _countDown * _countDown * _countDown * _countDown;
             }
 
 
@@ -192,7 +197,7 @@ public class StageManagement : MonoBehaviour
         if (stageInt == 6)
         {
 
-            
+
 
         }
         if (stageInt == 7)
@@ -217,7 +222,7 @@ public class StageManagement : MonoBehaviour
         //    StageSwitch(1);
         //}
         StageAnimation();
-     
+
     }
 
 
