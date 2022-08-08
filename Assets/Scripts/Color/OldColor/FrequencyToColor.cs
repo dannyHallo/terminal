@@ -208,6 +208,8 @@ public class FrequencyToColor : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
+        if (audioProcessor == null) audioProcessor = FindObjectOfType<AudioProcessor>();
+        if (partS == null) partS = GetComponent<ParticleSystem>();
         FinalColor.a = 1;
         GotColor = false;
         //m_YourFirstButton.onClick.AddListener(FrequenciesToColors);
