@@ -9,6 +9,14 @@ using UnityEngine.UI;
 public class PlayerController : MonoBehaviour
 {
     public String botName;
+    private UIManager uiManager
+    {
+        get
+        {
+            return GameObject.Find("Canvas").GetComponent<UIManager>();
+        }
+    }
+
     private TerrainMesh terrainMesh;
     private ColourGenerator2D colourGenerator2D;
     public GameObject butterflyPrefab;
@@ -68,7 +76,6 @@ public class PlayerController : MonoBehaviour
 
     public float socketMoveFreq, socketMoveBoundary;
     public float instrumentChaseSocketSpeed;
-    public UIManager uiManager;
     private float floatingHeight;
 
     void Start()
@@ -82,7 +89,6 @@ public class PlayerController : MonoBehaviour
 
         playerInputActions = new PlayerInputActions();
         playerInputActions.Player.Enable();
-        uiManager = FindObjectOfType<UIManager>();
     }
 
     public void EquipInstrument(InstrumentTypes instrumentType)
@@ -215,10 +221,10 @@ public class PlayerController : MonoBehaviour
             {
                 for (int i = 0; i < instruments.Count; i++)
                 {
+                    uiManager.hintText.text = "Remove dirt (RMB)";
+
                     if (instruments[i].e == mainSocketCurrentStoringInstrument)
                     {
-                        print("Put the former one back");
-
                         enumToInstrument enumToInstrument = instruments[i];
                         enumToInstrument.s = tmpSocket;
                         instruments[i] = enumToInstrument;
@@ -357,6 +363,7 @@ public class PlayerController : MonoBehaviour
             {
                 if (hit.collider.tag == "Chunk")
                 {
+
                     if (Input.GetMouseButton(0) && ableToDig)
                     {
                         // colourGenerator2D.DrawTextureOnWorldPos(colourGenerator2D.userTex, hit.point, drawRange, true);
@@ -372,16 +379,19 @@ public class PlayerController : MonoBehaviour
             }
             else if (mainSocketCurrentStoringInstrument == InstrumentTypes.Dudelsa)
             {
+                uiManager.hintText.text = "Add dirt (LMB)";
                 // TODO: change sky color
             }
             else if (mainSocketCurrentStoringInstrument == InstrumentTypes.Guitar)
             {
+                uiManager.hintText.text = "Add or remove trees";
                 // TODO: tree control
 
             }
             // Creaste / Destroy Creature
             else if (mainSocketCurrentStoringInstrument == InstrumentTypes.Mic)
             {
+                uiManager.hintText.text = "Add butterfly (LMB), Add metal spirit (RMB)";
                 // Create
                 if (hit.collider.tag == "Chunk")
                 {

@@ -6,6 +6,7 @@ TagManager:
   tags:
   - Chunk
   - Sun
+  - Creature
   layers:
   - Default
   - TransparentFX
