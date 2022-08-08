@@ -20,12 +20,15 @@ public class RandomForestGenerator : MonoBehaviour
     private void Start()
     {
         layerAsLayerMask = (1 << layer);
-
+        
     }
 
     private void Update()
     {
-
+        //if (Time.frameCount ==30)
+        //{
+        //    SpawnForest();
+        //}
     }
     public void SpawnForest()
     {

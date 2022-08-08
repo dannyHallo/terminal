@@ -82,8 +82,8 @@ public class Pickable : MonoBehaviour
 
             Destroy(this.gameObject);
             UIManager.pickUpUI.SetActive(false);
-            UIManager.InstrumentsUI[_instrumentInt].SetActive(true);
-            player.GetComponent<PlayerController>().InstrumentUIColor(_instrumentInt);
+            //UIManager.InstrumentsUI[_instrumentInt].SetActive(true);
+            //player.GetComponent<PlayerController>().InstrumentUIColor(_instrumentInt);
         }
 
     }

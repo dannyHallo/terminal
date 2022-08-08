@@ -80,9 +80,11 @@ public class StageManagement : MonoBehaviour
             if (_cameraControl.isFollowingPlayer) _cameraControl.OrbitPlayer();
             _countDown = rotateTime;
             stageInt = SwitchCount;
+            Debug.Log("III");
         }
         if (SwitchCount == 6)
         {
+            Debug.Log("we");
             randomForestGenerator.SpawnForest();
             Instantiate(FourthItem, fourthPosition, FourthItem.transform.rotation);
             stageInt = SwitchCount;
@@ -164,6 +166,7 @@ public class StageManagement : MonoBehaviour
         }
         if (stageInt == 5)
         {
+            Debug.Log("we");
             _countDown -= Time.deltaTime;
             if (_countDown <= 0)
             {
