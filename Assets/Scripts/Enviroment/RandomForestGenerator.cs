@@ -63,7 +63,7 @@ public class RandomForestGenerator : MonoBehaviour
                     blankCheck = true;
                 }
 
-                if (x <= 10f && x >= -10f && z <= 10 && z >= -10f)
+                if (x <= 25f && x >= -25f && z <= 25 && z >= -25f)
                 {
                     blankCheck = true;
                 }
