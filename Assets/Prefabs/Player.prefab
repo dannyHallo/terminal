@@ -247,8 +247,10 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   botName: Origin
-  terrainMesh: {fileID: 0}
-  colourGenerator2D: {fileID: 0}
+  butterflyPrefab: {fileID: 7243236347006311874, guid: c374e97757b66104da99814aac87b596,
+    type: 3}
+  metalSpiritPrefab: {fileID: 2835868219209234114, guid: 2cb95cb37e9efc84c900f95043b1b1e5,
+    type: 3}
   screenShotMask: {fileID: 0}
   walkingSpeed: 10
   runningSpeed: 20
@@ -263,23 +265,23 @@ MonoBehaviour:
   Cam_35mm: {fileID: 8300000, guid: 0392f216d18f6804080c30a6037e7c0b, type: 3}
   instruments:
   - e: 2
-    i: {fileID: 2067307802833102319, guid: 58fc5012cff6e004594bb26b67374939, type: 3}
-    s: {fileID: 2270053359124656479}
-    have: 0
-  - e: 1
-    i: {fileID: 6168081455213398407, guid: 3093accf85ddd3041964e9a939d64b54, type: 3}
-    s: {fileID: 3787544669922762187}
-    have: 0
-  - e: 2
     i: {fileID: 6904171808329163216, guid: bfb39a694fd55924f8bff2c3f3b7b7f3, type: 3}
-    s: {fileID: 2748527674345518824}
+    s: {fileID: 2270053359124656479}
     have: 0
   - e: 3
     i: {fileID: 5120190700763715873, guid: b0d3e6647d79d1247b95279e76a32c07, type: 3}
-    s: {fileID: 4358275453221296537}
+    s: {fileID: 3787544669922762187}
+    have: 0
+  - e: 0
+    i: {fileID: 8369377711183050774, guid: ec1be01ccaa69b34ebd3b80e89264d68, type: 3}
+    s: {fileID: 2748527674345518824}
     have: 0
   - e: 4
     i: {fileID: 426582129923611028, guid: 77d742fc6ec5bc749abd55c7c8866799, type: 3}
+    s: {fileID: 4358275453221296537}
+    have: 0
+  - e: 1
+    i: {fileID: 6168081455213398407, guid: 3093accf85ddd3041964e9a939d64b54, type: 3}
     s: {fileID: 5738759278876582419}
     have: 0
   mainSocket: {fileID: 4348931299965307217}
