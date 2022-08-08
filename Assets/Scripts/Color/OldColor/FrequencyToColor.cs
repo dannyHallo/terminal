@@ -215,6 +215,7 @@ public class FrequencyToColor : MonoBehaviour
             start = 16;
             end = 41;
         }
+        if (_colorObject == null) _colorObject = this.gameObject.GetComponent<Renderer>();
         FinalColor.a = 1;
         GotColor = false;
         //m_YourFirstButton.onClick.AddListener(FrequenciesToColors);
