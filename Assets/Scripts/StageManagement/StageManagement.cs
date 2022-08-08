@@ -74,6 +74,7 @@ public class StageManagement : MonoBehaviour
         {
             Instantiate(ThirdItem, thirdPosition, ThirdItem.transform.rotation);
             stageInt = SwitchCount;
+            _countDown = 0;
         }
         if (SwitchCount == 5)
         {
@@ -157,9 +158,10 @@ public class StageManagement : MonoBehaviour
         }
         if (stageInt == 4)
         {
+            _countDown += Time.deltaTime;
             if (_space.transform.localScale.y <= 0.1f)
             {
-                _space.transform.localScale += Vector3.one * 0.005f * Time.deltaTime;
+                _space.transform.localScale = Vector3.one * 0.0000000000001f * _countDown * _countDown * _countDown * _countDown * _countDown *_countDown * _countDown *_countDown * _countDown;
             }
 
 
