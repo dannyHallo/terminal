@@ -210,6 +210,11 @@ public class FrequencyToColor : MonoBehaviour
     {
         if (audioProcessor == null) audioProcessor = FindObjectOfType<AudioProcessor>();
         if (partS == null) partS = GetComponent<ParticleSystem>();
+        if(start==0&& end == 0)
+        {
+            start = 16;
+            end = 41;
+        }
         FinalColor.a = 1;
         GotColor = false;
         //m_YourFirstButton.onClick.AddListener(FrequenciesToColors);
