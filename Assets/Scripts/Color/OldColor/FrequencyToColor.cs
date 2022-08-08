@@ -147,7 +147,10 @@ public class FrequencyToColor : MonoBehaviour
 
     public void AverageFrequencyColorDecider()
     {
-        FrequencyAverageColor = _colorObject.material.color;
+        if (_colorObject != null)
+        {
+            FrequencyAverageColor = _colorObject.material.color;
+        }
         // Debug.Log("before" + targetColor);
         if (redSpeedLimit)
         {
@@ -215,7 +218,7 @@ public class FrequencyToColor : MonoBehaviour
             start = 16;
             end = 41;
         }
-        if (_colorObject == null) _colorObject = this.gameObject.GetComponent<Renderer>();
+        //if (_colorObject == null) _colorObject = this.gameObject.GetComponent<Renderer>();
         FinalColor.a = 1;
         GotColor = false;
         //m_YourFirstButton.onClick.AddListener(FrequenciesToColors);
