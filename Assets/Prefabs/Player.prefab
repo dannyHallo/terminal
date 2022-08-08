@@ -282,6 +282,8 @@ MonoBehaviour:
     i: {fileID: 426582129923611028, guid: 77d742fc6ec5bc749abd55c7c8866799, type: 3}
     s: {fileID: 5738759278876582419}
     have: 0
+  mainSocket: {fileID: 4348931299965307217}
+  tmpSocket: {fileID: 0}
   socketMoveFreq: 0.2
   socketMoveBoundary: 0.4
   instrumentChaseSocketSpeed: 4

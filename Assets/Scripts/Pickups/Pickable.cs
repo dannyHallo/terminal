@@ -63,22 +63,22 @@ public class Pickable : MonoBehaviour
             }
             if (instrumentType == PlayerController.InstrumentTypes.Mic)
             {
-               stageManagement.StageSwitch(7);
+                stageManagement.StageSwitch(7);
             }
             GameObject player = GameObject.Find("Player");
             // PlayerController.InstrumentTypes instrumentType = PlayerController.InstrumentTypes.Guitar;
             List<PlayerController.enumToInstrument> playerInstuments = player.GetComponent<PlayerController>().instruments;
-            for (int i=0; i < playerInstuments.Count; i ++)
+            for (int i = 0; i < playerInstuments.Count; i++)
             {
                 if (playerInstuments[i].e == instrumentType)
                 {
-                    PlayerController.enumToInstrument instrumentSetting= playerInstuments[i];
+                    PlayerController.enumToInstrument instrumentSetting = playerInstuments[i];
                     instrumentSetting.have = true;
                     playerInstuments[i] = instrumentSetting;
                 }
             }
-            
-            player.GetComponent<PlayerController>().UseInstrument(instrumentType);
+
+            player.GetComponent<PlayerController>().TryUseInstrument(instrumentType);
 
             Destroy(this.gameObject);
             UIManager.pickUpUI.SetActive(false);

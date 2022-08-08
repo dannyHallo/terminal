@@ -45,8 +45,10 @@ public class PlayerController : MonoBehaviour
         Violin,
         Sax,
         Dudelsa,
-        Mic
+        Mic,
+        None
     };
+
     public List<enumToInstrument> instruments;
     private GameObject activeInstrument;
 
@@ -58,6 +60,10 @@ public class PlayerController : MonoBehaviour
         public GameObject s;
         public bool have;
     }
+
+    public GameObject mainSocket;
+    public GameObject tmpSocket;
+    private InstrumentTypes mainSocketCurrentStoringInstrument = InstrumentTypes.None;
 
     public float socketMoveFreq, socketMoveBoundary;
     public float instrumentChaseSocketSpeed;
@@ -79,7 +85,6 @@ public class PlayerController : MonoBehaviour
     }
 
     // Land on planet initially
-
     private void EquipInstrument(int i)
     {
         if (i >= instruments.Count) return;
@@ -113,7 +118,7 @@ public class PlayerController : MonoBehaviour
 
             Vector3 pos = instruments[i].s.transform.localPosition;
             pos.y = floatingHeight + Mathf.Sin(
-                (2 * Mathf.PI * ((float)i / instruments.Count)) +
+                (2 * Mathf.PI * ((float)i / (2 * instruments.Count))) +
                 (2 * Mathf.PI * Time.time * socketMoveFreq)) * socketMoveBoundary;
 
             instruments[i].s.transform.localPosition = pos;
@@ -164,19 +169,21 @@ public class PlayerController : MonoBehaviour
         }
     }
 
-
-
     private void TryUseInstrument(int i)
     {
         var instrument = instruments[i].e;
         InstrumentUIColor(i);
+
         if (activeInstrument == instruments[i].i)
         {
+            // De-activate
             if (activeInstrument.activeInHierarchy)
             {
-                activeInstrument.SetActive(false);
+                TryUseInstrument(InstrumentTypes.None);
+
                 uiManager.InstrumentsUI[i].GetComponent<Image>().color = Color.gray;
             }
+            // Unreachable code
             else
             {
                 Debug.Log("!");
@@ -185,21 +192,76 @@ public class PlayerController : MonoBehaviour
         }
         else
         {
-            UseInstrument(instruments[i].e);
+            // Switch to
+            TryUseInstrument(instruments[i].e);
         }
     }
 
-    public void UseInstrument(InstrumentTypes instrument)
+    public void TryUseInstrument(InstrumentTypes instrument)
     {
-        if (activeInstrument)
-            activeInstrument.SetActive(false);
-
-        foreach (enumToInstrument queriedInstrument in instruments)
+        // No Instrument
+        if (instrument == InstrumentTypes.None)
         {
-            if (queriedInstrument.e == instrument && queriedInstrument.have == true)
+            // Place the former instrument back - IDENTICAL
+            if (mainSocketCurrentStoringInstrument != InstrumentTypes.None)
             {
+                for (int i = 0; i < instruments.Count; i++)
+                {
+                    if (instruments[i].e == mainSocketCurrentStoringInstrument)
+                    {
+                        print("Put the former one back");
+
+                        enumToInstrument enumToInstrument = instruments[i];
+                        enumToInstrument.s = tmpSocket;
+                        instruments[i] = enumToInstrument;
+                    }
+                }
+            }
+
+            // clear sockets
+            mainSocketCurrentStoringInstrument = InstrumentTypes.None;
+            tmpSocket = null;
+            return;
+        }
+
+        // Valid instrument
+        for (int instru = 0; instru < instruments.Count; instru++)
+        {
+            enumToInstrument queriedInstrument = instruments[instru];
+
+            if (queriedInstrument.e == instrument)
+            {
+                if (!queriedInstrument.have)
+                {
+                    print("Unusable because you don't have this instrument!");
+                }
+
                 activeInstrument = queriedInstrument.i;
-                activeInstrument.SetActive(true);
+
+                // Place the former instrument back
+                if (mainSocketCurrentStoringInstrument != InstrumentTypes.None)
+                {
+                    for (int i = 0; i < instruments.Count; i++)
+                    {
+                        if (instruments[i].e == mainSocketCurrentStoringInstrument)
+                        {
+                            print("Put the former one back");
+
+                            enumToInstrument enumToInstrument = instruments[i];
+                            enumToInstrument.s = tmpSocket;
+                            instruments[i] = enumToInstrument;
+                        }
+                    }
+                }
+
+                // Storing the current socket for future use
+                mainSocketCurrentStoringInstrument = queriedInstrument.e;
+                tmpSocket = queriedInstrument.s;
+                // Change socket
+                queriedInstrument.s = mainSocket;
+
+                // Save
+                instruments[instru] = queriedInstrument;
             }
         }
     }
