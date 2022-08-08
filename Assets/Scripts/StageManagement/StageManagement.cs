@@ -37,6 +37,11 @@ public class StageManagement : MonoBehaviour
     public AudioSource creatureNagativeSound;
     public AudioSource decoInstruSound;
     public AudioSource decoInstruSoundTwo;
+    public AudioSource eighty;
+    public AudioSource f2b;
+    public AudioSource skydown;
+    public AudioSource AI;
+    public AudioSource grass;
     private void Start()
     {
         _cameraControl = FindObjectOfType<CameraControl>();
@@ -65,6 +70,7 @@ public class StageManagement : MonoBehaviour
         }
         if (SwitchCount == 3)
         {
+
             Destroy(orginalPlane);
             if (_cameraControl.isFollowingPlayer) _cameraControl.OrbitPlayer();
             _countDown = rotateTime;
