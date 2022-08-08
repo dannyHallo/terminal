@@ -12,6 +12,13 @@ public class RandomColorChannel : ColorChannel
     // Start is called before the first frame update
     void Start()
     {
+
+
+    }
+
+    // Update is called once per frame
+    void Update()
+    {
         Random.InitState(GetInstanceID());
         if (mainInputChannel)
             baseColor = mainInputColor;
@@ -26,7 +33,7 @@ public class RandomColorChannel : ColorChannel
         {
             red = baseColor.r;
         }
-        if (randomlizeBlue)
+        if (randomlizeBlue) 
         {
             blue = Random.Range(Mathf.Min(startRangeColor.b, endRangeColor.b), Mathf.Max(startRangeColor.b, endRangeColor.b));
         }
@@ -44,13 +51,6 @@ public class RandomColorChannel : ColorChannel
         }
 
         outputColor = new Color(red, green, blue, baseColor.a);
-
-
-    }
-
-    // Update is called once per frame
-    void Update()
-    {
 
     }
 }

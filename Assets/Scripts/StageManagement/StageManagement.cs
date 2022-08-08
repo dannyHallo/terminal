@@ -23,14 +23,15 @@ public class StageManagement : MonoBehaviour
     private float rotateTime = 8f;
     public RandomForestGenerator randomForestGenerator;
 
-
+    public AudioSource greybackgroundmusic;
+    public AudioSource instrumentSwitching;
     private void Start()
     {
         _cameraControl = FindObjectOfType<CameraControl>();
         orginalPlane.transform.position = new Vector3(0,20,0);
         _space.transform.localScale = Vector3.zero;
-    }
 
+    }
 
 
     public void StageSwitch (int SwitchCount)
@@ -41,6 +42,7 @@ public class StageManagement : MonoBehaviour
             if (_cameraControl.isFollowingPlayer) _cameraControl.OrbitPlayer();
             _countDown = rotateTime;
             stageInt = SwitchCount;
+
         }
         if (SwitchCount == 2)
         {
@@ -90,6 +92,8 @@ public class StageManagement : MonoBehaviour
     {
         if (stageInt == 1)
         {
+            greybackgroundmusic.volume -= Time.deltaTime;
+            
             _countDown -= Time.deltaTime;
             if (_countDown <= 0)
             {
@@ -152,7 +156,7 @@ public class StageManagement : MonoBehaviour
         if (stageInt == 6)
         {
 
-
+            
 
         }
         if (stageInt == 7)
