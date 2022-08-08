@@ -98,18 +98,13 @@ public class PlayerController : MonoBehaviour
                 GameObject genInstrument = GameObject.Instantiate(
                     enumToInstrument.i, enumToInstrument.s.transform.position, Quaternion.identity);
 
-                // Change equip status to true, and change prefab to scene object
-                enumToInstrument tmpInstrument;
-                tmpInstrument.e = enumToInstrument.e;
-                tmpInstrument.s = enumToInstrument.s;
-                tmpInstrument.i = genInstrument;
-                tmpInstrument.have = true;
+                enumToInstrument.i = genInstrument;
+                enumToInstrument.have = true;
 
-                enumToInstrument = tmpInstrument;
                 instruments[i] = enumToInstrument;
+                return;
             }
         }
-
     }
 
     public void EquipInstrument(int i)
