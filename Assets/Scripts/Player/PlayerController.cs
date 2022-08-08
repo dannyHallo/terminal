@@ -50,7 +50,6 @@ public class PlayerController : MonoBehaviour
     };
 
     public List<enumToInstrument> instruments;
-    private GameObject activeInstrument;
 
     [Serializable]
     public struct enumToInstrument
@@ -133,23 +132,23 @@ public class PlayerController : MonoBehaviour
     {
         if (Input.GetKeyDown(KeyCode.Alpha1))
         {
-            TryUseInstrument(0);
+            TryToggleInstrument(0);
         }
         if (Input.GetKeyDown(KeyCode.Alpha2))
         {
-            TryUseInstrument(1);
+            TryToggleInstrument(1);
         }
         if (Input.GetKeyDown(KeyCode.Alpha3))
         {
-            TryUseInstrument(2);
+            TryToggleInstrument(2);
         }
         if (Input.GetKeyDown(KeyCode.Alpha4))
         {
-            TryUseInstrument(3);
+            TryToggleInstrument(3);
         }
         if (Input.GetKeyDown(KeyCode.Alpha5))
         {
-            TryUseInstrument(4);
+            TryToggleInstrument(4);
         }
     }
 
@@ -169,30 +168,16 @@ public class PlayerController : MonoBehaviour
         }
     }
 
-    private void TryUseInstrument(int i)
+    private void TryToggleInstrument(int i)
     {
-        var instrument = instruments[i].e;
         InstrumentUIColor(i);
-
-        if (activeInstrument == instruments[i].i)
+        if (mainSocketCurrentStoringInstrument == instruments[i].e)
         {
-            // De-activate
-            if (activeInstrument.activeInHierarchy)
-            {
-                TryUseInstrument(InstrumentTypes.None);
-
-                uiManager.InstrumentsUI[i].GetComponent<Image>().color = Color.gray;
-            }
-            // Unreachable code
-            else
-            {
-                Debug.Log("!");
-                activeInstrument.SetActive(true);
-            }
+            TryUseInstrument(InstrumentTypes.None);
+            uiManager.InstrumentsUI[i].GetComponent<Image>().color = Color.gray;
         }
         else
         {
-            // Switch to
             TryUseInstrument(instruments[i].e);
         }
     }
@@ -234,9 +219,8 @@ public class PlayerController : MonoBehaviour
                 if (!queriedInstrument.have)
                 {
                     print("Unusable because you don't have this instrument!");
+                    return;
                 }
-
-                activeInstrument = queriedInstrument.i;
 
                 // Place the former instrument back
                 if (mainSocketCurrentStoringInstrument != InstrumentTypes.None)
