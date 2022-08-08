@@ -48,6 +48,9 @@ public class StageManagement : MonoBehaviour
         orginalPlane.transform.position = new Vector3(0,20,0);
         _space.transform.localScale = Vector3.zero;
         randomForestGenerator = FindObjectOfType<RandomForestGenerator>();
+        f2b.loop =true;
+        
+
     }
 
 
@@ -55,7 +58,7 @@ public class StageManagement : MonoBehaviour
     {
         if (SwitchCount == 1)
         {
-            instrumentSwitching.Play();
+            eighty.Play();
             if (_cameraControl.isFollowingPlayer) _cameraControl.OrbitPlayer();
             _countDown = rotateTime;
             stageInt = SwitchCount;
@@ -63,14 +66,17 @@ public class StageManagement : MonoBehaviour
         }
         if (SwitchCount == 2)
         {
+
             _cameraControl.CameraShake(40);
             earthquake.Play();
             Instantiate(SecondItem, secondPosition, SecondItem.transform.rotation);
             stageInt = SwitchCount;
+            f2b.PlayDelayed(40f);
         }
         if (SwitchCount == 3)
         {
 
+            skydown.Play();
             Destroy(orginalPlane);
             if (_cameraControl.isFollowingPlayer) _cameraControl.OrbitPlayer();
             _countDown = rotateTime;
@@ -84,6 +90,7 @@ public class StageManagement : MonoBehaviour
         }
         if (SwitchCount == 5)
         {
+            grass.Play();
             if (_cameraControl.isFollowingPlayer) _cameraControl.OrbitPlayer();
             _countDown = rotateTime;
             stageInt = SwitchCount;
@@ -98,6 +105,7 @@ public class StageManagement : MonoBehaviour
         }
         if (SwitchCount == 7)
         {
+            AI.Play();
             if (_cameraControl.isFollowingPlayer) _cameraControl.OrbitPlayer();
             _countDown = rotateTime;
             stageInt = SwitchCount;
@@ -209,6 +217,7 @@ public class StageManagement : MonoBehaviour
         //    StageSwitch(1);
         //}
         StageAnimation();
+     
     }
 
 
