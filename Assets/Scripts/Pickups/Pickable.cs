@@ -78,6 +78,7 @@ public class Pickable : MonoBehaviour
                 }
             }
 
+            player.GetComponent<PlayerController>().EquipInstrument(instrumentType);
             player.GetComponent<PlayerController>().TryUseInstrument(instrumentType);
 
             Destroy(this.gameObject);
