@@ -65,7 +65,7 @@ public class StageManagement : MonoBehaviour
         }
         if (SwitchCount == 3)
         {
-
+            Destroy(orginalPlane);
             if (_cameraControl.isFollowingPlayer) _cameraControl.OrbitPlayer();
             _countDown = rotateTime;
             stageInt = SwitchCount;

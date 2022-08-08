@@ -51,15 +51,15 @@ public class Pickable : MonoBehaviour
         {
             if (instrumentType == PlayerController.InstrumentTypes.Guitar)
             {
-                stageManagement.StageSwitch(1);
+                stageManagement.StageSwitch(5);
             }
             if (instrumentType == PlayerController.InstrumentTypes.Sax)
             {
-                stageManagement.StageSwitch(3);
+                stageManagement.StageSwitch(1);
             }
             if (instrumentType == PlayerController.InstrumentTypes.Dudelsa)
             {
-                stageManagement.StageSwitch(5);
+                stageManagement.StageSwitch(3);
             }
             if (instrumentType == PlayerController.InstrumentTypes.Mic)
             {
