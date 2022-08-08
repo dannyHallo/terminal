@@ -59,11 +59,11 @@ public class Pickable : MonoBehaviour
             }
             if (instrumentType == PlayerController.InstrumentTypes.Dudelsa)
             {
-                //stageManagement.StageSwitch(3);
+                stageManagement.StageSwitch(5);
             }
             if (instrumentType == PlayerController.InstrumentTypes.Mic)
             {
-               // stageManagement.StageSwitch(3);
+               stageManagement.StageSwitch(7);
             }
             GameObject player = GameObject.Find("Player");
             // PlayerController.InstrumentTypes instrumentType = PlayerController.InstrumentTypes.Guitar;

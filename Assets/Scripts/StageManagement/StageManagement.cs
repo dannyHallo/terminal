@@ -25,12 +25,24 @@ public class StageManagement : MonoBehaviour
 
     public AudioSource greybackgroundmusic;
     public AudioSource instrumentSwitching;
+    public AudioSource landSwitching;
+    public AudioSource landSwitchingTwo;
+    public AudioSource earthquake;
+    public AudioSource earthquakeTwo;
+    public AudioSource skyChange;
+    public AudioSource skyChangeTwo;
+    public AudioSource factorySound;
+    public AudioSource creatureSound;
+    public AudioSource creatureSoundTwo;
+    public AudioSource creatureNagativeSound;
+    public AudioSource decoInstruSound;
+    public AudioSource decoInstruSoundTwo;
     private void Start()
     {
         _cameraControl = FindObjectOfType<CameraControl>();
         orginalPlane.transform.position = new Vector3(0,20,0);
         _space.transform.localScale = Vector3.zero;
-
+        randomForestGenerator = FindObjectOfType<RandomForestGenerator>();
     }
 
 
@@ -38,7 +50,7 @@ public class StageManagement : MonoBehaviour
     {
         if (SwitchCount == 1)
         {
-            
+            instrumentSwitching.Play();
             if (_cameraControl.isFollowingPlayer) _cameraControl.OrbitPlayer();
             _countDown = rotateTime;
             stageInt = SwitchCount;
@@ -47,7 +59,7 @@ public class StageManagement : MonoBehaviour
         if (SwitchCount == 2)
         {
             _cameraControl.CameraShake(40);
-            
+            earthquake.Play();
             Instantiate(SecondItem, secondPosition, SecondItem.transform.rotation);
             stageInt = SwitchCount;
         }
@@ -117,8 +129,13 @@ public class StageManagement : MonoBehaviour
                 }
                     else
                 {
-                    
+                    earthquake.volume -= Time.deltaTime;
                     //StageSwitch(3);
+                    if (_cameraControl.normalFollowingCam.GetCinemachineComponent<CinemachineBasicMultiChannelPerlin>().m_AmplitudeGain >= 0)
+                    {
+                   _cameraControl.CameraShakeStop();
+                    }
+
                 }
             }
 
