@@ -9,8 +9,10 @@ using UnityEngine.UI;
 public class PlayerController : MonoBehaviour
 {
     public String botName;
-    public TerrainMesh terrainMesh;
-    public ColourGenerator2D colourGenerator2D;
+    private TerrainMesh terrainMesh;
+    private ColourGenerator2D colourGenerator2D;
+    public GameObject butterflyPrefab;
+    public GameObject metalSpiritPrefab;
 
     public Image screenShotMask;
 
@@ -330,22 +332,65 @@ public class PlayerController : MonoBehaviour
         RaycastHit hit;
         if (Physics.Raycast(ray, out hit, rayLength, ~IgnoreMe))
         {
-            if (hit.collider.tag == "Chunk")
+            if (mainSocketCurrentStoringInstrument == InstrumentTypes.Sax)
             {
-                if (Input.GetMouseButton(0) && ableToDig)
+                if (hit.collider.tag == "Chunk")
                 {
-                    colourGenerator2D.DrawTextureOnWorldPos(colourGenerator2D.userTex, hit.point, drawRange, true);
-                    terrainMesh.DrawOnChunk(hit.point, drawRange, digStrength, 0);
+                    if (Input.GetMouseButton(0) && ableToDig)
+                    {
+                        // colourGenerator2D.DrawTextureOnWorldPos(colourGenerator2D.userTex, hit.point, drawRange, true);
+                        terrainMesh.DrawOnChunk(hit.point, drawRange, digStrength, 0);
+                    }
+                    else if (Input.GetMouseButton(1) && ableToDig)
+                    {
+                        // colourGenerator2D.DrawTextureOnWorldPos(colourGenerator2D.userTex, hit.point, drawRange, false);
+                        NotifyTerrainChanged(hit.point, drawRange);
+                        terrainMesh.DrawOnChunk(hit.point, drawRange, digStrength, 1);
+                    }
                 }
-                else if (Input.GetMouseButton(1) && ableToDig)
+            }
+            else if (mainSocketCurrentStoringInstrument == InstrumentTypes.Dudelsa)
+            {
+                // TODO:
+            }
+            else if (mainSocketCurrentStoringInstrument == InstrumentTypes.Guitar)
+            {
+
+            }
+            // Creaste / Destroy Creature
+            else if (mainSocketCurrentStoringInstrument == InstrumentTypes.Mic)
+            {
+                // Create
+                if (hit.collider.tag == "Chunk")
                 {
-                    colourGenerator2D.DrawTextureOnWorldPos(colourGenerator2D.userTex, hit.point, drawRange, false);
-                    NotifyTerrainChanged(hit.point, drawRange);
-                    terrainMesh.DrawOnChunk(hit.point, drawRange, digStrength, 1);
+                    if (Input.GetMouseButtonDown(0))
+                    {
+                        GameObject bufferflyCreated =
+                        GameObject.Instantiate(
+                            butterflyPrefab,
+                            new Vector3(hit.point.x, hit.point.y + 5.0f, hit.point.z),
+                            Quaternion.identity);
+                        bufferflyCreated.GetComponent<FlyingBehaviour>().seed = Time.time;
+                    }
+                    else if (Input.GetMouseButtonDown(1))
+                    {
+                        GameObject metalSpititCreated =
+                        GameObject.Instantiate(
+                            metalSpiritPrefab,
+                            new Vector3(hit.point.x, hit.point.y + 5.0f, hit.point.z),
+                            Quaternion.identity);
+                        metalSpititCreated.GetComponent<FlyingBehaviour>().seed = Time.time;
+                    }
+                }
+                // Destroy
+                else if (hit.collider.tag == "Creature")
+                {
+                    Destroy(hit.collider.gameObject);
                 }
             }
         }
     }
+
 
     private void CheckScreenShot()
     {
