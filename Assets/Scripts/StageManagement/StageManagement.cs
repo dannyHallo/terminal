@@ -42,8 +42,10 @@ public class StageManagement : MonoBehaviour
     public AudioSource skydown;
     public AudioSource AI;
     public AudioSource grass;
+    public GameObject THETREE;
     private void Start()
     {
+        THETREE.transform.position = new Vector3(0, -170, 0);
         _cameraControl = FindObjectOfType<CameraControl>();
         orginalPlane.transform.position = new Vector3(0, 20, 0);
         _space.transform.localScale = Vector3.zero;
@@ -112,6 +114,8 @@ public class StageManagement : MonoBehaviour
         }
         if (SwitchCount == 8)
         {
+            _cameraControl.CameraShake(20);
+            earthquakeTwo.Play();
             stageInt = SwitchCount;
         }
 
@@ -211,6 +215,10 @@ public class StageManagement : MonoBehaviour
         }
         if (stageInt == 8)
         {
+            if (THETREE.transform.localPosition.y < -27)
+            {
+                THETREE.transform.localPosition += Vector3.up * 10f * Time.deltaTime;
+            }
 
         }
     }
