@@ -22,7 +22,7 @@ public class FrequencyToColor : MonoBehaviour
     public int end;
     [Header("Color Mix")]
     public Color baseColor;
-    [Range(0, 1)] public float mixratio = .6f;
+    [Range(0, 1)] public float mixratio = .2f;
     [Header("Speed Control")]
     public bool redSpeedLimit;
     public bool greenSpeedLimit;
@@ -211,6 +211,7 @@ public class FrequencyToColor : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
+
         if (audioProcessor == null) audioProcessor = FindObjectOfType<AudioProcessor>();
         if (partS == null) partS = GetComponent<ParticleSystem>();
         if(start==0&& end == 0)
