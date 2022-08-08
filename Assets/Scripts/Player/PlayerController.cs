@@ -85,8 +85,7 @@ public class PlayerController : MonoBehaviour
         uiManager = FindObjectOfType<UIManager>();
     }
 
-    // Land on planet initially
-    private void EquipInstrument(int i)
+    public void EquipInstrument(int i)
     {
         if (i >= instruments.Count) return;
 
@@ -252,10 +251,10 @@ public class PlayerController : MonoBehaviour
 
     private void Awake()
     {
-        for (int i = 0; i < instruments.Count; i++)
-        {
-            EquipInstrument(i);
-        }
+        // for (int i = 0; i < instruments.Count; i++)
+        // {
+        //     EquipInstrument(i);
+        // }
     }
 
     private void Update()
@@ -351,10 +350,11 @@ public class PlayerController : MonoBehaviour
             }
             else if (mainSocketCurrentStoringInstrument == InstrumentTypes.Dudelsa)
             {
-                // TODO:
+                // TODO: change sky color
             }
             else if (mainSocketCurrentStoringInstrument == InstrumentTypes.Guitar)
             {
+                // TODO: tree control
 
             }
             // Creaste / Destroy Creature
