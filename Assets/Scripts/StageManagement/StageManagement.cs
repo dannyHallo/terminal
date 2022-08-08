@@ -21,7 +21,7 @@ public class StageManagement : MonoBehaviour
     public int stageInt;
     public float _countDown;
     private float rotateTime = 8f;
-
+    public RandomForestGenerator randomForestGenerator;
 
 
     private void Start()
@@ -69,6 +69,7 @@ public class StageManagement : MonoBehaviour
         }
         if (SwitchCount == 6)
         {
+            randomForestGenerator.SpawnForest();
             Instantiate(FourthItem, fourthPosition, FourthItem.transform.rotation);
             stageInt = SwitchCount;
         }

@@ -25,13 +25,9 @@ public class RandomForestGenerator : MonoBehaviour
 
     private void Update()
     {
-        if (Time.frameCount == 300)
-        {
-            SpawnForest();
 
-        }
     }
-    private void SpawnForest()
+    public void SpawnForest()
     {
         float blankSpaceStartX;
         float blankSpaceEndX;
