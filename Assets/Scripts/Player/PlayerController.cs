@@ -54,10 +54,15 @@ public class PlayerController : MonoBehaviour
     public struct enumToInstrument
     {
         public InstrumentTypes e;
-        public GameObject g;
+        public GameObject i;
+        public GameObject s;
         public bool have;
     }
+
+    public float socketMoveFreq, socketMoveBoundary;
+    public float instrumentChaseSocketSpeed;
     public UIManager uiManager;
+    private float floatingHeight;
 
     void Start()
     {
@@ -75,11 +80,144 @@ public class PlayerController : MonoBehaviour
 
     // Land on planet initially
 
+    private void EquipInstrument(int i)
+    {
+        if (i >= instruments.Count) return;
+
+        if (instruments[i].have == true) return;
+
+        GameObject genInstrument = GameObject.Instantiate(
+            instruments[i].i, instruments[i].s.transform.position, Quaternion.identity);
+
+        // Change equip status to true, and change prefab to scene object
+        enumToInstrument tmpInstrument;
+        tmpInstrument.e = instruments[i].e;
+        tmpInstrument.s = instruments[i].s;
+        tmpInstrument.i = genInstrument;
+        tmpInstrument.have = true;
+
+        instruments[i] = tmpInstrument;
+    }
+
+    private void MoveSockets()
+    {
+        if (instruments.Count <= 0)
+            return;
+
+        if (floatingHeight == 0) floatingHeight = instruments[0].s.transform.localPosition.y;
+
+        for (int i = 0; i < instruments.Count; i++)
+        {
+            if (!instruments[i].have)
+                continue;
+
+            Vector3 pos = instruments[i].s.transform.localPosition;
+            pos.y = floatingHeight + Mathf.Sin(
+                (2 * Mathf.PI * ((float)i / instruments.Count)) +
+                (2 * Mathf.PI * Time.time * socketMoveFreq)) * socketMoveBoundary;
+
+            instruments[i].s.transform.localPosition = pos;
+            // instruments[i].i.transform.localPosition = pos;
+            instruments[i].i.transform.position = Vector3.Lerp(instruments[i].i.transform.position,
+                instruments[i].s.transform.position, Time.deltaTime * instrumentChaseSocketSpeed);
+        }
+    }
+
+
+    private void ChangeWeaponCheck()
+    {
+        if (Input.GetKeyDown(KeyCode.Alpha1))
+        {
+            TryUseInstrument(0);
+        }
+        if (Input.GetKeyDown(KeyCode.Alpha2))
+        {
+            TryUseInstrument(1);
+        }
+        if (Input.GetKeyDown(KeyCode.Alpha3))
+        {
+            TryUseInstrument(2);
+        }
+        if (Input.GetKeyDown(KeyCode.Alpha4))
+        {
+            TryUseInstrument(3);
+        }
+        if (Input.GetKeyDown(KeyCode.Alpha5))
+        {
+            TryUseInstrument(4);
+        }
+    }
+
+    public void InstrumentUIColor(int num)
+    {
+        for (int i = 0; i < uiManager.InstrumentsUI.Count; i++)
+        {
+
+            if (i != num)
+            {
+                uiManager.InstrumentsUI[i].GetComponent<Image>().color = Color.gray;
+            }
+            else
+            {
+                uiManager.InstrumentsUI[i].GetComponent<Image>().color = Color.white;
+            }
+        }
+    }
+
+
+
+    private void TryUseInstrument(int i)
+    {
+        var instrument = instruments[i].e;
+        InstrumentUIColor(i);
+        if (activeInstrument == instruments[i].i)
+        {
+            if (activeInstrument.activeInHierarchy)
+            {
+                activeInstrument.SetActive(false);
+                uiManager.InstrumentsUI[i].GetComponent<Image>().color = Color.gray;
+            }
+            else
+            {
+                Debug.Log("!");
+                activeInstrument.SetActive(true);
+            }
+        }
+        else
+        {
+            UseInstrument(instruments[i].e);
+        }
+    }
+
+    public void UseInstrument(InstrumentTypes instrument)
+    {
+        if (activeInstrument)
+            activeInstrument.SetActive(false);
+
+        foreach (enumToInstrument queriedInstrument in instruments)
+        {
+            if (queriedInstrument.e == instrument && queriedInstrument.have == true)
+            {
+                activeInstrument = queriedInstrument.i;
+                activeInstrument.SetActive(true);
+            }
+        }
+    }
+
+    private void Awake()
+    {
+        for (int i = 0; i < instruments.Count; i++)
+        {
+            EquipInstrument(i);
+        }
+    }
 
     private void Update()
     {
         CheckRay();
         ChangeWeaponCheck();
+        MoveSockets();
+
         if (!terrainMesh)
             terrainMesh = GameObject.Find("TerrainGen").GetComponent<TerrainMesh>();
         if (!colourGenerator2D)
@@ -264,73 +402,5 @@ public class PlayerController : MonoBehaviour
     {
         Gizmos.color = Color.red;
     }
-    private void ChangeWeaponCheck()
-    {
-        if (Input.GetKeyDown(KeyCode.Alpha1))
-        {
-            TryUseInstrument(0);
-        }
-        if (Input.GetKeyDown(KeyCode.Alpha2))
-        {
-            TryUseInstrument(1);
-        }
-    }
 
-    public void InstrumentUIColor(int num)
-    {
-        for (int i = 0; i < uiManager.InstrumentsUI.Count; i++)
-        {
-
-            if (i != num)
-            {
-                uiManager.InstrumentsUI[i].GetComponent<Image>().color = Color.gray;
-            }
-            else
-            {
-                uiManager.InstrumentsUI[i].GetComponent<Image>().color = Color.white;
-            }
-        }
-    }
-
-
-
-    private void TryUseInstrument(int i)
-    {
-
-        var instrument = instruments[i].e;
-        InstrumentUIColor(i);
-        if (activeInstrument == instruments[i].g)
-        {
-            if (activeInstrument.activeInHierarchy)
-            {
-                activeInstrument.SetActive(false);
-                uiManager.InstrumentsUI[i].GetComponent<Image>().color = Color.gray;
-            }
-            else
-            {
-                Debug.Log("!");
-                activeInstrument.SetActive(true);
-            }
-        }
-        else
-        {
-            UseInstrument(instruments[i].e);
-
-        }
-
-    }
-    public void UseInstrument(InstrumentTypes instrument)
-    {
-        if (activeInstrument)
-            activeInstrument.SetActive(false);
-
-        foreach (enumToInstrument queriedInstrument in instruments)
-        {
-            if (queriedInstrument.e == instrument && queriedInstrument.have == true)
-            {
-                activeInstrument = queriedInstrument.g;
-                activeInstrument.SetActive(true);
-            }
-        }
-    }
 }
