@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using LibNoise.Generator;
 
 public class FlyingBehaviour : MonoBehaviour
 {
@@ -12,24 +13,33 @@ public class FlyingBehaviour : MonoBehaviour
         }
     }
 
+    private Perlin customPerlin;
+
     [Header("Creature Normal Settings")]
     public float minDistanceFromGround;
     public float maxDistanceFromGround;
     public float verticalMovementSpeed;
     public float horizontalMovementSpeed;
+    [Range(1.0f, 50.0f)] public float randomDecisionSpeedUp = 1.0f;
+
     public float verticalMovementFrequency;
     public float stopChasingThrehold;
     public float rotateSpeed;
-    public int drawRange;
     public float digStrength;
-    public float growSpeed;
+    public float growRequiredTime;
     public float maxToMinScaleRatio;
     private int frameCount = 0;
-    [Range(1, 20)] public int skipFrameNum;
+    [Range(1, 100)] public int skipFrameNum;
+    public float noiseChangeFac = 0.1f;
+
+
+    [Header("Drawing")]
+    [Range(1, 10)] public float initDrawRange = 1.0f;
+    [Range(1, 10)] public float maxDrawRange = 10.0f;
 
 
     [Header("Preferance")]
-    [Range(0, 1)] public float age_weight;
+    [Range(0, 1)] public float ability_weight;
     [Range(0, 1)] public float do_something_weight;
     [Range(0, 1)] public float player_weight;
     [Range(0, 1)] public float env_change_weight;
@@ -37,13 +47,14 @@ public class FlyingBehaviour : MonoBehaviour
 
 
     [Header("Read-onlys")]
-    public float age_score;
+    public float ability_score;
     public float do_something_score;
     public float player_score;
     public float env_change_score;
     public float attack_score;
+    public int currentDrawRange;
 
-    public bool do_something;
+    public bool wander;
     public bool chasePlayer;
     public bool env_change;
     public bool attack;
@@ -51,6 +62,7 @@ public class FlyingBehaviour : MonoBehaviour
 
     [Header("debug")]
     public float f1;
+    public Vector3 v1;
 
     private Vector3 playerPos;
     private Vector3 creaturePos;
@@ -63,8 +75,8 @@ public class FlyingBehaviour : MonoBehaviour
         if (currentScale >= maxToMinScaleRatio * initScale)
             return;
 
-        currentScale += growSpeed * Time.deltaTime;
-        age_score += age_weight * Time.deltaTime;
+        currentScale += (maxToMinScaleRatio / growRequiredTime) * Time.deltaTime;
+        ability_score += ability_weight * Time.deltaTime;
 
         transform.localScale = new Vector3(currentScale, currentScale, currentScale);
     }
@@ -115,6 +127,7 @@ public class FlyingBehaviour : MonoBehaviour
     {
         initScale = transform.localScale.x;
         currentScale = initScale;
+        customPerlin = new Perlin();
     }
 
     void Update()
@@ -145,21 +158,23 @@ public class FlyingBehaviour : MonoBehaviour
 
     private void DrawGrass(bool positiveToAdd)
     {
+        currentDrawRange = (int)Mathf.Clamp(initDrawRange * (1 + ability_score), 0, maxDrawRange);
+
         // Draw grass
         terrainGen.GetComponent<ColourGenerator2D>().CreateTextureIfNeeded();
         terrainGen.GetComponent<ColourGenerator2D>().DrawTextureOnWorldPos(
-            terrainGen.GetComponent<ColourGenerator2D>().userTex, hitTerrainPos, (int)(drawRange * (1 + age_score)), false);
+            terrainGen.GetComponent<ColourGenerator2D>().userTex, hitTerrainPos, currentDrawRange, false);
 
         // Change env
         terrainGen.GetComponent<TerrainMesh>().DrawOnChunk(
-            hitTerrainPos, (int)(drawRange * (1 + age_score)), digStrength * skipFrameNum, positiveToAdd ? 1 : 0);
+            hitTerrainPos, currentDrawRange, digStrength * skipFrameNum, positiveToAdd ? 1 : 0);
     }
 
     private void Move()
     {
         if (chasePlayer)
         {
-            Vector3 directionNormalized = playerPos - creaturePos;
+            Vector3 directionNormalized = (playerPos - creaturePos).normalized;
             directionNormalized.y = 0;
 
             creaturePos.x += directionNormalized.x * Time.deltaTime * horizontalMovementSpeed;
@@ -175,6 +190,27 @@ public class FlyingBehaviour : MonoBehaviour
 
             transform.rotation = Quaternion.Lerp(fromRotation, toRotation, rotateSpeed * Time.deltaTime);
             transform.position = creaturePos;
+            return;
+        }
+
+        if (wander)
+        {
+            float seed1 = (Time.time) * noiseChangeFac * randomDecisionSpeedUp;
+            float seed2 = (Time.time - 10.0f) * noiseChangeFac * randomDecisionSpeedUp;
+
+            double xComponent = customPerlin.GetValue(seed1, seed2, seed1);
+            double yComponent = customPerlin.GetValue(seed2, seed2, seed1);
+
+            Vector3 directionNormalized = new Vector3((float)xComponent, 0, (float)yComponent).normalized;
+            v1 = directionNormalized;
+
+            creaturePos.x += directionNormalized.x * Time.deltaTime * horizontalMovementSpeed * randomDecisionSpeedUp;
+            creaturePos.z += directionNormalized.z * Time.deltaTime * horizontalMovementSpeed * randomDecisionSpeedUp;
+
+            transform.LookAt(new Vector3(creaturePos.x, transform.position.y, creaturePos.z), Vector3.up);
+
+            transform.position = creaturePos;
+            return;
         }
     }
 }
