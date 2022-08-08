@@ -74,7 +74,7 @@ public class Pickable : MonoBehaviour
             player.GetComponent<PlayerController>().TryUseInstrument(instrumentType);
 
             Destroy(this.gameObject);
-            UIManager.hintText.text = "";
+            // UIManager.hintText.text = "";
         }
 
     }

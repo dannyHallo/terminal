@@ -221,7 +221,6 @@ public class PlayerController : MonoBehaviour
             {
                 for (int i = 0; i < instruments.Count; i++)
                 {
-                    uiManager.hintText.text = "Remove dirt (RMB)";
 
                     if (instruments[i].e == mainSocketCurrentStoringInstrument)
                     {
@@ -231,6 +230,7 @@ public class PlayerController : MonoBehaviour
                     }
                 }
             }
+            uiManager.hintText.text = "";
 
             // clear sockets
             mainSocketCurrentStoringInstrument = InstrumentTypes.None;
@@ -250,6 +250,32 @@ public class PlayerController : MonoBehaviour
                     print("Unusable because you don't have this instrument!");
                     return;
                 }
+
+                print(instru);
+
+                switch (instru)
+                {
+                    case 0:
+                        uiManager.hintText.text = "1 - Remove dirt (RMB)";
+                        break;
+
+                    case 1:
+                        uiManager.hintText.text = "2 - Add dirt (LMB)";
+                        break;
+
+                    case 2:
+                        uiManager.hintText.text = "3 - Add butterfly (LMB), Add metal spirit (RMB)";
+                        break;
+
+                    case 3:
+                        uiManager.hintText.text = "4 - Not implemented...";
+                        break;
+
+                    case 4:
+                        uiManager.hintText.text = "5 - Not implemented...";
+                        break;
+                }
+
 
                 // Place the former instrument back
                 if (mainSocketCurrentStoringInstrument != InstrumentTypes.None)
@@ -366,32 +392,21 @@ public class PlayerController : MonoBehaviour
 
                     if (Input.GetMouseButton(0) && ableToDig)
                     {
-                        // colourGenerator2D.DrawTextureOnWorldPos(colourGenerator2D.userTex, hit.point, drawRange, true);
                         terrainMesh.DrawOnChunk(hit.point, drawRange, digStrength, 0);
                     }
-                    else if (Input.GetMouseButton(1) && ableToDig)
-                    {
-                        // colourGenerator2D.DrawTextureOnWorldPos(colourGenerator2D.userTex, hit.point, drawRange, false);
-                        NotifyTerrainChanged(hit.point, drawRange);
-                        terrainMesh.DrawOnChunk(hit.point, drawRange, digStrength, 1);
-                    }
+
                 }
             }
             else if (mainSocketCurrentStoringInstrument == InstrumentTypes.Dudelsa)
             {
-                uiManager.hintText.text = "Add dirt (LMB)";
-                // TODO: change sky color
+                if (Input.GetMouseButton(0) && ableToDig)
+                {
+                    NotifyTerrainChanged(hit.point, drawRange);
+                    terrainMesh.DrawOnChunk(hit.point, drawRange, digStrength, 1);
+                }
             }
             else if (mainSocketCurrentStoringInstrument == InstrumentTypes.Guitar)
             {
-                uiManager.hintText.text = "Add or remove trees";
-                // TODO: tree control
-
-            }
-            // Creaste / Destroy Creature
-            else if (mainSocketCurrentStoringInstrument == InstrumentTypes.Mic)
-            {
-                uiManager.hintText.text = "Add butterfly (LMB), Add metal spirit (RMB)";
                 // Create
                 if (hit.collider.tag == "Chunk")
                 {
@@ -419,6 +434,11 @@ public class PlayerController : MonoBehaviour
                 {
                     Destroy(hit.collider.gameObject);
                 }
+            }
+            // Creaste / Destroy Creature
+            else if (mainSocketCurrentStoringInstrument == InstrumentTypes.Mic)
+            {
+
             }
         }
     }
