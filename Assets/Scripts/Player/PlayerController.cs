@@ -229,8 +229,6 @@ public class PlayerController : MonoBehaviour
                     {
                         if (instruments[i].e == mainSocketCurrentStoringInstrument)
                         {
-                            print("Put the former one back");
-
                             enumToInstrument enumToInstrument = instruments[i];
                             enumToInstrument.s = tmpSocket;
                             instruments[i] = enumToInstrument;
