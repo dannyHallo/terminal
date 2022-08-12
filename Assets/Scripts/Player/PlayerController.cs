@@ -370,12 +370,12 @@ public class PlayerController : MonoBehaviour
             {
                 if (hit.collider.tag == "Chunk")
                 {
-
                     if (Input.GetMouseButton(0) && ableToDig)
                     {
                         terrainMesh.DrawOnChunk(hit.point, drawRange, digStrength, 0);
+                        colourGenerator2D.DrawTextureOnWorldPos(
+                            colourGenerator2D.userTex, hit.point, drawRange, true);
                     }
-
                 }
             }
             else if (mainSocketCurrentStoringInstrument == InstrumentTypes.Dudelsa)
@@ -384,6 +384,8 @@ public class PlayerController : MonoBehaviour
                 {
                     // NotifyTerrainChanged(hit.point, drawRange);
                     terrainMesh.DrawOnChunk(hit.point, drawRange, digStrength, 1);
+                    colourGenerator2D.DrawTextureOnWorldPos(
+                            colourGenerator2D.userTex, hit.point, drawRange, false);
                 }
             }
             else if (mainSocketCurrentStoringInstrument == InstrumentTypes.Guitar)

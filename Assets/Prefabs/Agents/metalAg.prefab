@@ -212,6 +212,8 @@ MonoBehaviour:
   digStrength: 0.003
   growRequiredTime: 60
   maxToMinScaleRatio: 16
+  fixSkipFrameNum: 0
+  fixedSkipFrameNum: 0
   minSkipFrameNum: 7
   maxSkipFrameNum: 200
   skipFrameNumIncreasement: 0.008

@@ -133,9 +133,19 @@ public class ColourGenerator2D : MonoBehaviour
         }
     }
 
+    public bool UniversalRenderTexExists()
+    {
+        return universalRenderTex;
+    }
+
     private void Awake()
     {
         updateRequest = true;
+    }
+
+    private void OnDesrtoy()
+    {
+        universalRenderTex = null;
     }
 
     private void Update()
@@ -154,15 +164,8 @@ public class ColourGenerator2D : MonoBehaviour
         // Test function
         if (dispatch)
         {
-            // DrawOnTexture(userTex, (int)0, (int)0, 10, true);
-            // DrawOnTexture(userTex, (int)1024, (int)1024, 10, true);
-            // DrawOnTexture(userTex, (int)0, (int)1024, 10, true);
-            // DrawOnTexture(userTex, (int)1024, (int)0, 10, true);
-
             dispatch = false;
         }
-
-
     }
 
     public void DrawTextureOnWorldPos(Texture2D texture, Vector3 position, int radius, bool isMetal)

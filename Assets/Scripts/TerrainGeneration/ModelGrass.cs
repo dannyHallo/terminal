@@ -37,8 +37,9 @@ public class ModelGrass : MonoBehaviour
 
     public struct GroundLevelData
     {
-        public float twodeeHeight;
-        public bool isDirt;
+        public float weight;
+        public float twoDimentionalHeight;
+        public bool hasMeshAtThisPlace;
     };
 
     uint[] args;
@@ -52,7 +53,6 @@ public class ModelGrass : MonoBehaviour
             return gameObject.GetComponent<ColourGenerator2D>();
         }
     }
-
 
     Bounds fieldBounds;
 

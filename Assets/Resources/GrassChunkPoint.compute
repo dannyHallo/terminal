@@ -1,6 +1,8 @@
-
 #include "Assets/Scripts/Compute/Includes/Noise.compute"
 #include "Assets/Resources/Random.cginc"
+
+#pragma kernel CalculateGrassPos
+#pragma kernel InitializeGrassChunk
 
 struct GrassData {
     float4 position;
@@ -9,8 +11,9 @@ struct GrassData {
 
 struct GroundLevelData
 {
-    float twodeeHeight;
-    bool isDirt;
+    float weight;
+    float twoDimentionalHeight;
+    bool hasMeshAtThisPlace;
 };
 
 RWStructuredBuffer<GrassData> _GrassDataBuffer;
@@ -41,28 +44,28 @@ int colorCmp(float4 col1, float4 col2){
     return 1 - step(threhold, distance(col1.rgb, col2.rgb));
 }
 
-
-#pragma kernel CalculateGrassPos
-
 [numthreads(8,8,8)]
 void CalculateGrassPos(int3 id : SV_DispatchThreadID) {
     if(id.y <= 0){
         return;
     }
 
-    int index = indexFromCoord(id.x,id.y,id.z);
-    int below_index = indexFromCoord(id.x,id.y - 1,id.z);
+    int index = indexFromCoord(id.x, id.y, id.z);
+    int below_index = indexFromCoord(id.x, id.y - 1, id.z);
 
-    if(!GroundLevelDataBuffer[index].isDirt && GroundLevelDataBuffer[below_index].isDirt){
+    if(GroundLevelDataBuffer[index].weight < 0 && GroundLevelDataBuffer[below_index].weight > 0){
+        float weight1 = -GroundLevelDataBuffer[index].weight;
+        float weight2 =  GroundLevelDataBuffer[below_index].weight;
+        float weightSum = weight1 + weight2;
+
         float posY1 = centre.y + id.y * meshSpacing - chunkBoundSize / 2;
         float posY2 = centre.y + (id.y - 1) * meshSpacing - chunkBoundSize / 2;
-        float posY = (posY1 + posY1) / 2;
+        float posY = posY1 * (weight2 / weightSum) + posY2 * (weight1 / weightSum);
 
-        GroundLevelDataBuffer[id.x + id.z * numPointsPerAxis].twodeeHeight = posY;
+        GroundLevelDataBuffer[id.x + id.z * numPointsPerAxis].twoDimentionalHeight = posY;
     }
 }
 
-#pragma kernel InitializeGrassChunk
 
 [numthreads(8,8,1)]
 void InitializeGrassChunk(int2 id : SV_DispatchThreadID) {
@@ -93,20 +96,37 @@ void InitializeGrassChunk(int2 id : SV_DispatchThreadID) {
     // TOPLEFT
     heightMapPointTemp.x = floor(id.x * float(numPointsPerAxis - 1) / float(numGrassesPerAxis));
     heightMapPointTemp.y = floor(id.y * float(numPointsPerAxis - 1) / float(numGrassesPerAxis));
-    groundLevel1 = GroundLevelDataBuffer[heightMapPointTemp.x + heightMapPointTemp.y * numPointsPerAxis].twodeeHeight;
+    groundLevel1 = GroundLevelDataBuffer[heightMapPointTemp.x + heightMapPointTemp.y * numPointsPerAxis].twoDimentionalHeight;
+    if(!GroundLevelDataBuffer[heightMapPointTemp.x + heightMapPointTemp.y * numPointsPerAxis].hasMeshAtThisPlace){
+        grass.enable = false;
+        return;
+    }
     // TOPRIGHT
     heightMapPointTemp.x = ceil (id.x * float(numPointsPerAxis - 1) / float(numGrassesPerAxis));
     heightMapPointTemp.y = floor(id.y * float(numPointsPerAxis - 1) / float(numGrassesPerAxis));
-    groundLevel2 = GroundLevelDataBuffer[heightMapPointTemp.x + heightMapPointTemp.y * numPointsPerAxis].twodeeHeight;
+    groundLevel2 = GroundLevelDataBuffer[heightMapPointTemp.x + heightMapPointTemp.y * numPointsPerAxis].twoDimentionalHeight;
+    if(!GroundLevelDataBuffer[heightMapPointTemp.x + heightMapPointTemp.y * numPointsPerAxis].hasMeshAtThisPlace){
+        grass.enable = false;
+        return;
+    }
     // BOTTOMLEFT
     heightMapPointTemp.x = floor(id.x * float(numPointsPerAxis - 1) / float(numGrassesPerAxis));
     heightMapPointTemp.y = ceil (id.y * float(numPointsPerAxis - 1) / float(numGrassesPerAxis));
-    groundLevel3 = GroundLevelDataBuffer[heightMapPointTemp.x + heightMapPointTemp.y * numPointsPerAxis].twodeeHeight;
+    groundLevel3 = GroundLevelDataBuffer[heightMapPointTemp.x + heightMapPointTemp.y * numPointsPerAxis].twoDimentionalHeight;
+    if(!GroundLevelDataBuffer[heightMapPointTemp.x + heightMapPointTemp.y * numPointsPerAxis].hasMeshAtThisPlace){
+        grass.enable = false;
+        return;
+    }
     // BOTTOMRIGHT
     heightMapPointTemp.x = ceil (id.x * float(numPointsPerAxis - 1) / float(numGrassesPerAxis));
     heightMapPointTemp.y = ceil (id.y * float(numPointsPerAxis - 1) / float(numGrassesPerAxis));
-    groundLevel4 = GroundLevelDataBuffer[heightMapPointTemp.x + heightMapPointTemp.y * numPointsPerAxis].twodeeHeight;
+    groundLevel4 = GroundLevelDataBuffer[heightMapPointTemp.x + heightMapPointTemp.y * numPointsPerAxis].twoDimentionalHeight;
+    if(!GroundLevelDataBuffer[heightMapPointTemp.x + heightMapPointTemp.y * numPointsPerAxis].hasMeshAtThisPlace){
+        grass.enable = false;
+        return;
+    }
     
+
     float max12 = max(groundLevel1, groundLevel2);
     float max34 = max(groundLevel3, groundLevel4);
     float max1234 = max(max12, max34);
@@ -119,8 +139,9 @@ void InitializeGrassChunk(int2 id : SV_DispatchThreadID) {
     if(max1234 - min1234 > meshSpacing * 1.2f){
         grass.enable = false;
     }
+    
 
-    float testHeight1 = GroundLevelDataBuffer[id.x + id.y * numPointsPerAxis].twodeeHeight;
+    float testHeight1 = GroundLevelDataBuffer[id.x + id.y * numPointsPerAxis].twoDimentionalHeight;
     float testHeight2 = 0.0f;
     
     float2 interpolation = 0.0f;

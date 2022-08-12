@@ -70,7 +70,6 @@ public class TerrainMesh : MonoBehaviour
     [Header("Debug")]
     public bool editorUpdate = false;
 
-
     [System.Serializable]
     public struct LodSetup
     {
@@ -114,7 +113,7 @@ public class TerrainMesh : MonoBehaviour
         }
     }
 
-    void Update()
+    void LateUpdate()
     {
         // Playing update
         if (Application.isPlaying)
@@ -449,12 +448,13 @@ public class TerrainMesh : MonoBehaviour
         float pointSpacing = boundSize / (numPointsPerAxis - 1);
         // The exact chunk the player is drawing at
 
-        // Get idVector from hitpoint
-        Vector3 IdVector = new Vector3(
-            ((hitPoint - centre).x + boundSize / 2) / pointSpacing,
-            ((hitPoint - centre).y + boundSize / 2) / pointSpacing,
-            ((hitPoint - centre).z + boundSize / 2) / pointSpacing
+        // Original hit chunk id
+        Vector3Int IdVector = new Vector3Int(
+            Mathf.RoundToInt(((hitPoint - centre).x + boundSize / 2) / pointSpacing),
+            Mathf.RoundToInt(((hitPoint - centre).y + boundSize / 2) / pointSpacing),
+            Mathf.RoundToInt(((hitPoint - centre).z + boundSize / 2) / pointSpacing)
         );
+
         // Create a cube region of vectors
         for (int x = -range; x <= range; x++)
         {
@@ -462,34 +462,36 @@ public class TerrainMesh : MonoBehaviour
             {
                 for (int z = -range; z <= range; z++)
                 {
-                    Vector3 currentVector = new Vector3(
+                    // Chunk id with offset
+                    Vector3Int idInThisChunk = new Vector3Int(
                         ((IdVector.x + x) + (numPointsPerAxis - 1)) % (numPointsPerAxis - 1),
                         ((IdVector.y + y) + (numPointsPerAxis - 1)) % (numPointsPerAxis - 1),
                         ((IdVector.z + z) + (numPointsPerAxis - 1)) % (numPointsPerAxis - 1)
                     );
 
-                    Vector3Int chunkOffsetVector = new Vector3Int(
+                    // Chunk offset vector
+                    Vector3Int chunkOffset = new Vector3Int(
                         (int)
                             Mathf.Floor(
-                                ((IdVector.x + x) + (numPointsPerAxis - 1)) / (numPointsPerAxis - 1)
+                                ((float)(IdVector.x + x) + (numPointsPerAxis - 1)) / (numPointsPerAxis - 1)
                             ) - 1,
                         (int)
                             Mathf.Floor(
-                                ((IdVector.y + y) + (numPointsPerAxis - 1)) / (numPointsPerAxis - 1)
+                                ((float)(IdVector.y + y) + (numPointsPerAxis - 1)) / (numPointsPerAxis - 1)
                             ) - 1,
                         (int)
                             Mathf.Floor(
-                                ((IdVector.z + z) + (numPointsPerAxis - 1)) / (numPointsPerAxis - 1)
+                                ((float)(IdVector.z + z) + (numPointsPerAxis - 1)) / (numPointsPerAxis - 1)
                             ) - 1
                     );
 
                     float rangeFactor =
-                        range - ((currentVector + chunkOffsetVector * (numPointsPerAxis - 1)) - IdVector).magnitude;
+                        range - Mathf.Sqrt(Mathf.Pow(x, 2) + Mathf.Pow(y, 2) + Mathf.Pow(z, 2));
 
                     if (rangeFactor >= 0)
                     {
                         Vector3Int currentProcessingCoord =
-                            originalHittingCoord + chunkOffsetVector;
+                            originalHittingCoord + chunkOffset;
 
                         if (!existingChunks.ContainsKey(currentProcessingCoord))
                         {
@@ -502,19 +504,13 @@ public class TerrainMesh : MonoBehaviour
                             chunksNeedToBeUpdated.Add(currentProcessingCoord);
                         }
 
-                        Vector3Int currentVectorRoundToInt = new Vector3Int(
-                            Mathf.RoundToInt(currentVector.x),
-                            Mathf.RoundToInt(currentVector.y),
-                            Mathf.RoundToInt(currentVector.z)
-                        );
-
-                        int currentId = PosToIndex(currentVectorRoundToInt);
+                        int currentId = PosToIndex(idInThisChunk);
 
                         // On 8 vertexs of a cube
                         if (
-                            currentVectorRoundToInt.x == 0
-                            && currentVectorRoundToInt.y == 0
-                            && currentVectorRoundToInt.z == 0
+                            idInThisChunk.x == 0
+                            && idInThisChunk.y == 0
+                            && idInThisChunk.z == 0
                         )
                         {
                             int id = PosToIndex(
@@ -531,9 +527,9 @@ public class TerrainMesh : MonoBehaviour
                             );
                         }
                         if (
-                            currentVectorRoundToInt.x == numPointsPerAxis - 1
-                            && currentVectorRoundToInt.y == 0
-                            && currentVectorRoundToInt.z == 0
+                            idInThisChunk.x == numPointsPerAxis - 1
+                            && idInThisChunk.y == 0
+                            && idInThisChunk.z == 0
                         )
                         {
                             int id = PosToIndex(
@@ -546,9 +542,9 @@ public class TerrainMesh : MonoBehaviour
                             );
                         }
                         if (
-                            currentVectorRoundToInt.x == 0
-                            && currentVectorRoundToInt.y == numPointsPerAxis - 1
-                            && currentVectorRoundToInt.z == 0
+                            idInThisChunk.x == 0
+                            && idInThisChunk.y == numPointsPerAxis - 1
+                            && idInThisChunk.z == 0
                         )
                         {
                             int id = PosToIndex(
@@ -561,9 +557,9 @@ public class TerrainMesh : MonoBehaviour
                             );
                         }
                         if (
-                            currentVectorRoundToInt.x == 0
-                            && currentVectorRoundToInt.y == 0
-                            && currentVectorRoundToInt.z == numPointsPerAxis - 1
+                            idInThisChunk.x == 0
+                            && idInThisChunk.y == 0
+                            && idInThisChunk.z == numPointsPerAxis - 1
                         )
                         {
                             int id = PosToIndex(
@@ -576,9 +572,9 @@ public class TerrainMesh : MonoBehaviour
                             );
                         }
                         if (
-                            currentVectorRoundToInt.x == numPointsPerAxis - 1
-                            && currentVectorRoundToInt.y == numPointsPerAxis - 1
-                            && currentVectorRoundToInt.z == 0
+                            idInThisChunk.x == numPointsPerAxis - 1
+                            && idInThisChunk.y == numPointsPerAxis - 1
+                            && idInThisChunk.z == 0
                         )
                         {
                             int id = PosToIndex(new Vector3(0, 0, numPointsPerAxis - 1));
@@ -589,9 +585,9 @@ public class TerrainMesh : MonoBehaviour
                             );
                         }
                         if (
-                            currentVectorRoundToInt.x == numPointsPerAxis - 1
-                            && currentVectorRoundToInt.y == 0
-                            && currentVectorRoundToInt.z == numPointsPerAxis - 1
+                            idInThisChunk.x == numPointsPerAxis - 1
+                            && idInThisChunk.y == 0
+                            && idInThisChunk.z == numPointsPerAxis - 1
                         )
                         {
                             int id = PosToIndex(new Vector3(0, numPointsPerAxis - 1, 0));
@@ -602,9 +598,9 @@ public class TerrainMesh : MonoBehaviour
                             );
                         }
                         if (
-                            currentVectorRoundToInt.x == 0
-                            && currentVectorRoundToInt.y == numPointsPerAxis - 1
-                            && currentVectorRoundToInt.z == numPointsPerAxis - 1
+                            idInThisChunk.x == 0
+                            && idInThisChunk.y == numPointsPerAxis - 1
+                            && idInThisChunk.z == numPointsPerAxis - 1
                         )
                         {
                             int id = PosToIndex(new Vector3(numPointsPerAxis - 1, 0, 0));
@@ -615,9 +611,9 @@ public class TerrainMesh : MonoBehaviour
                             );
                         }
                         if (
-                            currentVectorRoundToInt.x == numPointsPerAxis - 1
-                            && currentVectorRoundToInt.y == numPointsPerAxis - 1
-                            && currentVectorRoundToInt.z == numPointsPerAxis - 1
+                            idInThisChunk.x == numPointsPerAxis - 1
+                            && idInThisChunk.y == numPointsPerAxis - 1
+                            && idInThisChunk.z == numPointsPerAxis - 1
                         )
                         {
                             int id = PosToIndex(new Vector3(0, 0, 0));
@@ -629,11 +625,11 @@ public class TerrainMesh : MonoBehaviour
                         }
 
                         // On 12 edges of a cube
-                        if (currentVectorRoundToInt.y == 0 && currentVectorRoundToInt.z == 0)
+                        if (idInThisChunk.y == 0 && idInThisChunk.z == 0)
                         {
                             int id = PosToIndex(
                                 new Vector3(
-                                    currentVectorRoundToInt.x,
+                                    idInThisChunk.x,
                                     numPointsPerAxis - 1,
                                     numPointsPerAxis - 1
                                 )
@@ -645,12 +641,12 @@ public class TerrainMesh : MonoBehaviour
                             );
                         }
                         if (
-                            currentVectorRoundToInt.y == 0
-                            && currentVectorRoundToInt.z == numPointsPerAxis - 1
+                            idInThisChunk.y == 0
+                            && idInThisChunk.z == numPointsPerAxis - 1
                         )
                         {
                             int id = PosToIndex(
-                                new Vector3(currentVectorRoundToInt.x, numPointsPerAxis - 1, 0)
+                                new Vector3(idInThisChunk.x, numPointsPerAxis - 1, 0)
                             );
                             ChangeVolumeData(
                                 currentProcessingCoord + new Vector3Int(0, -1, 1),
@@ -659,12 +655,12 @@ public class TerrainMesh : MonoBehaviour
                             );
                         }
                         if (
-                            currentVectorRoundToInt.y == numPointsPerAxis - 1
-                            && currentVectorRoundToInt.z == 0
+                            idInThisChunk.y == numPointsPerAxis - 1
+                            && idInThisChunk.z == 0
                         )
                         {
                             int id = PosToIndex(
-                                new Vector3(currentVectorRoundToInt.x, 0, numPointsPerAxis - 1)
+                                new Vector3(idInThisChunk.x, 0, numPointsPerAxis - 1)
                             );
                             ChangeVolumeData(
                                 currentProcessingCoord + new Vector3Int(0, 1, -1),
@@ -673,11 +669,11 @@ public class TerrainMesh : MonoBehaviour
                             );
                         }
                         if (
-                            currentVectorRoundToInt.y == numPointsPerAxis - 1
-                            && currentVectorRoundToInt.z == numPointsPerAxis - 1
+                            idInThisChunk.y == numPointsPerAxis - 1
+                            && idInThisChunk.z == numPointsPerAxis - 1
                         )
                         {
-                            int id = PosToIndex(new Vector3(currentVectorRoundToInt.x, 0, 0));
+                            int id = PosToIndex(new Vector3(idInThisChunk.x, 0, 0));
                             ChangeVolumeData(
                                 currentProcessingCoord + new Vector3Int(0, 1, 1),
                                 id,
@@ -685,13 +681,13 @@ public class TerrainMesh : MonoBehaviour
                             );
                         }
 
-                        if (currentVectorRoundToInt.x == 0 && currentVectorRoundToInt.y == 0)
+                        if (idInThisChunk.x == 0 && idInThisChunk.y == 0)
                         {
                             int id = PosToIndex(
                                 new Vector3(
                                     numPointsPerAxis - 1,
                                     numPointsPerAxis - 1,
-                                    currentVectorRoundToInt.z
+                                    idInThisChunk.z
                                 )
                             );
                             ChangeVolumeData(
@@ -701,12 +697,12 @@ public class TerrainMesh : MonoBehaviour
                             );
                         }
                         if (
-                            currentVectorRoundToInt.x == 0
-                            && currentVectorRoundToInt.y == numPointsPerAxis - 1
+                            idInThisChunk.x == 0
+                            && idInThisChunk.y == numPointsPerAxis - 1
                         )
                         {
                             int id = PosToIndex(
-                                new Vector3(numPointsPerAxis - 1, 0, currentVectorRoundToInt.z)
+                                new Vector3(numPointsPerAxis - 1, 0, idInThisChunk.z)
                             );
                             ChangeVolumeData(
                                 currentProcessingCoord + new Vector3Int(-1, 1, 0),
@@ -715,12 +711,12 @@ public class TerrainMesh : MonoBehaviour
                             );
                         }
                         if (
-                            currentVectorRoundToInt.x == numPointsPerAxis - 1
-                            && currentVectorRoundToInt.y == 0
+                            idInThisChunk.x == numPointsPerAxis - 1
+                            && idInThisChunk.y == 0
                         )
                         {
                             int id = PosToIndex(
-                                new Vector3(0, numPointsPerAxis - 1, currentVectorRoundToInt.z)
+                                new Vector3(0, numPointsPerAxis - 1, idInThisChunk.z)
                             );
                             ChangeVolumeData(
                                 currentProcessingCoord + new Vector3Int(1, -1, 0),
@@ -729,11 +725,11 @@ public class TerrainMesh : MonoBehaviour
                             );
                         }
                         if (
-                            currentVectorRoundToInt.x == numPointsPerAxis - 1
-                            && currentVectorRoundToInt.y == numPointsPerAxis - 1
+                            idInThisChunk.x == numPointsPerAxis - 1
+                            && idInThisChunk.y == numPointsPerAxis - 1
                         )
                         {
-                            int id = PosToIndex(new Vector3(0, 0, currentVectorRoundToInt.z));
+                            int id = PosToIndex(new Vector3(0, 0, idInThisChunk.z));
                             ChangeVolumeData(
                                 currentProcessingCoord + new Vector3Int(1, 1, 0),
                                 id,
@@ -741,12 +737,12 @@ public class TerrainMesh : MonoBehaviour
                             );
                         }
 
-                        if (currentVectorRoundToInt.x == 0 && currentVectorRoundToInt.z == 0)
+                        if (idInThisChunk.x == 0 && idInThisChunk.z == 0)
                         {
                             int id = PosToIndex(
                                 new Vector3(
                                     numPointsPerAxis - 1,
-                                    currentVectorRoundToInt.y,
+                                    idInThisChunk.y,
                                     numPointsPerAxis - 1
                                 )
                             );
@@ -757,12 +753,12 @@ public class TerrainMesh : MonoBehaviour
                             );
                         }
                         if (
-                            currentVectorRoundToInt.x == 0
-                            && currentVectorRoundToInt.z == numPointsPerAxis - 1
+                            idInThisChunk.x == 0
+                            && idInThisChunk.z == numPointsPerAxis - 1
                         )
                         {
                             int id = PosToIndex(
-                                new Vector3(numPointsPerAxis - 1, currentVectorRoundToInt.y, 0)
+                                new Vector3(numPointsPerAxis - 1, idInThisChunk.y, 0)
                             );
                             ChangeVolumeData(
                                 currentProcessingCoord + new Vector3Int(-1, 0, 1),
@@ -771,12 +767,12 @@ public class TerrainMesh : MonoBehaviour
                             );
                         }
                         if (
-                            currentVectorRoundToInt.x == numPointsPerAxis - 1
-                            && currentVectorRoundToInt.z == 0
+                            idInThisChunk.x == numPointsPerAxis - 1
+                            && idInThisChunk.z == 0
                         )
                         {
                             int id = PosToIndex(
-                                new Vector3(0, currentVectorRoundToInt.y, numPointsPerAxis - 1)
+                                new Vector3(0, idInThisChunk.y, numPointsPerAxis - 1)
                             );
                             ChangeVolumeData(
                                 currentProcessingCoord + new Vector3Int(1, 0, -1),
@@ -785,11 +781,11 @@ public class TerrainMesh : MonoBehaviour
                             );
                         }
                         if (
-                            currentVectorRoundToInt.x == numPointsPerAxis - 1
-                            && currentVectorRoundToInt.z == numPointsPerAxis - 1
+                            idInThisChunk.x == numPointsPerAxis - 1
+                            && idInThisChunk.z == numPointsPerAxis - 1
                         )
                         {
-                            int id = PosToIndex(new Vector3(0, currentVectorRoundToInt.y, 0));
+                            int id = PosToIndex(new Vector3(0, idInThisChunk.y, 0));
                             ChangeVolumeData(
                                 currentProcessingCoord + new Vector3Int(1, 0, 1),
                                 id,
@@ -798,13 +794,13 @@ public class TerrainMesh : MonoBehaviour
                         }
 
                         // On 6 faces of a cube
-                        if (currentVectorRoundToInt.x == 0)
+                        if (idInThisChunk.x == 0)
                         {
                             int id = PosToIndex(
                                 new Vector3(
                                     numPointsPerAxis - 1,
-                                    currentVectorRoundToInt.y,
-                                    currentVectorRoundToInt.z
+                                    idInThisChunk.y,
+                                    idInThisChunk.z
                                 )
                             );
                             ChangeVolumeData(
@@ -813,10 +809,10 @@ public class TerrainMesh : MonoBehaviour
                                 rangeFactor
                             );
                         }
-                        if (currentVectorRoundToInt.x == numPointsPerAxis - 1)
+                        if (idInThisChunk.x == numPointsPerAxis - 1)
                         {
                             int id = PosToIndex(
-                                new Vector3(0, currentVectorRoundToInt.y, currentVectorRoundToInt.z)
+                                new Vector3(0, idInThisChunk.y, idInThisChunk.z)
                             );
                             ChangeVolumeData(
                                 currentProcessingCoord + new Vector3Int(1, 0, 0),
@@ -824,12 +820,12 @@ public class TerrainMesh : MonoBehaviour
                                 rangeFactor
                             );
                         }
-                        if (currentVectorRoundToInt.z == 0)
+                        if (idInThisChunk.z == 0)
                         {
                             int id = PosToIndex(
                                 new Vector3(
-                                    currentVectorRoundToInt.x,
-                                    currentVectorRoundToInt.y,
+                                    idInThisChunk.x,
+                                    idInThisChunk.y,
                                     numPointsPerAxis - 1
                                 )
                             );
@@ -839,10 +835,10 @@ public class TerrainMesh : MonoBehaviour
                                 rangeFactor
                             );
                         }
-                        if (currentVectorRoundToInt.z == numPointsPerAxis - 1)
+                        if (idInThisChunk.z == numPointsPerAxis - 1)
                         {
                             int id = PosToIndex(
-                                new Vector3(currentVectorRoundToInt.x, currentVectorRoundToInt.y, 0)
+                                new Vector3(idInThisChunk.x, idInThisChunk.y, 0)
                             );
                             ChangeVolumeData(
                                 currentProcessingCoord + new Vector3Int(0, 0, 1),
@@ -850,13 +846,13 @@ public class TerrainMesh : MonoBehaviour
                                 rangeFactor
                             );
                         }
-                        if (currentVectorRoundToInt.y == 0)
+                        if (idInThisChunk.y == 0)
                         {
                             int id = PosToIndex(
                                 new Vector3(
-                                    currentVectorRoundToInt.x,
+                                    idInThisChunk.x,
                                     numPointsPerAxis - 1,
-                                    currentVectorRoundToInt.z
+                                    idInThisChunk.z
                                 )
                             );
                             ChangeVolumeData(
@@ -865,10 +861,10 @@ public class TerrainMesh : MonoBehaviour
                                 rangeFactor
                             );
                         }
-                        if (currentVectorRoundToInt.y == numPointsPerAxis - 1)
+                        if (idInThisChunk.y == numPointsPerAxis - 1)
                         {
                             int id = PosToIndex(
-                                new Vector3(currentVectorRoundToInt.x, 0, currentVectorRoundToInt.z)
+                                new Vector3(idInThisChunk.x, 0, idInThisChunk.z)
                             );
                             ChangeVolumeData(
                                 currentProcessingCoord + new Vector3Int(0, 1, 0),

@@ -62,7 +62,7 @@ Material:
     - _CullingBias: 0.394
     - _Cutoff: 0.5
     - _DetailNormalMapScale: 1
-    - _Droop: 4
+    - _Droop: 6
     - _DstBlend: 0
     - _FogDensity: 0
     - _FogOffset: 0
@@ -81,10 +81,10 @@ Material:
     - _UVSec: 0
     - _WindStrength: 0.5
     - _ZWrite: 1
-    - bottomThickness: 3
+    - bottomThickness: 4
     - overallScale: 1
-    - verticalScale: 2.9
-    - verticalStretchDueToHeight: 0.573
+    - verticalScale: 4
+    - verticalStretchDueToHeight: 0.8
     m_Colors:
     - _AOColor: {r: 0.3119883, g: 0.735849, b: 0.3019758, a: 1}
     - _Albedo: {r: 0.84029955, g: 1, b: 0.740566, a: 1}

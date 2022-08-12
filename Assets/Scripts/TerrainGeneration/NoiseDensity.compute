@@ -1,19 +1,19 @@
-﻿// The function name
-#pragma kernel Density
-#include "Assets/Scripts/Compute/Includes/Noise.compute"
+﻿#include "Assets/Scripts/Compute/Includes/Noise.compute"
 
-static const int numThreads = 8;
+#pragma kernel Density
 
 struct GroundLevelData
 {
-    float twodeeHeight;
-    bool isDirt;
+    float weight;
+    float twoDimentionalHeight;
+    bool hasMeshAtThisPlace;
 };
 
 // Noise settings
 StructuredBuffer<float3> offsets;
 RWStructuredBuffer<float> manualData;
 RWStructuredBuffer<GroundLevelData> GroundLevelDataBuffer;
+RWStructuredBuffer<float4> points;
 RWStructuredBuffer<int> pointsStatus;
 
 int octaves;
@@ -27,7 +27,6 @@ float f1, f2, f3;
 float4 params;
 float isoLevel;
 
-RWStructuredBuffer<float4> points;
 int numPointsPerAxis;
 float boundsSize;
 float3 centre;
@@ -45,7 +44,7 @@ float customDistance(float3 pos, float r){
     return -pos.y;
 }
 
-[numthreads(numThreads,numThreads,numThreads)]
+[numthreads(8,8,8)]
 void Density (int3 id : SV_DispatchThreadID)
 {
     // Out of bound
@@ -90,13 +89,6 @@ void Density (int3 id : SV_DispatchThreadID)
     // -pos.y * heightGredient + floorOffset + noise + manualData[index] = 0
     float heightOnThisPos = (floorOffset + noise + manualData[index]) / heightGredient;
     float heightOnThisPosWithoutManual = (noise + floorOffset) / heightGredient;
-    
-    // A bad method
-    // if(id.y == 0){
-        //     // 3D -> 2D buffer
-        //     GroundLevelDataBuffer[id.x + id.z * numPointsPerAxis].twodeeHeight = 
-        //     heightOnThisPos;
-    // }
 
     if (closeEdges) {
         float3 edgeOffset = abs(pos*2)-worldSize + spacing/2;
@@ -104,14 +96,15 @@ void Density (int3 id : SV_DispatchThreadID)
         finalVal = finalVal * (1-edgeWeight) - 100 * edgeWeight;
     }
 
-    if(finalVal + manualData[index] > 0){
+    float finalWeight = finalVal + manualData[index];
+
+    if(finalWeight > 0){
         pointsStatus[0] = 1;
-        GroundLevelDataBuffer[index].isDirt = true;
+        GroundLevelDataBuffer[id.x + id.z * numPointsPerAxis].hasMeshAtThisPlace = true;
         }else{
         pointsStatus[1] = 1;
-        GroundLevelDataBuffer[index].isDirt = false;
     }
+    GroundLevelDataBuffer[index].weight = finalWeight; // To GrassChunkPoint.compute
     
-    // This index list can be used in marchingcubes.compute
-    points[index] = float4(pos, finalVal + manualData[index]);
+    points[index] = float4(pos, finalWeight); // To marchingcubes.compute
 }

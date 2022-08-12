@@ -30,8 +30,10 @@ public class FlyingBehaviour : MonoBehaviour
     public float maxToMinScaleRatio;
 
     private int frameCount = 0;
-    [Range(1, 100)] public int minSkipFrameNum;
-    [Range(1, 800)] public int maxSkipFrameNum;
+    public bool fixSkipFrameNum;
+    [ConditionalHide("fixSkipFrameNum", true), Range(1, 1000)] public int fixedSkipFrameNum;
+    [ConditionalHide("fixSkipFrameNum", false), Range(1, 100)] public int minSkipFrameNum;
+    [ConditionalHide("fixSkipFrameNum", false), Range(1, 400)] public int maxSkipFrameNum;
     public float skipFrameNumIncreasement = 10;
 
     public float noiseChangeFac = 0.1f;
@@ -158,23 +160,32 @@ public class FlyingBehaviour : MonoBehaviour
         KeepDistanceFromTerrain();  // Vertically
         GetStatus();
 
-        ReverseSignIfOurOfBound();
+        ReverseSignIfOutOfBound();
         Move();                     // Horizontally
 
         if (frameCount % skipFrameNum == 0 && isAboveTerrain)
         {
-            DrawGrass(digIn, drawMetal);
+            DrawSpecialTexture(digIn, drawMetal);
             frameCount = 0;
         }
     }
 
-    void ReverseSignIfOurOfBound()
+    void ChangeSeedBasedOnTime()
+    {
+        seed = Time.time * Time.deltaTime * 1000.0f;
+    }
+
+    void ReverseSignIfOutOfBound()
     {
         if (Mathf.Abs(creaturePos.x) > worldBound)
+        {
             xSign = flipSign(xSign);
+        }
 
         if (Mathf.Abs(creaturePos.z) > worldBound)
+        {
             zSign = flipSign(zSign);
+        }
     }
 
     int flipSign(int i)
@@ -184,6 +195,9 @@ public class FlyingBehaviour : MonoBehaviour
 
     int GetSkipFrameNumThisFrame()
     {
+        if (fixSkipFrameNum)
+            return fixedSkipFrameNum;
+
         skipFrameNum = (int)(minSkipFrameNum + Mathf.Pow(Vector3.Distance(creaturePos, playerPos), 2) * skipFrameNumIncreasement);
         skipFrameNum = Mathf.Clamp(skipFrameNum, minSkipFrameNum, maxSkipFrameNum);
 
@@ -198,10 +212,9 @@ public class FlyingBehaviour : MonoBehaviour
         }
     }
 
-    private void DrawGrass(bool digIn, bool drawMetal)
+    private void DrawSpecialTexture(bool digIn, bool drawMetal)
     {
         currentDrawRange = (int)Mathf.Clamp(initDrawRange * (1 + ability_score), 0, maxDrawRange);
-
 
         // Draw texture
         terrainGen.GetComponent<ColourGenerator2D>().CreateTextureIfNeeded();
@@ -238,13 +251,11 @@ public class FlyingBehaviour : MonoBehaviour
         if (wander)
         {
             float seed1 = (Time.time + seed * 1000.0f) * noiseChangeFac * randomDecisionSpeedUp;
-            float seed2 = (Time.time - 289.0f + seed * 2000.0f) * noiseChangeFac * randomDecisionSpeedUp;
+            float angle01 = (float)customPerlin.GetValue(seed1, 0, 0);
 
-            double xComponent = customPerlin.GetValue(seed1, seed2, seed1);
-            double yComponent = customPerlin.GetValue(seed2, seed2, seed1);
-
-            Vector3 directionNormalized = new Vector3((float)xComponent, 0, (float)yComponent).normalized;
-            v1 = directionNormalized;
+            // Change direction
+            Vector3 directionNormalized =
+                new Vector3(Mathf.Cos(angle01 * 2 * Mathf.PI), 0, Mathf.Sin(angle01 * 2 * Mathf.PI));
 
             creaturePos.x += xSign * directionNormalized.x * Time.deltaTime * horizontalMovementSpeed * randomDecisionSpeedUp;
             creaturePos.z += zSign * directionNormalized.z * Time.deltaTime * horizontalMovementSpeed * randomDecisionSpeedUp;

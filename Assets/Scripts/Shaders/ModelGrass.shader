@@ -51,7 +51,6 @@ Shader "Custom/ModelGrass" {
                 bool enable;
             };
 
-            sampler2D _WindTex;
             float4 _Albedo1, _Albedo2, _AOColor, _TipColor, _FogColor;
             StructuredBuffer<GrassData> positionBuffer;
             float verticalStretchDueToHeight, _Droop, _FogDensity, _FogOffset, windStrength;
@@ -128,9 +127,8 @@ Shader "Custom/ModelGrass" {
 
                 float2 windDirection = 0.0f;
                 float windChangeFrequency = 0.02f;
-                windDirection.x = snoise(float3(_Time.y * windChangeFrequency, 0 , 0));
-                windDirection.y = snoise(float3(_Time.y * windChangeFrequency + 10, 0 , 0));
-                windDirection = normalize(windDirection);
+                float angle01 = snoise(float3(_Time.y * windChangeFrequency, 0 , 0));
+                windDirection = float2(cos(angle01 * 2 * UNITY_PI), sin(angle01 * 2 * UNITY_PI));
 
                 localPosition.x += windDirection.x * windStrength * v.uv.y * tenderness * 2.0f;
                 localPosition.z += windDirection.y * windStrength * v.uv.y * tenderness * 2.0f;
