@@ -4,6 +4,14 @@ using UnityEngine;
 
 public class NoiseDensity : MonoBehaviour
 {
+    private TerrainMesh terrainMesh
+    {
+        get
+        {
+            return gameObject.GetComponent<TerrainMesh>();
+        }
+    }
+
     [Header("Noise")]
     public int seed;
 
@@ -47,11 +55,14 @@ public class NoiseDensity : MonoBehaviour
 
     protected List<ComputeBuffer> buffersToRelease;
 
+    [Header("Debug")]
+    public bool editorUpdate = false;
+
     void OnValidate()
     {
-        if (!Application.isPlaying && FindObjectOfType<TerrainMesh>())
+        if (editorUpdate && !Application.isPlaying && terrainMesh)
         {
-            FindObjectOfType<TerrainMesh>().RequestMeshUpdate();
+            terrainMesh.RequestMeshUpdate();
         }
     }
 

@@ -2,10 +2,20 @@
 using UnityEngine;
 
 [ExecuteInEditMode]
+[RequireComponent(typeof(NoiseDensity))]
+[RequireComponent(typeof(ModelGrass))]
+[RequireComponent(typeof(ColourGenerator2D))]
 public class TerrainMesh : MonoBehaviour
 {
     const int threadGroupSize = 8;
-    public NoiseDensity noiseDensity;
+    private NoiseDensity noiseDensity
+    {
+        get
+        {
+            return gameObject.GetComponent<NoiseDensity>();
+        }
+    }
+
     public ModelGrass modelGrass;
     public AudioProcessor audioProcessor;
     public float windWeight;
@@ -58,7 +68,8 @@ public class TerrainMesh : MonoBehaviour
     int maxChunksInViewVert;
 
     [Header("Debug")]
-    public bool printActiveChunk = false;
+    public bool editorUpdate = false;
+
 
     [System.Serializable]
     public struct LodSetup
@@ -122,16 +133,6 @@ public class TerrainMesh : MonoBehaviour
     private void RuntimeUpdatePerFrame()
     {
         CreateBuffers();
-
-        if (printActiveChunk)
-        {
-            foreach (Chunk chunk in activeChunks)
-            {
-                print(chunk);
-            }
-
-            printActiveChunk = false;
-        }
 
         if (fixedMapSize && drawGrass)
         {
@@ -447,7 +448,6 @@ public class TerrainMesh : MonoBehaviour
         Vector3 centre = CentreFromCoord(originalHittingCoord);
         float pointSpacing = boundSize / (numPointsPerAxis - 1);
         // The exact chunk the player is drawing at
-        //print(hitCoord);
 
         // Get idVector from hitpoint
         Vector3 IdVector = new Vector3(
@@ -455,8 +455,6 @@ public class TerrainMesh : MonoBehaviour
             ((hitPoint - centre).y + boundSize / 2) / pointSpacing,
             ((hitPoint - centre).z + boundSize / 2) / pointSpacing
         );
-        //print("originalHittingCoord: " + originalHittingCoord);
-        // print("IdVector: " + IdVector);
         // Create a cube region of vectors
         for (int x = -range; x <= range; x++)
         {
@@ -894,6 +892,8 @@ public class TerrainMesh : MonoBehaviour
             additionalPointsBuffer.SetData(existingChunkVolumeData[chunksNeedToBeUpdated[i]]);
             UpdateChunkMesh(existingChunks[chunksNeedToBeUpdated[i]], additionalPointsBuffer);
         }
+        // print("chunksNeedToBeUpdated.Count = " + chunksNeedToBeUpdated.Count);
+
         additionalPointsBuffer.Release();
     }
 
@@ -1036,9 +1036,8 @@ public class TerrainMesh : MonoBehaviour
 
         if (!Application.isPlaying || triangleBuffer == null)
         {
-            // print("Creating buffers");
-            if (Application.isPlaying)
-                ReleaseBuffers();
+            // if (Application.isPlaying)
+            //     ReleaseBuffers();
 
             numVoxelsPerAxis = Application.isPlaying
                 ? lodSetup.numPointsPerAxis - 1
@@ -1068,6 +1067,8 @@ public class TerrainMesh : MonoBehaviour
 
     void ReleaseBuffers()
     {
+        // print("Buffer released");
+
         modelGrass.ClearGrassBufferIfNeeded();
         ReleaseExistingChunkBuffers();
 
@@ -1208,7 +1209,7 @@ public class TerrainMesh : MonoBehaviour
     // Run every time settings in MeshGenerator changed
     void OnValidate()
     {
-        if (!Application.isPlaying)
+        if (editorUpdate && !Application.isPlaying)
         {
             settingsUpdated = true;
         }

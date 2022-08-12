@@ -130,6 +130,7 @@ public class ModelGrass : MonoBehaviour
 
     public void InitializeGrassChunkIfNeeded(Chunk chunk, Vector3 centre, int numPointsPerAxis, Vector3 offset, float meshSpacing)
     {
+
         if (voteBuffer == null)
         {
             InitIfNeeded();
@@ -167,6 +168,7 @@ public class ModelGrass : MonoBehaviour
 
         chunk.grassMaterial = new Material(grassMaterial);
         chunk.grassMaterial.SetBuffer("positionBuffer", chunk.culledPositionsBuffer);
+        // print("Chunk buffer created");
     }
 
     public void CalculateChunkGrassPos(Chunk chunk)
@@ -307,6 +309,4 @@ public class ModelGrass : MonoBehaviour
         scannedGroupSumBuffer.Release();
         scannedGroupSumBuffer = null;
     }
-
-
 }

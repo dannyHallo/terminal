@@ -181,29 +181,11 @@ public class PlayerController : MonoBehaviour
         }
     }
 
-    public void InstrumentUIColor(int num)
-    {
-        for (int i = 0; i < uiManager.InstrumentsUI.Count; i++)
-        {
-
-            if (i != num)
-            {
-                uiManager.InstrumentsUI[i].GetComponent<Image>().color = Color.gray;
-            }
-            else
-            {
-                uiManager.InstrumentsUI[i].GetComponent<Image>().color = Color.white;
-            }
-        }
-    }
-
     private void TryToggleInstrument(int i)
     {
-        InstrumentUIColor(i);
         if (mainSocketCurrentStoringInstrument == instruments[i].e)
         {
             TryUseInstrument(InstrumentTypes.None);
-            uiManager.InstrumentsUI[i].GetComponent<Image>().color = Color.gray;
         }
         else
         {
@@ -251,28 +233,26 @@ public class PlayerController : MonoBehaviour
                     return;
                 }
 
-                print(instru);
-
                 switch (instru)
                 {
                     case 0:
-                        uiManager.hintText.text = "1 - Remove dirt (RMB)";
+                        uiManager.hintText.text = "1 Remove dirt";
                         break;
 
                     case 1:
-                        uiManager.hintText.text = "2 - Add dirt (LMB)";
+                        uiManager.hintText.text = "2 Add dirt";
                         break;
 
                     case 2:
-                        uiManager.hintText.text = "3 - Add butterfly (LMB), Add metal spirit (RMB)";
+                        uiManager.hintText.text = "3 Add Butterfly";
                         break;
 
                     case 3:
-                        uiManager.hintText.text = "4 - Not implemented...";
+                        uiManager.hintText.text = "4 Add Metal Spirit";
                         break;
 
                     case 4:
-                        uiManager.hintText.text = "5 - Not implemented...";
+                        uiManager.hintText.text = "5 Not implemented...";
                         break;
                 }
 
@@ -305,10 +285,11 @@ public class PlayerController : MonoBehaviour
 
     private void Awake()
     {
-        // for (int i = 0; i < instruments.Count; i++)
-        // {
-        //     EquipInstrument(i);
-        // }
+        for (int i = 0; i < instruments.Count; i++)
+        {
+            EquipInstrument(i);
+        }
+        TryToggleInstrument(0);
     }
 
     private void Update()
@@ -401,13 +382,13 @@ public class PlayerController : MonoBehaviour
             {
                 if (Input.GetMouseButton(0) && ableToDig)
                 {
-                    NotifyTerrainChanged(hit.point, drawRange);
+                    // NotifyTerrainChanged(hit.point, drawRange);
                     terrainMesh.DrawOnChunk(hit.point, drawRange, digStrength, 1);
                 }
             }
             else if (mainSocketCurrentStoringInstrument == InstrumentTypes.Guitar)
             {
-                // Create
+                // Create butterfly
                 if (hit.collider.tag == "Chunk")
                 {
                     if (Input.GetMouseButtonDown(0))
@@ -419,7 +400,14 @@ public class PlayerController : MonoBehaviour
                             Quaternion.identity);
                         bufferflyCreated.GetComponent<FlyingBehaviour>().seed = Time.time;
                     }
-                    else if (Input.GetMouseButtonDown(1))
+                }
+            }
+            else if (mainSocketCurrentStoringInstrument == InstrumentTypes.Mic)
+            {
+                // Create metal spirit
+                if (hit.collider.tag == "Chunk")
+                {
+                    if (Input.GetMouseButtonDown(0))
                     {
                         GameObject metalSpititCreated =
                         GameObject.Instantiate(
@@ -429,20 +417,9 @@ public class PlayerController : MonoBehaviour
                         metalSpititCreated.GetComponent<FlyingBehaviour>().seed = Time.time;
                     }
                 }
-                // Destroy
-                else if (hit.collider.tag == "Creature")
-                {
-                    Destroy(hit.collider.gameObject);
-                }
-            }
-            // Creaste / Destroy Creature
-            else if (mainSocketCurrentStoringInstrument == InstrumentTypes.Mic)
-            {
-
             }
         }
     }
-
 
     private void CheckScreenShot()
     {
