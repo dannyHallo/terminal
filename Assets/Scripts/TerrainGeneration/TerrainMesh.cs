@@ -110,11 +110,6 @@ public class TerrainMesh : MonoBehaviour
             }
         }
     }
-    private const MeshUpdateFlags MESH_UPDATE_FLAGS =
-    MeshUpdateFlags.DontValidateIndices |
-    MeshUpdateFlags.DontNotifyMeshUsers |
-    MeshUpdateFlags.DontRecalculateBounds |
-    MeshUpdateFlags.DontResetBoneBounds;
 
     void DestroyOldChunks()
     {
@@ -927,13 +922,9 @@ public class TerrainMesh : MonoBehaviour
     public int UpdateChunkMesh(Chunk chunk, ComputeBuffer additionalPointsBuffer, bool generateColliderNow)
     {
         int numVoxelsPerAxis = chunkMeshProperty.numPointsPerAxis - 1;
-        float isoLevel = 0;
         // A thread contains several mini threads
         int numThreadsPerAxis = Mathf.CeilToInt(numVoxelsPerAxis / (float)threadGroupSize);
         float meshPointSpacing = chunkMeshProperty.boundSize / (chunkMeshProperty.numPointsPerAxis - 1);
-
-        Vector3Int coord = chunk.coord;
-        Vector3 centre = chunk.centre;
 
         // Indecator of the points are full or empty
         int[] pointStatusData = new int[2];
@@ -944,17 +935,12 @@ public class TerrainMesh : MonoBehaviour
 
         Vector3 worldSize = new Vector3(numChunks.x, numChunks.y, numChunks.z) * chunkMeshProperty.boundSize;
 
-        // Gerenate individual noise value using compute shader， modifies pointsBuffer
+        // Gerenate individual noise value using compute shader, modifies pointsBuffer
         noiseDensity.CalculateChunkNoise(
             chunk,
             pointsBuffer,
             additionalPointsBuffer,
             pointsStatus,
-            chunkMeshProperty.numPointsPerAxis,
-            chunkMeshProperty.boundSize,
-            centre,
-            meshPointSpacing,
-            isoLevel,
             worldSize
         );
         pointsStatus.GetData(pointStatusData);
@@ -973,7 +959,7 @@ public class TerrainMesh : MonoBehaviour
         shader.SetBuffer(0, "points", pointsBuffer);
         shader.SetBuffer(0, "triangles", triangleBuffer);
         shader.SetInt("numPointsPerAxis", chunkMeshProperty.numPointsPerAxis);
-        shader.SetFloat("isoLevel", isoLevel);
+        shader.SetFloat("isoLevel", 0);
 
         shader.Dispatch(0, numThreadsPerAxis, numThreadsPerAxis, numThreadsPerAxis);
 
@@ -1006,7 +992,7 @@ public class TerrainMesh : MonoBehaviour
         mesh.vertices = vertices;
         mesh.triangles = meshTriangles;
 
-        mesh.RecalculateNormals(MESH_UPDATE_FLAGS);
+        mesh.RecalculateNormals();
 
         if (generateColliderNow)
             chunk.UpdateColliderSharedMesh();

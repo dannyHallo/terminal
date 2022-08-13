@@ -1,6 +1,5 @@
 ﻿#include "Assets/Scripts/Compute/Includes/Noise.compute"
 
-
 struct GroundLevelData
 {
     float weight;
@@ -24,8 +23,6 @@ bool b1, b2;
 float f1, f2, f3;
 
 float4 params;
-float isoLevel;
-
 int numPointsPerAxis;
 float boundsSize;
 float3 centre;
@@ -42,8 +39,9 @@ float customDistance(float3 pos, float r){
     return -pos.y;
 }
 
-
+// k1: Change chunk manualData
 #pragma kernel EditTerrain
+
 [numthreads(8,8,8)]
 void EditTerrain (int3 id : SV_DispatchThreadID)
 {
@@ -57,6 +55,7 @@ void EditTerrain (int3 id : SV_DispatchThreadID)
 }
 
 #pragma kernel CalculateChunkNoise
+
 [numthreads(8,8,8)]
 void CalculateChunkNoise (int3 id : SV_DispatchThreadID)
 {

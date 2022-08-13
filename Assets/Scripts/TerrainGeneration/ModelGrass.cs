@@ -122,7 +122,6 @@ public class ModelGrass : MonoBehaviour
         universalRenderTex = new RenderTexture(userTex.width, userTex.height, 0);
         universalRenderTex.enableRandomWrite = true;
         universalRenderTex.Create();
-        Graphics.Blit(userTex, universalRenderTex);
 
         float ratio = 1 / (2.0f * colourGenerator2D.worldPosOffset);
         float worldPosOffset = colourGenerator2D.worldPosOffset;
@@ -141,6 +140,9 @@ public class ModelGrass : MonoBehaviour
     public void CalculateChunkGrassPosition(Chunk chunk)
     {
         if (voteBuffer == null) InitRelevantShadersAndBuffers();
+
+        Texture2D userTex = colourGenerator2D.userTex;
+        Graphics.Blit(userTex, universalRenderTex);
 
         chunk.argsBuffer.SetData(args);
         chunk.argsLodBuffer.SetData(argsLOD);
