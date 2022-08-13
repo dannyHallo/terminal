@@ -1,10 +1,14 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using static System.Runtime.InteropServices.Marshal;
 
 public class Chunk : MonoBehaviour
 {
     public Vector3Int coord;
+    public Vector3 centre;
+    public float boundSize;
+    public float pointSpacing;
 
     [HideInInspector]
     public Mesh mesh;
@@ -16,11 +20,43 @@ public class Chunk : MonoBehaviour
     bool setuped = false;
 
     public ComputeBuffer argsBuffer;
-    public ComputeBuffer argsBufferLOD;
+    public ComputeBuffer argsLodBuffer;
     public ComputeBuffer positionsBuffer;
+    public ComputeBuffer editingBuffer;
     public ComputeBuffer groundLevelDataBuffer;
     public ComputeBuffer culledPositionsBuffer;
     public Material grassMaterial;
+
+    public int numPointsPerAxis, numGrassesPerAxis;
+
+    private struct GrassData
+    {
+        Vector4 position;
+        bool enable;
+    };
+
+    public struct GroundLevelData
+    {
+        public float weight;
+        public float twoDimentionalHeight;
+        public bool hasMeshAtThisPlace;
+    };
+
+    public void SetupConfig(
+        int numPointsPerAxis,
+        int numGrassesPerAxis,
+        Vector3Int coord,
+        Vector3 centre,
+        float boundSize,
+        float pointSpacing)
+    {
+        this.numPointsPerAxis = numPointsPerAxis;
+        this.numGrassesPerAxis = numGrassesPerAxis;
+        this.coord = coord;
+        this.centre = centre;
+        this.boundSize = boundSize;
+        this.pointSpacing = pointSpacing;
+    }
 
     public void DestroyAndClearBuffer()
     {
@@ -36,7 +72,26 @@ public class Chunk : MonoBehaviour
             DestroyImmediate(gameObject, false);
         }
         FreeBuffers();
+    }
 
+    public void CreateBuffers()
+    {
+        argsBuffer = new ComputeBuffer(
+            1,
+            5 * sizeof(uint),
+            ComputeBufferType.IndirectArguments
+        );
+        argsLodBuffer = new ComputeBuffer(
+            1,
+            5 * sizeof(uint),
+            ComputeBufferType.IndirectArguments
+        );
+        groundLevelDataBuffer = new ComputeBuffer(numPointsPerAxis * numPointsPerAxis * numPointsPerAxis,
+                    SizeOf(typeof(GroundLevelData)));
+
+        positionsBuffer = new ComputeBuffer(numGrassesPerAxis * numGrassesPerAxis, SizeOf(typeof(GrassData)));
+        culledPositionsBuffer = new ComputeBuffer(numGrassesPerAxis * numGrassesPerAxis, SizeOf(typeof(GrassData)));
+        editingBuffer = new ComputeBuffer(numPointsPerAxis * numPointsPerAxis * numPointsPerAxis, sizeof(float));
     }
 
     public void FreeBuffers()
@@ -47,21 +102,24 @@ public class Chunk : MonoBehaviour
         positionsBuffer.Release();
         positionsBuffer = null;
 
+        editingBuffer.Release();
+        editingBuffer = null;
+
         culledPositionsBuffer.Release();
         culledPositionsBuffer = null;
 
         argsBuffer.Release();
         argsBuffer = null;
 
-        argsBufferLOD.Release();
-        argsBufferLOD = null;
+        argsLodBuffer.Release();
+        argsLodBuffer = null;
 
         groundLevelDataBuffer.Release();
         groundLevelDataBuffer = null;
     }
 
     // Add components/get references in case lost (references can be lost when working in the editor)
-    public void SetUp(Material mat, bool generateCollider)
+    public void BindMaterialAndCollider(Material mat, bool generateCollider)
     {
         if (setuped)
             return;

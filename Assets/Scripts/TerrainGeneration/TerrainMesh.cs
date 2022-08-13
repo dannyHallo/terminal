@@ -47,13 +47,9 @@ public class TerrainMesh : MonoBehaviour
     public Vector3Int numChunks = Vector3Int.one;
     public Transform viewer;
 
-    public LodSetup lodSetup;
+    public ChunkMeshProperty chunkMeshProperty;
     public ComputeShader shader;
     public Material mat;
-
-    [Header("Voxel Settings")]
-    public float boundSize = 20;
-    Vector3 offset = Vector3.zero;
 
     // [Header("Gizmos")]
     private Color boundsGizmoCol = Color.white;
@@ -89,13 +85,15 @@ public class TerrainMesh : MonoBehaviour
     public bool editorUpdate = false;
 
     [System.Serializable]
-    public struct LodSetup
+    public struct ChunkMeshProperty
     {
-        [Header("8n")]
         public int numPointsPerAxis;
-        public int viewDistanceHori;
-        public int viewDistanceVert;
+        public int numGrassesPerAxis;
+        public float boundSize;
     }
+
+    public int viewDistanceHori;
+    public int viewDistanceVert;
 
     private void Awake()
     {
@@ -157,16 +155,11 @@ public class TerrainMesh : MonoBehaviour
         if (!Application.isPlaying) return;
 
         // DRAW GRASS THIS FRAME
-        // CreateBuffers();
         modelGrass.DrawAllGrass(activeChunks, audioProcessor.loudness * windWeight);
 
         // GENERATE COLLIDERS
         if (chunksNeedsToUpdateCollider.Count != 0)
         {
-            if (chunksNeedsToUpdateCollider.Count > 5)
-            {
-                print("WOW! chunksNeedsToUpdateCollider.Count: " + chunksNeedsToUpdateCollider.Count);
-            }
             NativeArray<int> meshIds = new NativeArray<int>(chunksNeedsToUpdateCollider.Count, Allocator.TempJob);
             for (int i = 0; i < meshIds.Length; ++i)
             {
@@ -215,7 +208,7 @@ public class TerrainMesh : MonoBehaviour
     private Vector3Int GetViewerCoord()
     {
         Vector3 p = viewer.position;
-        Vector3 ps = p / boundSize;
+        Vector3 ps = p / chunkMeshProperty.boundSize;
 
         // Indicates which chunk the viewer in in
         Vector3Int viewerCoord = new Vector3Int(
@@ -229,17 +222,17 @@ public class TerrainMesh : MonoBehaviour
 
     private void PrecalculateChunkBounds()
     {
-        maxChunksInViewHori = Mathf.CeilToInt(lodSetup.viewDistanceHori / boundSize);
-        maxChunksInViewVert = Mathf.CeilToInt(lodSetup.viewDistanceVert / boundSize);
+        maxChunksInViewHori = Mathf.CeilToInt(viewDistanceHori / chunkMeshProperty.boundSize);
+        maxChunksInViewVert = Mathf.CeilToInt(viewDistanceVert / chunkMeshProperty.boundSize);
 
         // maxChunksInViewHoriMustLoad = Mathf.CeilToInt(lodSetup.viewDistanceHori * 0.5f / boundSize);
         // maxChunksInViewVertMustLoad = Mathf.CeilToInt(lodSetup.viewDistanceVert * 0.5f / boundSize);
 
         maxChunksInViewHoriDisappear = Mathf.CeilToInt(
-            lodSetup.viewDistanceHori * 1.5f / boundSize
+            viewDistanceHori * 1.5f / chunkMeshProperty.boundSize
         );
         maxChunksInViewVertDisappear = Mathf.CeilToInt(
-            lodSetup.viewDistanceVert * 1.5f / boundSize
+            viewDistanceVert * 1.5f / chunkMeshProperty.boundSize
         );
     }
 
@@ -350,12 +343,10 @@ public class TerrainMesh : MonoBehaviour
         }
 
         int numPoints =
-            lodSetup.numPointsPerAxis * lodSetup.numPointsPerAxis * lodSetup.numPointsPerAxis;
+            chunkMeshProperty.numPointsPerAxis * chunkMeshProperty.numPointsPerAxis * chunkMeshProperty.numPointsPerAxis;
 
         Chunk chunk = CreateChunk(coord);
-
-        chunk.coord = coord;
-        chunk.SetUp(mat, generateColliders);
+        chunk.BindMaterialAndCollider(mat, generateColliders);
 
         additionalPointsBuffer = new ComputeBuffer(numPoints, sizeof(float));
         if (!existingChunkVolumeData.ContainsKey(coord))
@@ -404,13 +395,13 @@ public class TerrainMesh : MonoBehaviour
                         continue;
 
                     int numPoints =
-                        lodSetup.numPointsPerAxis
-                        * lodSetup.numPointsPerAxis
-                        * lodSetup.numPointsPerAxis;
-                    Chunk chunk = CreateChunk(coord);
+                        chunkMeshProperty.numPointsPerAxis
+                        * chunkMeshProperty.numPointsPerAxis
+                        * chunkMeshProperty.numPointsPerAxis;
 
-                    chunk.coord = coord;
-                    chunk.SetUp(mat, generateColliders);
+                    Chunk chunk = CreateChunk(coord);
+                    chunk.BindMaterialAndCollider(mat, generateColliders);
+
                     existingChunks.Add(coord, chunk);
                     chunks.Add(chunk);
 
@@ -445,7 +436,7 @@ public class TerrainMesh : MonoBehaviour
         if (!existingChunkVolumeData.ContainsKey(chunkCoord))
         {
             int numPoints =
-                lodSetup.numPointsPerAxis * lodSetup.numPointsPerAxis * lodSetup.numPointsPerAxis;
+                chunkMeshProperty.numPointsPerAxis * chunkMeshProperty.numPointsPerAxis * chunkMeshProperty.numPointsPerAxis;
             float[] chunkVolumeData = new float[numPoints];
             existingChunkVolumeData.Add(chunkCoord, chunkVolumeData);
         }
@@ -468,24 +459,25 @@ public class TerrainMesh : MonoBehaviour
             meshPaintingFinal = Mathf.Abs(meshPaintingFac * strength);
         }
 
-        int numPointsPerAxis = lodSetup.numPointsPerAxis;
+        int numPointsPerAxis = chunkMeshProperty.numPointsPerAxis;
         List<Vector3Int> chunksNeedToBeUpdated = new List<Vector3Int>();
         int numPoints = numPointsPerAxis * numPointsPerAxis * numPointsPerAxis;
-        Vector3 ps = hitPoint / boundSize;
+        Vector3 ps = hitPoint / chunkMeshProperty.boundSize;
+
         Vector3Int originalHittingCoord = new Vector3Int(
             Mathf.RoundToInt(ps.x),
             Mathf.RoundToInt(ps.y),
             Mathf.RoundToInt(ps.z)
         );
         Vector3 centre = CentreFromCoord(originalHittingCoord);
-        float pointSpacing = boundSize / (numPointsPerAxis - 1);
+        float pointSpacing = chunkMeshProperty.boundSize / (numPointsPerAxis - 1);
         // The exact chunk the player is drawing at
 
         // Original hit chunk id
         Vector3Int IdVector = new Vector3Int(
-            Mathf.RoundToInt(((hitPoint - centre).x + boundSize / 2) / pointSpacing),
-            Mathf.RoundToInt(((hitPoint - centre).y + boundSize / 2) / pointSpacing),
-            Mathf.RoundToInt(((hitPoint - centre).z + boundSize / 2) / pointSpacing)
+            Mathf.RoundToInt(((hitPoint - centre).x + chunkMeshProperty.boundSize / 2) / pointSpacing),
+            Mathf.RoundToInt(((hitPoint - centre).y + chunkMeshProperty.boundSize / 2) / pointSpacing),
+            Mathf.RoundToInt(((hitPoint - centre).z + chunkMeshProperty.boundSize / 2) / pointSpacing)
         );
 
         // Create a cube region of vectors
@@ -934,15 +926,14 @@ public class TerrainMesh : MonoBehaviour
     /// <returns>0: Inactive chunk, 1: Active chunk</returns>
     public int UpdateChunkMesh(Chunk chunk, ComputeBuffer additionalPointsBuffer, bool generateColliderNow)
     {
-        int numPointsPerAxis = lodSetup.numPointsPerAxis;
-        int numVoxelsPerAxis = numPointsPerAxis - 1;
+        int numVoxelsPerAxis = chunkMeshProperty.numPointsPerAxis - 1;
         float isoLevel = 0;
         // A thread contains several mini threads
         int numThreadsPerAxis = Mathf.CeilToInt(numVoxelsPerAxis / (float)threadGroupSize);
-        float pointSpacing = boundSize / (numPointsPerAxis - 1);
+        float meshPointSpacing = chunkMeshProperty.boundSize / (chunkMeshProperty.numPointsPerAxis - 1);
 
         Vector3Int coord = chunk.coord;
-        Vector3 centre = CentreFromCoord(coord);
+        Vector3 centre = chunk.centre;
 
         // Indecator of the points are full or empty
         int[] pointStatusData = new int[2];
@@ -951,22 +942,18 @@ public class TerrainMesh : MonoBehaviour
         ComputeBuffer pointsStatus = new ComputeBuffer(2, sizeof(int));
         pointsStatus.SetData(pointStatusData);
 
-        // Chunk grass is not initialized yet (not in registery)
-        modelGrass.InitializeGrassChunkIfNeeded(chunk, centre, numPointsPerAxis, offset, pointSpacing);
-
-        Vector3 worldSize = new Vector3(numChunks.x, numChunks.y, numChunks.z) * boundSize;
+        Vector3 worldSize = new Vector3(numChunks.x, numChunks.y, numChunks.z) * chunkMeshProperty.boundSize;
 
         // Gerenate individual noise value using compute shader， modifies pointsBuffer
-        noiseDensity.Generate(
+        noiseDensity.CalculateChunkNoise(
             chunk,
             pointsBuffer,
             additionalPointsBuffer,
             pointsStatus,
-            numPointsPerAxis,
-            boundSize,
+            chunkMeshProperty.numPointsPerAxis,
+            chunkMeshProperty.boundSize,
             centre,
-            offset,
-            pointSpacing,
+            meshPointSpacing,
             isoLevel,
             worldSize
         );
@@ -985,7 +972,7 @@ public class TerrainMesh : MonoBehaviour
         triangleBuffer.SetCounterValue(0);
         shader.SetBuffer(0, "points", pointsBuffer);
         shader.SetBuffer(0, "triangles", triangleBuffer);
-        shader.SetInt("numPointsPerAxis", numPointsPerAxis);
+        shader.SetInt("numPointsPerAxis", chunkMeshProperty.numPointsPerAxis);
         shader.SetFloat("isoLevel", isoLevel);
 
         shader.Dispatch(0, numThreadsPerAxis, numThreadsPerAxis, numThreadsPerAxis);
@@ -1028,8 +1015,7 @@ public class TerrainMesh : MonoBehaviour
 
         if (Application.isPlaying)
         {
-            // Dispatch grass chunk point shader
-            modelGrass.CalculateChunkGrassPos(chunk);
+            modelGrass.CalculateChunkGrassPosition(chunk);
         }
 
         return 1;
@@ -1039,12 +1025,12 @@ public class TerrainMesh : MonoBehaviour
     public void UpdateAllChunks()
     {
         additionalPointsBuffer = new ComputeBuffer(
-            lodSetup.numPointsPerAxis * lodSetup.numPointsPerAxis * lodSetup.numPointsPerAxis,
+            chunkMeshProperty.numPointsPerAxis * chunkMeshProperty.numPointsPerAxis * chunkMeshProperty.numPointsPerAxis,
             sizeof(float)
         );
         additionalPointsBuffer.SetData(
             new float[
-                lodSetup.numPointsPerAxis * lodSetup.numPointsPerAxis * lodSetup.numPointsPerAxis
+                chunkMeshProperty.numPointsPerAxis * chunkMeshProperty.numPointsPerAxis * chunkMeshProperty.numPointsPerAxis
             ]
         );
 
@@ -1074,12 +1060,12 @@ public class TerrainMesh : MonoBehaviour
             //     ReleaseBuffers();
 
             numVoxelsPerAxis = Application.isPlaying
-                ? lodSetup.numPointsPerAxis - 1
-                : lodSetup.numPointsPerAxis - 1;
+                ? chunkMeshProperty.numPointsPerAxis - 1
+                : chunkMeshProperty.numPointsPerAxis - 1;
 
             numPoints = Application.isPlaying
-                ? (int)Mathf.Pow(lodSetup.numPointsPerAxis, 3)
-                : (int)Mathf.Pow(lodSetup.numPointsPerAxis, 3);
+                ? (int)Mathf.Pow(chunkMeshProperty.numPointsPerAxis, 3)
+                : (int)Mathf.Pow(chunkMeshProperty.numPointsPerAxis, 3);
             // Voxels(mini cubes) in a volume
             numVoxels = numVoxelsPerAxis * numVoxelsPerAxis * numVoxelsPerAxis;
             // Max triangles to be create per voxel is 5
@@ -1123,11 +1109,11 @@ public class TerrainMesh : MonoBehaviour
         // Centre entire map at origin
         if (fixedMapSize || !Application.isPlaying)
         {
-            Vector3 totalBounds = (Vector3)numChunks * boundSize;
-            return -totalBounds / 2 + (Vector3)coord * boundSize + Vector3.one * boundSize / 2;
+            Vector3 totalBounds = (Vector3)numChunks * chunkMeshProperty.boundSize;
+            return -totalBounds / 2 + (Vector3)coord * chunkMeshProperty.boundSize + Vector3.one * chunkMeshProperty.boundSize / 2;
         }
 
-        return new Vector3(coord.x, coord.y, coord.z) * boundSize;
+        return new Vector3(coord.x, coord.y, coord.z) * chunkMeshProperty.boundSize;
     }
 
     void CreateChunkHolderIfNeeded()
@@ -1176,9 +1162,8 @@ public class TerrainMesh : MonoBehaviour
         else
             activeChunks = new List<Chunk>();
 
-        List<Chunk> oldChunks = FindChunkInChildWithTag(chunkHolder);
+        DestroyOldChunks();
 
-        // Go through all coords and create a chunk there if one doesn't already exist
         for (int x = 0; x < numChunks.x; x++)
         {
             for (int y = 0; y < numChunks.y; y++)
@@ -1186,37 +1171,11 @@ public class TerrainMesh : MonoBehaviour
                 for (int z = 0; z < numChunks.z; z++)
                 {
                     Vector3Int coord = new Vector3Int(x, y, z);
-                    bool chunkAlreadyExists = false;
-
-                    // If chunk already exists, add it to the chunks list, and remove from the old list.
-                    for (int i = 0; i < oldChunks.Count; i++)
-                    {
-                        if (oldChunks[i].coord == coord)
-                        {
-                            chunks.Add(oldChunks[i]);
-                            oldChunks.RemoveAt(i);
-                            chunkAlreadyExists = true;
-                            break;
-                        }
-                    }
-
-                    // Otherwise, create a new chunk
-                    if (!chunkAlreadyExists)
-                    {
-                        var newChunk = CreateChunk(coord);
-                        chunks.Add(newChunk);
-                    }
-
-                    // Setup this chunk's material and maybe setup a collider
-                    chunks[chunks.Count - 1].SetUp(mat, generateColliders);
+                    var newChunk = CreateChunk(coord);
+                    chunks.Add(newChunk);
+                    chunks[chunks.Count - 1].BindMaterialAndCollider(mat, generateColliders);
                 }
             }
-        }
-
-        // Delete all unused old chunks
-        for (int i = 0; i < oldChunks.Count; i++)
-        {
-            oldChunks[i].DestroyAndClearBuffer();
         }
     }
 
@@ -1225,7 +1184,18 @@ public class TerrainMesh : MonoBehaviour
         GameObject chunk = new GameObject($"Chunk ({coord.x}, {coord.y}, {coord.z})");
         chunk.transform.parent = chunkHolder.transform;
         Chunk newChunk = chunk.AddComponent<Chunk>();
-        newChunk.coord = coord;
+
+        // newChunk.FreeBuffers();
+        newChunk.SetupConfig(
+            numPointsPerAxis: chunkMeshProperty.numPointsPerAxis,
+            numGrassesPerAxis: chunkMeshProperty.numGrassesPerAxis,
+            coord: coord,
+            centre: CentreFromCoord(coord),
+            boundSize: chunkMeshProperty.boundSize,
+            pointSpacing: chunkMeshProperty.boundSize / (chunkMeshProperty.numPointsPerAxis - 1));
+
+        newChunk.CreateBuffers();
+
         return newChunk;
     }
 
@@ -1235,8 +1205,8 @@ public class TerrainMesh : MonoBehaviour
         int y = Mathf.RoundToInt(pos.y);
         int z = Mathf.RoundToInt(pos.z);
 
-        return z * lodSetup.numPointsPerAxis * lodSetup.numPointsPerAxis
-            + y * lodSetup.numPointsPerAxis
+        return z * chunkMeshProperty.numPointsPerAxis * chunkMeshProperty.numPointsPerAxis
+            + y * chunkMeshProperty.numPointsPerAxis
             + x;
     }
 
@@ -1283,9 +1253,9 @@ public class TerrainMesh : MonoBehaviour
                 (this.chunks == null) ? new List<Chunk>(FindObjectsOfType<Chunk>(false)) : this.chunks;
             foreach (var chunk in chunks)
             {
-                Bounds bounds = new Bounds(CentreFromCoord(chunk.coord), Vector3.one * boundSize);
+                Bounds bounds = new Bounds(CentreFromCoord(chunk.coord), Vector3.one * chunkMeshProperty.boundSize);
                 Gizmos.color = boundsGizmoCol;
-                Gizmos.DrawWireCube(CentreFromCoord(chunk.coord), Vector3.one * boundSize);
+                Gizmos.DrawWireCube(CentreFromCoord(chunk.coord), Vector3.one * chunkMeshProperty.boundSize);
             }
         }
     }

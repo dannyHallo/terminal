@@ -50,7 +50,6 @@ public class NoiseDensity : MonoBehaviour
 
     ComputeBuffer debugBuffer;
 
-    const int threadGroupSize = 8;
     public ComputeShader noiseDensityShader;
 
     protected List<ComputeBuffer> buffersToRelease;
@@ -66,7 +65,7 @@ public class NoiseDensity : MonoBehaviour
         }
     }
 
-    public void Generate(
+    public void CalculateChunkNoise(
         Chunk chunk,
         ComputeBuffer pointsBuffer,
         ComputeBuffer additionalPointsBuffer,
@@ -74,23 +73,16 @@ public class NoiseDensity : MonoBehaviour
         int numPointsPerAxis,
         float boundsSize,
         Vector3 centre,
-        Vector3 offset,
         float spacing,
         float isoLevel,
         Vector3 worldSize
     )
     {
         int numPoints = numPointsPerAxis * numPointsPerAxis * numPointsPerAxis;
-        int numThreadsPerAxis = Mathf.CeilToInt(numPointsPerAxis / (float)threadGroupSize);
+        int numThreadsPerAxis = Mathf.CeilToInt(numPointsPerAxis / 8.0f);
         buffersToRelease = new List<ComputeBuffer>();
 
         // Points buffer is populated inside shader with pos (xyz) + density (w).
-
-        /// Noise parameters
-        // Scale: (SCALE)
-        // Octaves: level of details (LAYER NUMS)
-        // Lacunarity: adjusts fraquency at each octave (FRAQUENCY multiplied per layer)
-        // Persistance: adjust amplitude of each octave (AMPLITUDE multiplied per layer)
 
         var prng = new System.Random(seed);
         var offsets = new Vector3[numOctaves];
@@ -126,27 +118,26 @@ public class NoiseDensity : MonoBehaviour
         noiseDensityShader.SetFloat("f1", f1);
         noiseDensityShader.SetFloat("f2", f2);
         noiseDensityShader.SetFloat("f3", f3);
-        noiseDensityShader.SetBuffer(0, "offsets", offsetsBuffer);
+        noiseDensityShader.SetBuffer(1, "offsets", offsetsBuffer);
         noiseDensityShader.SetFloat("floorOffset", floorOffset);
         noiseDensityShader.SetFloat("radius", planetRadius);
         noiseDensityShader.SetFloat("heightGredient", heightGredient);
         noiseDensityShader.SetFloat("multiFractalWeight", multiFractalWeight);
         noiseDensityShader.SetVector("params", shaderParams);
 
-        noiseDensityShader.SetBuffer(0, "points", pointsBuffer);
-        noiseDensityShader.SetBuffer(0, "manualData", additionalPointsBuffer);
+        noiseDensityShader.SetBuffer(1, "points", pointsBuffer);
+        noiseDensityShader.SetBuffer(1, "manualData", additionalPointsBuffer);
 
-        noiseDensityShader.SetBuffer(0, "GroundLevelDataBuffer", chunk.groundLevelDataBuffer);
+        noiseDensityShader.SetBuffer(1, "GroundLevelDataBuffer", chunk.groundLevelDataBuffer);
 
-        noiseDensityShader.SetBuffer(0, "pointsStatus", pointsStatus);
+        noiseDensityShader.SetBuffer(1, "pointsStatus", pointsStatus);
         noiseDensityShader.SetInt("numPointsPerAxis", numPointsPerAxis);
         noiseDensityShader.SetFloat("boundsSize", boundsSize);
         noiseDensityShader.SetVector("centre", new Vector4(centre.x, centre.y, centre.z));
-        noiseDensityShader.SetVector("offset", new Vector4(offset.x, offset.y, offset.z));
         noiseDensityShader.SetFloat("spacing", spacing);
         noiseDensityShader.SetFloat("isoLevel", isoLevel);
 
-        noiseDensityShader.Dispatch(0, numThreadsPerAxis, numThreadsPerAxis, numThreadsPerAxis);
+        noiseDensityShader.Dispatch(1, numThreadsPerAxis, numThreadsPerAxis, numThreadsPerAxis);
 
         foreach (ComputeBuffer buffer in buffersToRelease)
         {

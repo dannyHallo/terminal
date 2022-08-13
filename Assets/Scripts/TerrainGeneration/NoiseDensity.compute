@@ -1,6 +1,5 @@
 ﻿#include "Assets/Scripts/Compute/Includes/Noise.compute"
 
-#pragma kernel Density
 
 struct GroundLevelData
 {
@@ -31,7 +30,6 @@ int numPointsPerAxis;
 float boundsSize;
 float3 centre;
 float3 worldSize;
-float3 offset;
 float spacing;
 bool closeEdges;
 
@@ -44,8 +42,23 @@ float customDistance(float3 pos, float r){
     return -pos.y;
 }
 
+
+#pragma kernel EditTerrain
 [numthreads(8,8,8)]
-void Density (int3 id : SV_DispatchThreadID)
+void EditTerrain (int3 id : SV_DispatchThreadID)
+{
+    // Out of bound
+    if (id.x >= numPointsPerAxis || id.y >= numPointsPerAxis || id.z >= numPointsPerAxis) {
+        return;
+    }
+
+
+
+}
+
+#pragma kernel CalculateChunkNoise
+[numthreads(8,8,8)]
+void CalculateChunkNoise (int3 id : SV_DispatchThreadID)
 {
     // Out of bound
     if (id.x >= numPointsPerAxis || id.y >= numPointsPerAxis || id.z >= numPointsPerAxis) {

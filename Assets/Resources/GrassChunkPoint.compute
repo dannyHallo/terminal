@@ -1,8 +1,6 @@
 #include "Assets/Scripts/Compute/Includes/Noise.compute"
 #include "Assets/Resources/Random.cginc"
 
-#pragma kernel CalculateGrassPos
-#pragma kernel InitializeGrassChunk
 
 struct GrassData {
     float4 position;
@@ -22,7 +20,6 @@ RWStructuredBuffer<GroundLevelData> GroundLevelDataBuffer;
 int _Dimension, numGrassesPerAxis, numPointsPerAxis;
 float chunkBoundSize;
 float3 centre;
-float3 offset;
 float grassSpacing;
 float meshSpacing;
 float4 requiredColor;
@@ -43,6 +40,9 @@ int colorCmp(float4 col1, float4 col2){
     float threhold = 0.01f;
     return 1 - step(threhold, distance(col1.rgb, col2.rgb));
 }
+
+// k1: Calculate vertical position of every 2d mesh point from GroundLevelData buffer
+#pragma kernel CalculateGrassPos
 
 [numthreads(8,8,8)]
 void CalculateGrassPos(int3 id : SV_DispatchThreadID) {
@@ -66,6 +66,8 @@ void CalculateGrassPos(int3 id : SV_DispatchThreadID) {
     }
 }
 
+// k2: Calculate exact position of every grass from GroundLevelData (By interpolation)
+#pragma kernel InitializeGrassChunk
 
 [numthreads(8,8,1)]
 void InitializeGrassChunk(int2 id : SV_DispatchThreadID) {
