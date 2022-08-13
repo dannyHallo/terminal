@@ -1,5 +1,23 @@
 ﻿using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Rendering;
+using Unity.Collections;
+using Unity.Jobs;
+
+public struct BakeJob : IJobParallelFor
+{
+    private NativeArray<int> meshIds;
+
+    public BakeJob(NativeArray<int> meshIds)
+    {
+        this.meshIds = meshIds;
+    }
+
+    public void Execute(int index)
+    {
+        Physics.BakeMesh(meshIds[index], false);
+    }
+}
 
 [ExecuteInEditMode]
 [RequireComponent(typeof(NoiseDensity))]
@@ -23,7 +41,6 @@ public class TerrainMesh : MonoBehaviour
 
     [Header("General Settings")]
     public bool fixedMapSize;
-    public bool drawGrass;
 
     // Nums of chunks to generate
     // Show this variable when fixedMapSize is true
@@ -48,6 +65,7 @@ public class TerrainMesh : MonoBehaviour
     GameObject chunkHolder;
     List<Chunk> chunks;
     List<Chunk> activeChunks;
+    List<Chunk> chunksNeedsToUpdateCollider;
     Dictionary<Vector3Int, Chunk> existingChunks;
     List<Vector3Int> chunkCoordsNeededToBeRendered;
     Dictionary<Vector3Int, float[]> existingChunkVolumeData;
@@ -94,6 +112,11 @@ public class TerrainMesh : MonoBehaviour
             }
         }
     }
+    private const MeshUpdateFlags MESH_UPDATE_FLAGS =
+    MeshUpdateFlags.DontValidateIndices |
+    MeshUpdateFlags.DontNotifyMeshUsers |
+    MeshUpdateFlags.DontRecalculateBounds |
+    MeshUpdateFlags.DontResetBoneBounds;
 
     void DestroyOldChunks()
     {
@@ -113,7 +136,7 @@ public class TerrainMesh : MonoBehaviour
         }
     }
 
-    void LateUpdate()
+    private void Update()
     {
         // Playing update
         if (Application.isPlaying)
@@ -129,23 +152,41 @@ public class TerrainMesh : MonoBehaviour
         }
     }
 
+    private void LateUpdate()
+    {
+        if (!Application.isPlaying) return;
+
+        // DRAW GRASS THIS FRAME
+        // CreateBuffers();
+        modelGrass.DrawAllGrass(activeChunks, audioProcessor.loudness * windWeight);
+
+        // GENERATE COLLIDERS
+        if (chunksNeedsToUpdateCollider.Count != 0)
+        {
+            if (chunksNeedsToUpdateCollider.Count > 5)
+            {
+                print("WOW! chunksNeedsToUpdateCollider.Count: " + chunksNeedsToUpdateCollider.Count);
+            }
+            NativeArray<int> meshIds = new NativeArray<int>(chunksNeedsToUpdateCollider.Count, Allocator.TempJob);
+            for (int i = 0; i < meshIds.Length; ++i)
+            {
+                meshIds[i] = chunksNeedsToUpdateCollider[i].GetMeshInstanceId();
+            }
+            var job = new BakeJob(meshIds);
+            job.Schedule(meshIds.Length, 1).Complete(); // Each core will update one collider
+            meshIds.Dispose();
+
+            foreach (Chunk c in chunksNeedsToUpdateCollider)
+            {
+                c.UpdateColliderSharedMesh();
+            }
+            chunksNeedsToUpdateCollider.Clear();
+        }
+    }
+
     private void RuntimeUpdatePerFrame()
     {
-        CreateBuffers();
 
-        if (fixedMapSize && drawGrass)
-        {
-            modelGrass.DrawAllGrass(activeChunks, audioProcessor.loudness * windWeight);
-            return;
-        }
-
-        if (!fixedMapSize)
-        {
-            UpdateSurroundingChunks();
-            if (drawGrass)
-                modelGrass.DrawAllGrass(activeChunks, audioProcessor.loudness * windWeight);
-            return;
-        }
     }
 
     public void RequestMeshUpdate()
@@ -164,6 +205,7 @@ public class TerrainMesh : MonoBehaviour
         recycleableChunks = new Queue<Chunk>();
         chunks = new List<Chunk>();
         activeChunks = new List<Chunk>();
+        chunksNeedsToUpdateCollider = new List<Chunk>();
         chunkCoordsNeededToBeRendered = new List<Vector3Int>();
         existingChunks = new Dictionary<Vector3Int, Chunk>();
         existingChunkVolumeData = new Dictionary<Vector3Int, float[]>();
@@ -201,9 +243,7 @@ public class TerrainMesh : MonoBehaviour
         );
     }
 
-    /// <summary>
-    /// Load one unloaded chunk, searching from centre
-    /// </summary>
+    // INFINITE MAP
     void UpdateSurroundingChunks()
     {
         if (chunks == null)
@@ -282,6 +322,7 @@ public class TerrainMesh : MonoBehaviour
         return;
     }
 
+    // INFINITE MAP GEN STRATAGY
     private bool AllBoundCornersAreLoaded(int xzBound, int yBound)
     {
         Vector3Int viewerCoord = GetViewerCoord();
@@ -299,8 +340,7 @@ public class TerrainMesh : MonoBehaviour
         return true;
     }
 
-    /// <param name="coord"></param>
-    /// <returns>The chunk is worth render (1) or not (0)</returns>
+    // INFINITE MAP RENDER STRATAGY
     private int RenderChunk(Vector3Int coord)
     {
         if (existingChunks.ContainsKey(coord))
@@ -308,11 +348,9 @@ public class TerrainMesh : MonoBehaviour
             print("Try to render " + coord + " but it already exists! ");
             return 0;
         }
-        int renderedChunks = 0;
 
         int numPoints =
             lodSetup.numPointsPerAxis * lodSetup.numPointsPerAxis * lodSetup.numPointsPerAxis;
-        float[] chunkVolumeData = new float[numPoints];
 
         Chunk chunk = CreateChunk(coord);
 
@@ -320,26 +358,26 @@ public class TerrainMesh : MonoBehaviour
         chunk.SetUp(mat, generateColliders);
 
         additionalPointsBuffer = new ComputeBuffer(numPoints, sizeof(float));
-
         if (!existingChunkVolumeData.ContainsKey(coord))
         {
+            float[] chunkVolumeData = new float[numPoints];
             additionalPointsBuffer.SetData(chunkVolumeData);
-            renderedChunks += UpdateChunkMesh(chunk, additionalPointsBuffer);
         }
         else
         {
             additionalPointsBuffer.SetData(existingChunkVolumeData[coord]);
-            renderedChunks += UpdateChunkMesh(chunk, additionalPointsBuffer);
         }
+
+        int chunkUseFlag = 0;
+        chunkUseFlag += UpdateChunkMesh(chunk, additionalPointsBuffer, true);
         additionalPointsBuffer.Release();
 
         existingChunks.Add(coord, chunk);
         chunks.Add(chunk);
-        if (renderedChunks == 1)
-        {
+        if (chunkUseFlag == 1)
             activeChunks.Add(chunk);
-        }
-        return renderedChunks;
+
+        return chunkUseFlag;
     }
 
     private void LoadBoundedChunks()
@@ -348,10 +386,6 @@ public class TerrainMesh : MonoBehaviour
             return;
 
         CreateChunkHolderIfNeeded();
-
-        // All chunks, no matter lod
-        // int fixedChunksHori = Mathf.CeilToInt(lodSetup.fixedDistanceHori / boundSize);
-        // int fixedChunksVert = Mathf.CeilToInt(lodSetup.fixedDistanceVert / boundSize);
 
         int fixedChunksHori = numChunks.x;
         int fixedChunksVert = numChunks.y;
@@ -374,7 +408,6 @@ public class TerrainMesh : MonoBehaviour
                         * lodSetup.numPointsPerAxis
                         * lodSetup.numPointsPerAxis;
                     Chunk chunk = CreateChunk(coord);
-                    float[] chunkVolumeData = new float[numPoints];
 
                     chunk.coord = coord;
                     chunk.SetUp(mat, generateColliders);
@@ -382,22 +415,22 @@ public class TerrainMesh : MonoBehaviour
                     chunks.Add(chunk);
 
                     additionalPointsBuffer = new ComputeBuffer(numPoints, sizeof(float));
-
-                    int activeFlag = 0;
                     if (!existingChunkVolumeData.ContainsKey(coord))
                     {
+                        float[] chunkVolumeData = new float[numPoints];
                         additionalPointsBuffer.SetData(chunkVolumeData);
-                        activeFlag = UpdateChunkMesh(chunk, additionalPointsBuffer);
                     }
                     else
                     {
                         additionalPointsBuffer.SetData(existingChunkVolumeData[coord]);
-                        activeFlag = UpdateChunkMesh(chunk, additionalPointsBuffer);
                     }
-                    if (activeFlag == 1)
-                        activeChunks.Add(chunk);
 
+                    int chunkUseFlag = 0;
+                    chunkUseFlag = UpdateChunkMesh(chunk, additionalPointsBuffer, true);
                     additionalPointsBuffer.Release();
+
+                    if (chunkUseFlag == 1)
+                        activeChunks.Add(chunk);
                 }
             }
         }
@@ -886,7 +919,7 @@ public class TerrainMesh : MonoBehaviour
         for (int i = 0; i < chunksNeedToBeUpdated.Count; i++)
         {
             additionalPointsBuffer.SetData(existingChunkVolumeData[chunksNeedToBeUpdated[i]]);
-            UpdateChunkMesh(existingChunks[chunksNeedToBeUpdated[i]], additionalPointsBuffer);
+            UpdateChunkMesh(existingChunks[chunksNeedToBeUpdated[i]], additionalPointsBuffer, false);
         }
         // print("chunksNeedToBeUpdated.Count = " + chunksNeedToBeUpdated.Count);
 
@@ -899,7 +932,7 @@ public class TerrainMesh : MonoBehaviour
     /// <param name="chunk"></param>
     /// <param name="additionalPointsBuffer"></param>
     /// <returns>0: Inactive chunk, 1: Active chunk</returns>
-    public int UpdateChunkMesh(Chunk chunk, ComputeBuffer additionalPointsBuffer)
+    public int UpdateChunkMesh(Chunk chunk, ComputeBuffer additionalPointsBuffer, bool generateColliderNow)
     {
         int numPointsPerAxis = lodSetup.numPointsPerAxis;
         int numVoxelsPerAxis = numPointsPerAxis - 1;
@@ -986,10 +1019,14 @@ public class TerrainMesh : MonoBehaviour
         mesh.vertices = vertices;
         mesh.triangles = meshTriangles;
 
-        mesh.RecalculateNormals();
-        chunk.UpdateColliders();
+        mesh.RecalculateNormals(MESH_UPDATE_FLAGS);
 
-        if (drawGrass && Application.isPlaying)
+        if (generateColliderNow)
+            chunk.UpdateColliderSharedMesh();
+        else
+            chunksNeedsToUpdateCollider.Add(chunk);
+
+        if (Application.isPlaying)
         {
             // Dispatch grass chunk point shader
             modelGrass.CalculateChunkGrassPos(chunk);
@@ -998,6 +1035,7 @@ public class TerrainMesh : MonoBehaviour
         return 1;
     }
 
+    // Editor Preview
     public void UpdateAllChunks()
     {
         additionalPointsBuffer = new ComputeBuffer(
@@ -1013,7 +1051,7 @@ public class TerrainMesh : MonoBehaviour
         // Create mesh for each chunk
         foreach (Chunk chunk in chunks)
         {
-            UpdateChunkMesh(chunk, additionalPointsBuffer);
+            UpdateChunkMesh(chunk, additionalPointsBuffer, true);
         }
         additionalPointsBuffer.Release();
     }

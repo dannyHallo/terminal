@@ -65,36 +65,25 @@ public class Chunk : MonoBehaviour
     {
         if (setuped)
             return;
-        setuped = true;
+
         this.generateCollider = generateCollider;
+
         if (gameObject.tag != "Chunk")
             gameObject.tag = "Chunk";
-        meshFilter = GetComponent<MeshFilter>();
-        meshRenderer = GetComponent<MeshRenderer>();
 
-        if (generateCollider)
-            meshCollider = GetComponent<MeshCollider>();
-
+        // Get / Create meshFilter
         if (meshFilter == null)
-        {
             meshFilter = gameObject.AddComponent<MeshFilter>();
-        }
+        else
+            meshFilter = GetComponent<MeshFilter>();
 
+        // Get / Create meshRenderer
         if (meshRenderer == null)
-        {
             meshRenderer = gameObject.AddComponent<MeshRenderer>();
-        }
+        else
+            meshRenderer = GetComponent<MeshRenderer>();
 
-        if (meshCollider == null && generateCollider)
-        {
-            meshCollider = gameObject.AddComponent<MeshCollider>();
-        }
-        if (meshCollider != null && !generateCollider)
-        {
-            // DestroyImm.. works at editor, whereas Destroy not
-            DestroyImmediate(meshCollider);
-        }
-
+        // Get / Create mesh and bind
         mesh = meshFilter.sharedMesh;
         if (mesh == null)
         {
@@ -103,26 +92,41 @@ public class Chunk : MonoBehaviour
             meshFilter.sharedMesh = mesh;
         }
 
+        // Generate and bind collider with mesh
         if (generateCollider)
         {
-            if (meshCollider.sharedMesh == null)
-            {
-                meshCollider.sharedMesh = mesh;
-            }
-            UpdateColliders();
+            if (meshCollider == null)
+                meshCollider = gameObject.AddComponent<MeshCollider>();
+            else
+                meshCollider = GetComponent<MeshCollider>();
+
+            meshCollider.cookingOptions = MeshColliderCookingOptions.CookForFasterSimulation |
+                    MeshColliderCookingOptions.EnableMeshCleaning |
+                    MeshColliderCookingOptions.UseFastMidphase |
+                    MeshColliderCookingOptions.WeldColocatedVertices;
+
+            UpdateColliderSharedMesh();
         }
+        // Destroy existing mesh collider if collision is disabled
+        else if (meshCollider != null)
+            DestroyImmediate(meshCollider); // DestroyImm.. works at editor, whereas Destroy does not
+
+        // Set materials
         meshRenderer.material = mat;
+
+        setuped = true;
     }
 
-    public void UpdateColliders()
+    public int GetMeshInstanceId()
     {
-        if (generateCollider)
-        {
-            // force update
-            meshCollider.sharedMesh = null;
-            meshCollider.sharedMesh = mesh;
-            meshCollider.enabled = false;
-            meshCollider.enabled = true;
-        }
+        return mesh.GetInstanceID();
+    }
+
+    public void UpdateColliderSharedMesh()
+    {
+        if (!generateCollider)
+            return;
+
+        meshCollider.sharedMesh = mesh;
     }
 }

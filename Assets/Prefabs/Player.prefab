@@ -285,7 +285,6 @@ MonoBehaviour:
   socketMoveFreq: 0.2
   socketMoveBoundary: 0.4
   instrumentChaseSocketSpeed: 4
-  uiManager: {fileID: 0}
 --- !u!82 &460509502085719021
 AudioSource:
   m_ObjectHideFlags: 0

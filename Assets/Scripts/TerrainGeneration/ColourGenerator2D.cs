@@ -117,6 +117,7 @@ public class ColourGenerator2D : MonoBehaviour
     {
         dst = new Texture2D(src.width, src.height, TextureFormat.RGBA32, false);
         dst.SetPixels(src.GetPixels());
+        dst.filterMode = FilterMode.Point;
         dst.Apply();
     }
 
