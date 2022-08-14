@@ -65,10 +65,30 @@ public class NoiseDensity : MonoBehaviour
         }
     }
 
-    public void CalculateChunkNoise(
+    public void EnableChunkDrawing()
+    {
+        noiseDensityShader.SetBool("processDrawing", true);
+    }
+
+    public void DisableChunkDrawing()
+    {
+        noiseDensityShader.SetBool("processDrawing", false);
+    }
+
+    public void RegisterChunkDrawingDataToComputeShader(
+        Vector3 hitWorldPos,
+        float affactRange,
+        float affactWeight
+    )
+    {
+        noiseDensityShader.SetVector("hitWorldPos", hitWorldPos);
+        noiseDensityShader.SetFloat("affactRange", affactRange);
+        noiseDensityShader.SetFloat("affactWeight", affactWeight);
+    }
+
+    public void CalculateChunkVolumeData(
         Chunk chunk,
         ComputeBuffer pointsBuffer,
-        ComputeBuffer additionalPointsBuffer,
         ComputeBuffer pointsStatus,
         Vector3 worldSize
     )
@@ -124,17 +144,14 @@ public class NoiseDensity : MonoBehaviour
         noiseDensityShader.SetFloat("heightGredient", heightGredient);
         noiseDensityShader.SetFloat("multiFractalWeight", multiFractalWeight);
 
-        noiseDensityShader.SetBuffer(1, "offsets", offsetsBuffer);
-        noiseDensityShader.SetBuffer(1, "points", pointsBuffer);
-        noiseDensityShader.SetBuffer(1, "manualData", additionalPointsBuffer);
-        noiseDensityShader.SetBuffer(1, "GroundLevelDataBuffer", chunk.groundLevelDataBuffer);
-        noiseDensityShader.SetBuffer(1, "pointsStatus", pointsStatus);
+        noiseDensityShader.SetBuffer(0, "offsets", offsetsBuffer);
+        noiseDensityShader.SetBuffer(0, "points", pointsBuffer);
+        noiseDensityShader.SetBuffer(0, "manualData", chunk.editingBuffer);
+        noiseDensityShader.SetBuffer(0, "GroundLevelDataBuffer", chunk.groundLevelDataBuffer);
+        noiseDensityShader.SetBuffer(0, "pointsStatus", pointsStatus);
 
-        noiseDensityShader.Dispatch(1, numThreadsPerAxis, numThreadsPerAxis, numThreadsPerAxis);
+        noiseDensityShader.Dispatch(0, numThreadsPerAxis, numThreadsPerAxis, numThreadsPerAxis);
 
-        foreach (ComputeBuffer buffer in buffersToRelease)
-        {
-            buffer.Release();
-        }
+        foreach (ComputeBuffer buffer in buffersToRelease) buffer.Release();
     }
 }

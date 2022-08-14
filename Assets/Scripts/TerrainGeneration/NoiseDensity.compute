@@ -39,30 +39,19 @@ float customDistance(float3 pos, float r){
     return -pos.y;
 }
 
-// k1: Change chunk manualData
-#pragma kernel EditTerrain
+float3 hitWorldPos;
+float affactRange;
+float affactWeight;
+bool processDrawing;
+
+// k1: calculate chunk volume data,
+// optional: process drawing
+#pragma kernel CalculateChunkVolumeData
 
 [numthreads(8,8,8)]
-void EditTerrain (int3 id : SV_DispatchThreadID)
+void CalculateChunkVolumeData (int3 id : SV_DispatchThreadID)
 {
-    // Out of bound
-    if (id.x >= numPointsPerAxis || id.y >= numPointsPerAxis || id.z >= numPointsPerAxis) {
-        return;
-    }
-
-
-
-}
-
-#pragma kernel CalculateChunkNoise
-
-[numthreads(8,8,8)]
-void CalculateChunkNoise (int3 id : SV_DispatchThreadID)
-{
-    // Out of bound
-    if (id.x >= numPointsPerAxis || id.y >= numPointsPerAxis || id.z >= numPointsPerAxis) {
-        return;
-    }
+    if (id.x >= numPointsPerAxis || id.y >= numPointsPerAxis || id.z >= numPointsPerAxis) return;
 
     int index = indexFromCoord(id.x,id.y,id.z);
     
@@ -98,6 +87,11 @@ void CalculateChunkNoise (int3 id : SV_DispatchThreadID)
     // float finalVal = (radius - distance(float3(0,0,0), pos)) * heightGredient + floorOffset + noise;
     float finalVal = -pos.y * heightGredient + floorOffset + noise;
 
+    if(processDrawing){
+        manualData[index] += 
+        clamp(affactRange - distance(pos, hitWorldPos), 0, affactRange) * affactWeight;
+    }
+    
     // -pos.y * heightGredient + floorOffset + noise + manualData[index] = 0
     float heightOnThisPos = (floorOffset + noise + manualData[index]) / heightGredient;
     float heightOnThisPosWithoutManual = (noise + floorOffset) / heightGredient;
