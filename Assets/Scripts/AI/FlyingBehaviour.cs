@@ -217,9 +217,8 @@ public class FlyingBehaviour : MonoBehaviour
         currentDrawRange = (int)Mathf.Clamp(initDrawRange * (1 + ability_score), 0, maxDrawRange);
 
         // Draw texture
-        terrainGen.GetComponent<ColourGenerator2D>().CreateTextureIfNeeded();
         terrainGen.GetComponent<ColourGenerator2D>().DrawTextureOnWorldPos(
-            terrainGen.GetComponent<ColourGenerator2D>().userTex, hitTerrainPos, currentDrawRange, drawMetal);
+            hitTerrainPos, currentDrawRange, drawMetal);
 
         // Change env
         terrainGen.GetComponent<TerrainMesh>().DrawOnChunk(

@@ -44,7 +44,7 @@ float affactRadius;
 float affactWeight;
 bool processDrawing;
 
-// k1: calculate chunk volume data,
+// k0: calculate chunk volume data,
 // optional: process drawing
 #pragma kernel CalculateChunkVolumeData
 

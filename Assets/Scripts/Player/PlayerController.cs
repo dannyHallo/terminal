@@ -18,8 +18,22 @@ public class PlayerController : MonoBehaviour
         }
     }
 
-    private TerrainMesh terrainMesh;
-    private ColourGenerator2D colourGenerator2D;
+    private TerrainMesh terrainMesh
+    {
+        get
+        {
+            return GameObject.Find("TerrainGen").GetComponent<TerrainMesh>();
+        }
+    }
+
+    private ColourGenerator2D colourGenerator2D
+    {
+        get
+        {
+            return GameObject.Find("TerrainGen").GetComponent<ColourGenerator2D>();
+        }
+    }
+
     public GameObject butterflyPrefab;
     public GameObject metalSpiritPrefab;
 
@@ -299,11 +313,6 @@ public class PlayerController : MonoBehaviour
         ChangeWeaponCheck();
         MoveSockets();
 
-        if (!terrainMesh)
-            terrainMesh = GameObject.Find("TerrainGen").GetComponent<TerrainMesh>();
-        if (!colourGenerator2D)
-            colourGenerator2D = GameObject.Find("TerrainGen").GetComponent<ColourGenerator2D>();
-
         if (Cursor.lockState == CursorLockMode.None)
         {
             if (PlayerWantsToLockCursor())
@@ -376,10 +385,9 @@ public class PlayerController : MonoBehaviour
                         Profiler.BeginSample("PF_DrawOnChunk");
                         terrainMesh.DrawOnChunk(hit.point, drawRange, digStrength, 0);
                         Profiler.EndSample();
-                        
+
                         Profiler.BeginSample("PF_DrawTextureOnWorldPos");
-                        colourGenerator2D.DrawTextureOnWorldPos(
-                            colourGenerator2D.userTex, hit.point, drawRange, true);
+                        colourGenerator2D.DrawTextureOnWorldPos(hit.point, drawRange, true);
                         Profiler.EndSample();
                     }
                 }
@@ -390,8 +398,7 @@ public class PlayerController : MonoBehaviour
                 {
                     // NotifyTerrainChanged(hit.point, drawRange);
                     terrainMesh.DrawOnChunk(hit.point, drawRange, digStrength, 1);
-                    colourGenerator2D.DrawTextureOnWorldPos(
-                            colourGenerator2D.userTex, hit.point, drawRange, false);
+                    colourGenerator2D.DrawTextureOnWorldPos(hit.point, drawRange, false);
                 }
             }
             else if (mainSocketCurrentStoringInstrument == InstrumentTypes.Guitar)

@@ -29,7 +29,7 @@ float worldPosOffset;
 float textureSize;
 
 float _DisplacementStrength;
-RWTexture2D<float4> image;
+RWTexture2D<float4> universalRenderTex;
 
 int indexFromCoord(uint x, uint y, uint z) {
     return z * numPointsPerAxis * numPointsPerAxis + y * numPointsPerAxis + x;
@@ -41,7 +41,7 @@ int colorCmp(float4 col1, float4 col2){
     return 1 - step(threhold, distance(col1.rgb, col2.rgb));
 }
 
-// k1: Calculate vertical position of every 2d mesh point from GroundLevelData buffer
+// k0: Calculate vertical position of every 2d mesh point from GroundLevelData buffer
 #pragma kernel CalculateGrassPos
 
 [numthreads(8,8,8)]
@@ -66,7 +66,7 @@ void CalculateGrassPos(int3 id : SV_DispatchThreadID) {
     }
 }
 
-// k2: Calculate exact position of every grass from GroundLevelData (By interpolation)
+// k1: Calculate exact position of every grass from GroundLevelData (By interpolation)
 #pragma kernel InitializeGrassChunk
 
 [numthreads(8,8,1)]
@@ -86,7 +86,7 @@ void InitializeGrassChunk(int2 id : SV_DispatchThreadID) {
     textureSamplePoint += worldPosOffset;
     textureSamplePoint *= ratio * textureSize;
 
-    grass.enable = colorCmp(requiredColor, image[textureSamplePoint]);
+    grass.enable = colorCmp(requiredColor, universalRenderTex[textureSamplePoint]);
 
     float groundLevel1, groundLevel2, groundLevel3, groundLevel4;
     float heightMapStep, grassMapStep;

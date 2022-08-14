@@ -42,11 +42,8 @@ public class ModelGrass : MonoBehaviour
         numWindThreadGroups,
         numGrassInitThreadGroups;
 
-
-
     uint[] args;
     uint[] argsLOD;
-    private RenderTexture universalRenderTex;
 
     private ColourGenerator2D colourGenerator2D
     {
@@ -117,20 +114,15 @@ public class ModelGrass : MonoBehaviour
         argsLOD[2] = (uint)grassLODMesh.GetIndexStart(0);
         argsLOD[3] = (uint)grassLODMesh.GetBaseVertex(0);
 
-        // Create & bind render texture
-        Texture2D userTex = colourGenerator2D.userTex;
-        universalRenderTex = new RenderTexture(userTex.width, userTex.height, 0);
-        universalRenderTex.enableRandomWrite = true;
-        universalRenderTex.Create();
-
         float ratio = 1 / (2.0f * colourGenerator2D.worldPosOffset);
         float worldPosOffset = colourGenerator2D.worldPosOffset;
-        float textureSize = userTex.width;
+        float textureSize = ColourGenerator2D.textureResolution;
 
         grassChunkPointShader.SetFloat("ratio", ratio);
         grassChunkPointShader.SetFloat("worldPosOffset", worldPosOffset);
         grassChunkPointShader.SetFloat("textureSize", textureSize);
-        grassChunkPointShader.SetTexture(1, "image", universalRenderTex);
+
+        grassChunkPointShader.SetTexture(1, "universalRenderTex", colourGenerator2D.GetUniversalRenderTexture());
         grassChunkPointShader.SetFloats("requiredColor", colourGenerator2D.fillColor(colourGenerator2D.grassColor));
 
         meshThreadGroupNum = Mathf.CeilToInt(numPointsPerAxis / 8.0f);
@@ -140,9 +132,6 @@ public class ModelGrass : MonoBehaviour
     public void CalculateChunkGrassPosition(Chunk chunk)
     {
         if (voteBuffer == null) InitRelevantShadersAndBuffers();
-
-        Texture2D userTex = colourGenerator2D.userTex;
-        Graphics.Blit(userTex, universalRenderTex);
 
         chunk.argsBuffer.SetData(args);
         chunk.argsLodBuffer.SetData(argsLOD);
