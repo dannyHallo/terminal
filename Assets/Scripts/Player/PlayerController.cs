@@ -54,9 +54,7 @@ public class PlayerController : MonoBehaviour
     [HideInInspector]
     public bool canMove = true;
 
-    bool ableToDig = true;
-
-    [Range(1, 10)]
+    [Range(1, 20)]
     public float drawRange = 5.0f;
     public float digStrength = 1.0f;
 
@@ -96,12 +94,9 @@ public class PlayerController : MonoBehaviour
     void Start()
     {
         audioSource = GetComponent<AudioSource>();
-        // audioListener = GetComponent<AudioListener>();
         characterController = GetComponent<CharacterController>();
 
         LockCursor();
-        ableToDig = true;
-
         playerInputActions = new PlayerInputActions();
         playerInputActions.Player.Enable();
     }
@@ -329,12 +324,6 @@ public class PlayerController : MonoBehaviour
         }
     }
 
-    IEnumerator DiggingCountdown()
-    {
-        yield return new WaitForEndOfFrame();
-        ableToDig = true;
-    }
-
     IEnumerator TakePhoto()
     {
         String desktopPath = Environment.GetFolderPath(Environment.SpecialFolder.Desktop);
@@ -378,29 +367,34 @@ public class PlayerController : MonoBehaviour
         {
             if (mainSocketCurrentStoringInstrument == InstrumentTypes.Sax)
             {
-                if (hit.collider.tag == "Chunk")
-                {
-                    if (Input.GetMouseButton(0) && ableToDig)
-                    {
-                        Profiler.BeginSample("PF_DrawOnChunk");
-                        terrainMesh.DrawOnChunk(hit.point, drawRange, digStrength, 0);
-                        Profiler.EndSample();
+                if (hit.collider.tag != "Chunk") return;
 
-                        Profiler.BeginSample("PF_DrawTextureOnWorldPos");
-                        colourGenerator2D.DrawTextureOnWorldPos(hit.point, drawRange, true);
-                        Profiler.EndSample();
-                    }
-                }
+                Profiler.BeginSample("PF_DrawOnChunk");
+
+                if (Input.GetMouseButton(0))
+                    terrainMesh.DrawOnChunk(hit.point, drawRange, digStrength, 0);
+                else if (Input.GetMouseButton(1))
+                    terrainMesh.DrawOnChunk(hit.point, drawRange, digStrength, 1);
+
+                Profiler.EndSample();
             }
+
             else if (mainSocketCurrentStoringInstrument == InstrumentTypes.Dudelsa)
             {
-                if (Input.GetMouseButton(0) && ableToDig)
+                if (hit.collider.tag != "Chunk") return;
+
+                if (Input.GetMouseButton(0))
                 {
-                    // NotifyTerrainChanged(hit.point, drawRange);
-                    terrainMesh.DrawOnChunk(hit.point, drawRange, digStrength, 1);
+                    terrainMesh.DrawOnChunk(hit.point, drawRange, 0.0f, 1);
+                    colourGenerator2D.DrawTextureOnWorldPos(hit.point, drawRange, true);
+                }
+                else if (Input.GetMouseButton(1))
+                {
+                    terrainMesh.DrawOnChunk(hit.point, drawRange, 0.0f, 1);
                     colourGenerator2D.DrawTextureOnWorldPos(hit.point, drawRange, false);
                 }
             }
+
             else if (mainSocketCurrentStoringInstrument == InstrumentTypes.Guitar)
             {
                 // Create butterfly

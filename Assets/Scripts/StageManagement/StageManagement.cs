@@ -63,7 +63,7 @@ public class StageManagement : MonoBehaviour
         if (SwitchCount == 1)
         {
             eighty.Play();
-            if (_cameraControl.isFollowingPlayer) _cameraControl.OrbitPlayer();
+            if (_cameraControl.isFollowingPlayerThirdPerson) _cameraControl.OrbitPlayer();
             _countDown = rotateTime;
             stageInt = SwitchCount;
 
@@ -82,7 +82,7 @@ public class StageManagement : MonoBehaviour
 
             skydown.Play();
 
-            if (_cameraControl.isFollowingPlayer) _cameraControl.OrbitPlayer();
+            if (_cameraControl.isFollowingPlayerThirdPerson) _cameraControl.OrbitPlayer();
             _countDown = rotateTime;
             stageInt = SwitchCount;
         }
@@ -95,7 +95,7 @@ public class StageManagement : MonoBehaviour
         if (SwitchCount == 5)
         {
             grass.Play();
-            if (_cameraControl.isFollowingPlayer) _cameraControl.OrbitPlayer();
+            if (_cameraControl.isFollowingPlayerThirdPerson) _cameraControl.OrbitPlayer();
             _countDown = rotateTime;
             stageInt = SwitchCount;
             Debug.Log("III");
@@ -110,7 +110,7 @@ public class StageManagement : MonoBehaviour
         if (SwitchCount == 7)
         {
             AI.Play();
-            if (_cameraControl.isFollowingPlayer) _cameraControl.OrbitPlayer();
+            if (_cameraControl.isFollowingPlayerThirdPerson) _cameraControl.OrbitPlayer();
             _countDown = rotateTime;
             stageInt = SwitchCount;
         }
@@ -161,7 +161,7 @@ public class StageManagement : MonoBehaviour
             {
                 earthquake.volume -= Time.deltaTime;
                 //StageSwitch(3);
-                if (_cameraControl.normalFollowingCam.GetCinemachineComponent<CinemachineBasicMultiChannelPerlin>().m_AmplitudeGain >= 0)
+                if (_cameraControl.thirdPersonCam.GetCinemachineComponent<CinemachineBasicMultiChannelPerlin>().m_AmplitudeGain >= 0)
                 {
                     _cameraControl.CameraShakeStop();
                 }
@@ -219,7 +219,7 @@ public class StageManagement : MonoBehaviour
         }
         if (stageInt == 8)
         {
-            
+
             if (THETREE.transform.localPosition.y < -27)
             {
                 THETREE.transform.localPosition += Vector3.up * 10f * Time.deltaTime;
