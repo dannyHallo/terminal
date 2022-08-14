@@ -169,7 +169,7 @@ public class ColourGenerator2D : MonoBehaviour
         }
     }
 
-    public void DrawTextureOnWorldPos(Texture2D texture, Vector3 position, int radius, bool isMetal)
+    public void DrawTextureOnWorldPos(Texture2D texture, Vector3 position, float radius, bool isMetal)
     {
         float ratio = 1 / (2.0f * worldPosOffset);
 

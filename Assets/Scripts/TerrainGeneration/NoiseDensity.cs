@@ -77,12 +77,12 @@ public class NoiseDensity : MonoBehaviour
 
     public void RegisterChunkDrawingDataToComputeShader(
         Vector3 hitWorldPos,
-        float affactRange,
+        float affactRadius,
         float affactWeight
     )
     {
         noiseDensityShader.SetVector("hitWorldPos", hitWorldPos);
-        noiseDensityShader.SetFloat("affactRange", affactRange);
+        noiseDensityShader.SetFloat("affactRadius", affactRadius);
         noiseDensityShader.SetFloat("affactWeight", affactWeight);
     }
 

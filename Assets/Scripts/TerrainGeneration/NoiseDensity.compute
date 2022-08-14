@@ -40,7 +40,7 @@ float customDistance(float3 pos, float r){
 }
 
 float3 hitWorldPos;
-float affactRange;
+float affactRadius;
 float affactWeight;
 bool processDrawing;
 
@@ -89,7 +89,7 @@ void CalculateChunkVolumeData (int3 id : SV_DispatchThreadID)
 
     if(processDrawing){
         manualData[index] += 
-        clamp(affactRange - distance(pos, hitWorldPos), 0, affactRange) * affactWeight;
+        clamp(affactRadius - distance(pos, hitWorldPos), 0, affactRadius) * affactWeight;
     }
     
     // -pos.y * heightGredient + floorOffset + noise + manualData[index] = 0

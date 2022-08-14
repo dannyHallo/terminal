@@ -3,6 +3,7 @@ using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine.UI;
+using UnityEngine.Profiling;
 
 [RequireComponent(typeof(AudioSource))]
 [RequireComponent(typeof(CharacterController))]
@@ -42,7 +43,7 @@ public class PlayerController : MonoBehaviour
     bool ableToDig = true;
 
     [Range(1, 10)]
-    public int drawRange = 5;
+    public float drawRange = 5.0f;
     public float digStrength = 1.0f;
 
     AudioSource audioSource;
@@ -372,9 +373,14 @@ public class PlayerController : MonoBehaviour
                 {
                     if (Input.GetMouseButton(0) && ableToDig)
                     {
+                        Profiler.BeginSample("PF_DrawOnChunk");
                         terrainMesh.DrawOnChunk(hit.point, drawRange, digStrength, 0);
+                        Profiler.EndSample();
+                        
+                        Profiler.BeginSample("PF_DrawTextureOnWorldPos");
                         colourGenerator2D.DrawTextureOnWorldPos(
                             colourGenerator2D.userTex, hit.point, drawRange, true);
+                        Profiler.EndSample();
                     }
                 }
             }
