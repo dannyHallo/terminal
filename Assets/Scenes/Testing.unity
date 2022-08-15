@@ -248,7 +248,7 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 19492581}
-  m_LocalRotation: {x: 0.22504473, y: 0, z: 0, w: 0.9743485}
+  m_LocalRotation: {x: 0.107833624, y: 0, z: 0, w: 0.994169}
   m_LocalPosition: {x: 0, y: 49.449997, z: -3.5}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
@@ -1342,7 +1342,7 @@ MonoBehaviour:
   m_HorizontalDamping: 0
   m_VerticalDamping: 0
   m_ScreenX: 0.5
-  m_ScreenY: 0.4000002
+  m_ScreenY: 0.6069998
   m_DeadZoneWidth: 0
   m_DeadZoneHeight: 0
   m_SoftZoneWidth: 0.17
@@ -1580,7 +1580,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0c246675c48dd4e6796ca3fe12dabbb2, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  modelGrass: {fileID: 1229284586}
   audioProcessor: {fileID: 383323101}
   windWeight: 0
   fixedMapSize: 1
@@ -1592,7 +1591,6 @@ MonoBehaviour:
     numGrassesPerAxis: 256
     boundSize: 40
   shader: {fileID: 7200000, guid: e6675a5747764487687871eed95a316b, type: 3}
-  mat: {fileID: 2100000, guid: d93366c815783437abcf8032ab99990b, type: 2}
   generateColliders: 1
   meshPaintingFac: 1
   editorUpdate: 0
@@ -1646,7 +1644,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: fe8e142838c90d54090bb9af47c4aee4, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  mat: {fileID: 2100000, guid: d93366c815783437abcf8032ab99990b, type: 2}
   drawImageComputeShader: {fileID: 7200000, guid: 4ba05a433a37712489b60d77d040b52a,
     type: 3}
   gradient:
@@ -2213,7 +2210,7 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1710116858}
-  m_LocalRotation: {x: 0.20693062, y: 0.0000000043690487, z: -9.2409136e-10, w: 0.97835565}
+  m_LocalRotation: {x: 0.2069306, y: 0.000000016833958, z: -0.0000000035605265, w: 0.97835565}
   m_LocalPosition: {x: -0.87, y: 46.618, z: 0.604}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
@@ -2445,7 +2442,7 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 2035024505}
-  m_LocalRotation: {x: 0.22504473, y: 0, z: 0, w: 0.9743485}
+  m_LocalRotation: {x: 0.107833624, y: 0, z: 0, w: 0.994169}
   m_LocalPosition: {x: 0, y: 49.449997, z: -3.5}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0

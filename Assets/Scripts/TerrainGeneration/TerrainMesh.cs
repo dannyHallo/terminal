@@ -34,7 +34,22 @@ public class TerrainMesh : MonoBehaviour
         }
     }
 
-    public ModelGrass modelGrass;
+    private ColourGenerator2D colourGenerator2D
+    {
+        get
+        {
+            return gameObject.GetComponent<ColourGenerator2D>();
+        }
+    }
+
+    private ModelGrass modelGrass
+    {
+        get
+        {
+            return gameObject.GetComponent<ModelGrass>();
+        }
+    }
+
     public AudioProcessor audioProcessor;
     public float windWeight;
 
@@ -49,7 +64,6 @@ public class TerrainMesh : MonoBehaviour
 
     public ChunkMeshProperty chunkMeshProperty;
     public ComputeShader shader;
-    public Material mat;
 
     // [Header("Gizmos")]
     private Color boundsGizmoCol = Color.white;
@@ -323,7 +337,7 @@ public class TerrainMesh : MonoBehaviour
             chunkMeshProperty.numPointsPerAxis * chunkMeshProperty.numPointsPerAxis * chunkMeshProperty.numPointsPerAxis;
 
         Chunk chunk = CreateChunk(coord);
-        chunk.BindMaterialAndCollider(mat, generateColliders);
+        chunk.BindMaterialAndCollider(colourGenerator2D.GetTerrainColourMaterial(), generateColliders);
 
         int chunkUseFlag = 0;
         chunkUseFlag += UpdateChunkMesh(chunk, true);
@@ -354,7 +368,7 @@ public class TerrainMesh : MonoBehaviour
                         * chunkMeshProperty.numPointsPerAxis;
 
                     Chunk chunk = CreateChunk(coord);
-                    chunk.BindMaterialAndCollider(mat, generateColliders);
+                    chunk.BindMaterialAndCollider(colourGenerator2D.GetTerrainColourMaterial(), generateColliders);
 
                     existingChunks.Add(coord, chunk);
                     chunks.Add(chunk);
@@ -579,8 +593,6 @@ public class TerrainMesh : MonoBehaviour
 
     void ReleaseBuffers()
     {
-        // print("Buffer released");
-
         modelGrass.ClearGrassBufferIfNeeded();
         ReleaseExistingChunkBuffers();
 
@@ -655,7 +667,8 @@ public class TerrainMesh : MonoBehaviour
                     Vector3Int coord = new Vector3Int(x, y, z);
                     var newChunk = CreateChunk(coord);
                     chunks.Add(newChunk);
-                    chunks[chunks.Count - 1].BindMaterialAndCollider(mat, generateColliders);
+                    chunks[chunks.Count - 1].BindMaterialAndCollider(
+                        colourGenerator2D.GetTerrainColourMaterial(), generateColliders);
                 }
             }
         }

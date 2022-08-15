@@ -1,0 +1,15 @@
+RWTexture3D<float4> universalRenderTex;
+int radius;
+float4 drawColor;
+int3 origin;
+
+// k0: Draw on texture
+#pragma kernel DrawOnTexture
+
+[numthreads(8,8,8)]
+void DrawOnTexture (uint3 id : SV_DispatchThreadID)
+{
+    if(distance(id, origin) <= radius){
+        universalRenderTex[id.xyz] = drawColor;
+    }
+}

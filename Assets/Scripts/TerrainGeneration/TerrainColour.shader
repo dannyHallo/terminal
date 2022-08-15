@@ -1,4 +1,4 @@
-Shader "Custom/TerrainPainter2D"
+Shader "Custom/TerrainColour"
 {
     Properties
     {
@@ -49,7 +49,7 @@ Shader "Custom/TerrainPainter2D"
         
         sampler2D originalGrayscaleTex;
         sampler2D originalPalette;
-        sampler2D userTex;
+        sampler3D universalRenderTex;
         sampler2D metallicTex;
 
         // return: 0 - false, 1 - true
@@ -61,12 +61,12 @@ Shader "Custom/TerrainPainter2D"
         void surf (Input IN, inout SurfaceOutputStandard o)
         {
             // User texture
-            float4 userCol = tex2D(
-            userTex, 
-            float2((IN.worldPos.x + worldPosOffset) * mapBound, (IN.worldPos.z + worldPosOffset) * mapBound));
-
-            // Load original texture from color palette and noise
-            // float texId = tex2D(originalGrayscaleTex, float2(IN.worldPos.x * mapBound, IN.worldPos.z * mapBound)).r;
+            float4 userCol = tex3D(
+            universalRenderTex, 
+            float3( 
+            (IN.worldPos.x + worldPosOffset) * mapBound, 
+            (IN.worldPos.y + worldPosOffset) * mapBound, 
+            (IN.worldPos.z + worldPosOffset) * mapBound));
 
             float h = smoothstep(  
             -minMaxBounds, 
@@ -78,7 +78,6 @@ Shader "Custom/TerrainPainter2D"
             float3 originalCol = tex2D(originalPalette, float2(h,.5));
             
             // Blend func
-            // float blendFactor = userCol.a;
             float metallicFac = colorCmp(metalColor, userCol);
             o.Albedo = lerp(originalCol, userCol, metallicFac);
 

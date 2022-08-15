@@ -5,9 +5,9 @@ using UnityEngine;
 public class ColourGenerator2D : MonoBehaviour
 {
     [Header("Dependencies")]
-    public Material mat;
-    public ComputeShader drawImageComputeShader;
 
+    private Material terrainColourMateral;
+    private ComputeShader drawImageComputeShader;
 
     [Header("Pallete Rules")]
     public Gradient gradient;
@@ -24,10 +24,6 @@ public class ColourGenerator2D : MonoBehaviour
     public Color grassColor = new Color();
     public float strokeMul;
 
-
-    [Header("Debug")]
-    public bool updateRequest = false;
-
     public const int textureResolution = 496;
     const int paletteResolution = 50;
 
@@ -38,6 +34,50 @@ public class ColourGenerator2D : MonoBehaviour
     private Texture2D userTex;
     private RenderTexture universalRenderTex;
     private Texture2D orignalPalette;
+
+    // Getters
+    public Material GetTerrainColourMaterial()
+    {
+        if (!terrainColourMateral) CreateTerrainColourMaterial();
+        return terrainColourMateral;
+    }
+
+    public ComputeShader GetDrawImageComputeShader()
+    {
+        if (!drawImageComputeShader) CreateDrawImageComputeShader();
+        return drawImageComputeShader;
+    }
+
+    public RenderTexture GetUniversalRenderTexture()
+    {
+        if (!universalRenderTex) CreateUniversalRenderTexture();
+        return universalRenderTex;
+    }
+    // End: Getters
+
+    // Initializers
+    private void CreateTerrainColourMaterial()
+    {
+        terrainColourMateral = new Material(Shader.Find("Custom/TerrainColour"));
+    }
+
+    private void CreateDrawImageComputeShader()
+    {
+        drawImageComputeShader = (ComputeShader)Resources.Load("DrawOnTexture");
+    }
+
+    private void CreateUniversalRenderTexture()
+    {
+        universalRenderTex = new RenderTexture(textureResolution, textureResolution, 0);
+        universalRenderTex.volumeDepth = textureResolution;
+        universalRenderTex.dimension = UnityEngine.Rendering.TextureDimension.Tex3D;
+        universalRenderTex.filterMode = FilterMode.Point;
+        universalRenderTex.enableRandomWrite = true;
+        universalRenderTex.useMipMap = false;
+        universalRenderTex.Create();
+    }
+    // End: Initializers
+
 
     private void Awake()
     {
@@ -88,15 +128,15 @@ public class ColourGenerator2D : MonoBehaviour
             orignalPalette.Apply();
         }
 
-        mat.SetColor("metalColor", metalColor);
-        mat.SetColor("grassColor", grassColor);
-        mat.SetFloat("mapBound", 1 / (2.0f * worldPosOffset));
-        mat.SetFloat("normalOffsetWeight", normalOffsetWeight);
-        mat.SetFloat("minMaxBounds", minMaxBounds);
-        mat.SetFloat("offsetY", offsetY);
-        mat.SetFloat("worldPosOffset", worldPosOffset);
-        mat.SetTexture("originalPalette", orignalPalette);
-        mat.SetTexture("userTex", universalRenderTex);
+        terrainColourMateral.SetColor("metalColor", metalColor);
+        terrainColourMateral.SetColor("grassColor", grassColor);
+        terrainColourMateral.SetFloat("mapBound", 1 / (2.0f * worldPosOffset));
+        terrainColourMateral.SetFloat("normalOffsetWeight", normalOffsetWeight);
+        terrainColourMateral.SetFloat("minMaxBounds", minMaxBounds);
+        terrainColourMateral.SetFloat("offsetY", offsetY);
+        terrainColourMateral.SetFloat("worldPosOffset", worldPosOffset);
+        terrainColourMateral.SetTexture("originalPalette", orignalPalette);
+        terrainColourMateral.SetTexture("universalRenderTex", GetUniversalRenderTexture());
     }
 
     private void CreateTexture2DFromBlank(Texture2D src, out Texture2D dst)
@@ -107,34 +147,24 @@ public class ColourGenerator2D : MonoBehaviour
         dst.Apply();
     }
 
-    public void CreateUniversalRenderTexture()
-    {
-        universalRenderTex = new RenderTexture(textureResolution, textureResolution, 0);
-        universalRenderTex.enableRandomWrite = true;
-        universalRenderTex.filterMode = FilterMode.Point;
-        universalRenderTex.Create();
-    }
-
-    public RenderTexture GetUniversalRenderTexture()
-    {
-        if (!universalRenderTex) CreateUniversalRenderTexture();
-        return universalRenderTex;
-    }
-
     public void DrawTextureOnWorldPos(Vector3 position, float radius, bool isMetal)
     {
         float ratio = 1 / (2.0f * worldPosOffset);
         float textureScaleMul = textureResolution / 1024.0f;
 
         float x = position.x;
+        float y = position.y;
         float z = position.z;
 
         x += worldPosOffset;
+        y += worldPosOffset;
         z += worldPosOffset;
+
         x *= ratio * textureResolution;
+        y *= ratio * textureResolution;
         z *= ratio * textureResolution;
 
-        DrawOnTexture((int)x, (int)z, Mathf.CeilToInt(textureScaleMul * radius * strokeMul), isMetal);
+        DrawOnTexture((int)x, (int)y, (int)z, Mathf.CeilToInt(textureScaleMul * radius * strokeMul), isMetal);
     }
 
     public float[] fillColor(Color color)
@@ -147,23 +177,26 @@ public class ColourGenerator2D : MonoBehaviour
         return colorArray;
     }
 
-    private void DrawOnTexture(int originX, int originY, int radius, bool isMetal)
+    private void DrawOnTexture(int originX, int originY, int originZ, int radius, bool isMetal)
     {
-        int[] origin = new int[2];
+        int[] origin = new int[3];
         origin[0] = originX;
         origin[1] = originY;
+        origin[2] = originZ;
 
         float[] drawColor = new float[4];
 
-        if (isMetal)
-            drawColor = fillColor(metalColor);
-        else
-            drawColor = fillColor(grassColor);
+        if (isMetal) drawColor = fillColor(metalColor);
+        else drawColor = fillColor(grassColor);
 
-        drawImageComputeShader.SetFloats("drawColor", drawColor);
-        drawImageComputeShader.SetInt("radius", radius);
-        drawImageComputeShader.SetInts("origin", origin);
-        drawImageComputeShader.SetTexture(0, "universalRenderTex", universalRenderTex);
-        drawImageComputeShader.Dispatch(0, Mathf.CeilToInt(textureResolution / 8.0f), Mathf.CeilToInt(textureResolution / 8.0f), 1);
+        GetDrawImageComputeShader().SetFloats("drawColor", drawColor);
+        GetDrawImageComputeShader().SetInt("radius", radius);
+        GetDrawImageComputeShader().SetInts("origin", origin);
+        GetDrawImageComputeShader().SetTexture(0, "universalRenderTex", GetUniversalRenderTexture());
+        GetDrawImageComputeShader().Dispatch(
+            0,
+            Mathf.CeilToInt(textureResolution / 8.0f),
+            Mathf.CeilToInt(textureResolution / 8.0f),
+            Mathf.CeilToInt(textureResolution / 8.0f));
     }
 }

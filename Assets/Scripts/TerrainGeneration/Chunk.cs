@@ -171,7 +171,6 @@ public class Chunk : MonoBehaviour
 
         // Set materials
         meshRenderer.material = mat;
-
         setuped = true;
     }
 

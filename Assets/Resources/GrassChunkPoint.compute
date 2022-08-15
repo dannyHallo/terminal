@@ -29,7 +29,7 @@ float worldPosOffset;
 float textureSize;
 
 float _DisplacementStrength;
-RWTexture2D<float4> universalRenderTex;
+RWTexture3D<float4> universalRenderTex;
 
 int indexFromCoord(uint x, uint y, uint z) {
     return z * numPointsPerAxis * numPointsPerAxis + y * numPointsPerAxis + x;
@@ -70,7 +70,7 @@ void CalculateGrassPos(int3 id : SV_DispatchThreadID) {
 #pragma kernel InitializeGrassChunk
 
 [numthreads(8,8,1)]
-void InitializeGrassChunk(int2 id : SV_DispatchThreadID) {
+void InitializeGrassChunk(uint2 id : SV_DispatchThreadID) {
     if (id.x >= numGrassesPerAxis || id.y >= numGrassesPerAxis) {
         return;
     }
@@ -79,10 +79,11 @@ void InitializeGrassChunk(int2 id : SV_DispatchThreadID) {
     
     float3 id223 = float3(id.x, 0, id.y);
     float3 worldPos = centre + id223 * grassSpacing - chunkBoundSize * 0.5f; // no y
-    float2 textureSamplePoint;
-
+    
+    float3 textureSamplePoint;
     textureSamplePoint.x = worldPos.x;
-    textureSamplePoint.y = worldPos.z;
+    textureSamplePoint.y = worldPos.y;
+    textureSamplePoint.z = worldPos.z;
     textureSamplePoint += worldPosOffset;
     textureSamplePoint *= ratio * textureSize;
 
