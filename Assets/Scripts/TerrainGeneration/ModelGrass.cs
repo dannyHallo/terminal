@@ -35,7 +35,6 @@ public class ModelGrass : MonoBehaviour
         scannedGroupSumBuffer;
 
     private int numGrassesPerChunk,
-        chunkDimension,
         numThreadGroups,
         numVoteThreadGroups,
         numGroupScanThreadGroups,
@@ -141,7 +140,7 @@ public class ModelGrass : MonoBehaviour
 
         grassChunkPointShader.SetBuffer(0, "GroundLevelDataBuffer", chunk.groundLevelDataBuffer);
         grassChunkPointShader.SetBuffer(1, "GroundLevelDataBuffer", chunk.groundLevelDataBuffer);
-        grassChunkPointShader.SetBuffer(1, "_GrassDataBuffer", chunk.positionsBuffer);
+        grassChunkPointShader.SetBuffer(1, "GrassPositionsBuffer", chunk.grassPositionsBuffer);
 
         chunk.grassMaterial = new Material(grassMaterial);
         chunk.grassMaterial.SetBuffer("positionBuffer", chunk.culledPositionsBuffer);
@@ -162,7 +161,7 @@ public class ModelGrass : MonoBehaviour
 
         // Vote
         cullGrassShader.SetMatrix("MATRIX_VP", VP);
-        cullGrassShader.SetBuffer(0, "_GrassDataBuffer", chunk.positionsBuffer);
+        cullGrassShader.SetBuffer(0, "GrassPositionsBuffer", chunk.grassPositionsBuffer);
         cullGrassShader.SetBuffer(0, "_VoteBuffer", voteBuffer);
         cullGrassShader.SetVector("_CameraPosition", Camera.main.transform.position);
         cullGrassShader.SetFloat("_Distance", distanceCutoff);
@@ -181,7 +180,7 @@ public class ModelGrass : MonoBehaviour
         cullGrassShader.Dispatch(2, numGroupScanThreadGroups, 1, 1);
 
         // Compact
-        cullGrassShader.SetBuffer(3, "_GrassDataBuffer", chunk.positionsBuffer);
+        cullGrassShader.SetBuffer(3, "GrassPositionsBuffer", chunk.grassPositionsBuffer);
         cullGrassShader.SetBuffer(3, "_VoteBuffer", voteBuffer);
         cullGrassShader.SetBuffer(3, "_ScanBuffer", scanBuffer);
         cullGrassShader.SetBuffer(3, "_ArgsBuffer", noLOD ? chunk.argsBuffer : chunk.argsLodBuffer);

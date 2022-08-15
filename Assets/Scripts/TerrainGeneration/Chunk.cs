@@ -21,7 +21,7 @@ public class Chunk : MonoBehaviour
 
     public ComputeBuffer argsBuffer;
     public ComputeBuffer argsLodBuffer;
-    public ComputeBuffer positionsBuffer;
+    public ComputeBuffer grassPositionsBuffer;
     public ComputeBuffer editingBuffer;
     public ComputeBuffer groundLevelDataBuffer;
     public ComputeBuffer culledPositionsBuffer;
@@ -89,18 +89,18 @@ public class Chunk : MonoBehaviour
         groundLevelDataBuffer = new ComputeBuffer(numPointsPerAxis * numPointsPerAxis * numPointsPerAxis,
                     SizeOf(typeof(GroundLevelData)));
 
-        positionsBuffer = new ComputeBuffer(numGrassesPerAxis * numGrassesPerAxis, SizeOf(typeof(GrassData)));
+        grassPositionsBuffer = new ComputeBuffer(numGrassesPerAxis * numGrassesPerAxis, SizeOf(typeof(GrassData)));
         culledPositionsBuffer = new ComputeBuffer(numGrassesPerAxis * numGrassesPerAxis, SizeOf(typeof(GrassData)));
         editingBuffer = new ComputeBuffer(numPointsPerAxis * numPointsPerAxis * numPointsPerAxis, sizeof(float));
     }
 
     public void FreeBuffers()
     {
-        if (positionsBuffer == null)
+        if (grassPositionsBuffer == null)
             return;
 
-        positionsBuffer.Release();
-        positionsBuffer = null;
+        grassPositionsBuffer.Release();
+        grassPositionsBuffer = null;
 
         editingBuffer.Release();
         editingBuffer = null;

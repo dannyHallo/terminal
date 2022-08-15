@@ -13,7 +13,7 @@ struct GrassData {
 
 RWStructuredBuffer<uint> _ArgsBuffer;
 RWStructuredBuffer<uint> _ArgsBufferLOD;
-RWStructuredBuffer<GrassData> _GrassDataBuffer;
+RWStructuredBuffer<GrassData> GrassPositionsBuffer;
 RWStructuredBuffer<uint> _VoteBuffer;
 RWStructuredBuffer<uint> _ScanBuffer;
 RWStructuredBuffer<uint> _GroupSumArray;
@@ -30,7 +30,7 @@ float3 _CameraPosition;
 
 [numthreads(128, 1, 1)]
 void Vote(uint3 id : SV_DispatchThreadID) {
-    float4 position = float4(_GrassDataBuffer[id.x].position.xyz, 1.0f);
+    float4 position = float4(GrassPositionsBuffer[id.x].position.xyz, 1.0f);
     
     float4 viewspace = mul(MATRIX_VP, position);
 
@@ -44,7 +44,7 @@ void Vote(uint3 id : SV_DispatchThreadID) {
     bool inView = clipspace.x < -0.2f || clipspace.x > 1.2f || clipspace.z <= -0.1f ? 0 : 1;
     bool withinDistance = distance(_CameraPosition, position.xyz) < _Distance;
 
-    _VoteBuffer[id.x] = inView * withinDistance * _GrassDataBuffer[id.x].enable;
+    _VoteBuffer[id.x] = inView * withinDistance * GrassPositionsBuffer[id.x].enable;
 }
 
 // From GPU Gems Chapter 39 'Parallel Prefix Sum (Scan) with CUDA'
@@ -151,7 +151,7 @@ void Compact(uint3 id : SV_DISPATCHTHREADID, uint groupIndex : SV_GROUPINDEX, ui
     
     if (inCamera == 1) {
         InterlockedAdd(_ArgsBuffer[1], 1);
-        _CulledGrassOutputBuffer[_ScanBuffer[tid] + groupSum] = _GrassDataBuffer[tid];
+        _CulledGrassOutputBuffer[_ScanBuffer[tid] + groupSum] = GrassPositionsBuffer[tid];
     }
 }
 

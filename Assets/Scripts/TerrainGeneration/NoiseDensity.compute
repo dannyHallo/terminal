@@ -43,6 +43,7 @@ float3 hitWorldPos;
 float affactRadius;
 float affactWeight;
 bool processDrawing;
+const float impossibleHeight = -99999.0f;
 
 // k0: calculate chunk volume data,
 // optional: process drawing
@@ -106,11 +107,12 @@ void CalculateChunkVolumeData (int3 id : SV_DispatchThreadID)
 
     if(finalWeight > 0){
         pointsStatus[0] = 1;
-        GroundLevelDataBuffer[id.x + id.z * numPointsPerAxis].hasMeshAtThisPlace = true;
+        // GroundLevelDataBuffer[id.x + id.z * numPointsPerAxis].hasMeshAtThisPlace = true;
         }else{
         pointsStatus[1] = 1;
     }
     GroundLevelDataBuffer[index].weight = finalWeight; // To GrassChunkPoint.compute
-    
+    GroundLevelDataBuffer[index].twoDimentionalHeight = impossibleHeight; // Fill default data
+
     points[index] = float4(pos, finalWeight); // To marchingcubes.compute
 }
