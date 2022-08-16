@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using static System.Runtime.InteropServices.Marshal;
 
 public class ModelGrass : MonoBehaviour
 {
@@ -132,6 +133,19 @@ public class ModelGrass : MonoBehaviour
     {
         if (voteBuffer == null) InitRelevantShadersAndBuffers();
 
+        ComputeBuffer belowChunkGroundLevelDataBuffer = new ComputeBuffer(numPointsPerAxis * numPointsPerAxis * numPointsPerAxis,
+                    SizeOf(typeof(Chunk.GroundLevelData)));
+
+        grassChunkPointShader.SetBool("hasChunkBelow", false);
+        CalculateChunkGrassPosition(chunk, belowChunkGroundLevelDataBuffer);
+        grassChunkPointShader.SetBool("hasChunkBelow", true);
+        belowChunkGroundLevelDataBuffer.Release();
+    }
+
+    public void CalculateChunkGrassPosition(Chunk chunk, ComputeBuffer belowChunkGroundLevelDataBuffer)
+    {
+        if (voteBuffer == null) InitRelevantShadersAndBuffers();
+
         chunk.argsBuffer.SetData(args);
         chunk.argsLodBuffer.SetData(argsLOD);
 
@@ -140,6 +154,7 @@ public class ModelGrass : MonoBehaviour
 
         grassChunkPointShader.SetBuffer(0, "GroundLevelDataBuffer", chunk.groundLevelDataBuffer);
         grassChunkPointShader.SetBuffer(1, "GroundLevelDataBuffer", chunk.groundLevelDataBuffer);
+        grassChunkPointShader.SetBuffer(1, "GroundLevelDataBufferBelow", belowChunkGroundLevelDataBuffer);
         grassChunkPointShader.SetBuffer(1, "GrassPositionsBuffer", chunk.grassPositionsBuffer);
 
         chunk.grassMaterial = new Material(grassMaterial);

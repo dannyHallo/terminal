@@ -22,6 +22,7 @@ public class ColourGenerator2D : MonoBehaviour
     [Header("Drawing")]
     public Color metalColor = new Color();
     public Color grassColor = new Color();
+    private Color clearColor = new Color(0, 0, 0, 0);
     public float strokeMul;
 
     public const int textureResolution = 496;
@@ -34,6 +35,13 @@ public class ColourGenerator2D : MonoBehaviour
     private Texture2D userTex;
     private RenderTexture universalRenderTex;
     private Texture2D orignalPalette;
+
+    public enum DrawType
+    {
+        Grass,
+        Metal,
+        Clear
+    }
 
     // Getters
     public Material GetTerrainColourMaterial()
@@ -147,7 +155,7 @@ public class ColourGenerator2D : MonoBehaviour
         dst.Apply();
     }
 
-    public void DrawTextureOnWorldPos(Vector3 position, float radius, bool isMetal)
+    public void DrawTextureOnWorldPos(Vector3 position, float radius, DrawType drawType)
     {
         float ratio = 1 / (2.0f * worldPosOffset);
         float textureScaleMul = textureResolution / 1024.0f;
@@ -164,7 +172,7 @@ public class ColourGenerator2D : MonoBehaviour
         y *= ratio * textureResolution;
         z *= ratio * textureResolution;
 
-        DrawOnTexture((int)x, (int)y, (int)z, Mathf.CeilToInt(textureScaleMul * radius * strokeMul), isMetal);
+        DrawOnTexture((int)x, (int)y, (int)z, Mathf.CeilToInt(textureScaleMul * radius * strokeMul), drawType);
     }
 
     public float[] fillColor(Color color)
@@ -177,7 +185,7 @@ public class ColourGenerator2D : MonoBehaviour
         return colorArray;
     }
 
-    private void DrawOnTexture(int originX, int originY, int originZ, int radius, bool isMetal)
+    private void DrawOnTexture(int originX, int originY, int originZ, int radius, DrawType drawType)
     {
         int[] origin = new int[3];
         origin[0] = originX;
@@ -186,8 +194,18 @@ public class ColourGenerator2D : MonoBehaviour
 
         float[] drawColor = new float[4];
 
-        if (isMetal) drawColor = fillColor(metalColor);
-        else drawColor = fillColor(grassColor);
+        switch (drawType)
+        {
+            case DrawType.Grass:
+                drawColor = fillColor(grassColor);
+                break;
+            case DrawType.Metal:
+                drawColor = fillColor(metalColor);
+                break;
+            case DrawType.Clear:
+                drawColor = fillColor(clearColor);
+                break;
+        }
 
         GetDrawImageComputeShader().SetFloats("drawColor", drawColor);
         GetDrawImageComputeShader().SetInt("radius", radius);

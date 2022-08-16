@@ -529,7 +529,13 @@ public class TerrainMesh : MonoBehaviour
 
         if (Application.isPlaying)
         {
-            modelGrass.CalculateChunkGrassPosition(chunk);
+            Vector3Int chunkBelowCoord = chunk.coord + new Vector3Int(0, -1, 0);
+            if (existingChunks.ContainsKey(chunkBelowCoord))
+            {
+                modelGrass.CalculateChunkGrassPosition(chunk, existingChunks[chunkBelowCoord].groundLevelDataBuffer);
+            }else{
+                modelGrass.CalculateChunkGrassPosition(chunk);
+            }
         }
 
         if (!activeChunks.Contains(chunk)) activeChunks.Add(chunk);

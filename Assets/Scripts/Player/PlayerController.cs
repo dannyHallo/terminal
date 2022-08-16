@@ -55,7 +55,7 @@ public class PlayerController : MonoBehaviour
     public bool canMove = true;
 
     [Range(1, 20)]
-    public float drawRange = 5.0f;
+    public float terrainEditingRange = 5.0f;
     public float digStrength = 1.0f;
 
     AudioSource audioSource;
@@ -372,9 +372,15 @@ public class PlayerController : MonoBehaviour
                 Profiler.BeginSample("PF_DrawOnChunk");
 
                 if (Input.GetMouseButton(0))
-                    terrainMesh.DrawOnChunk(hit.point, drawRange, digStrength, 0);
+                {
+                    terrainMesh.DrawOnChunk(hit.point, terrainEditingRange, digStrength, 0);
+                    colourGenerator2D.DrawTextureOnWorldPos(hit.point, terrainEditingRange, ColourGenerator2D.DrawType.Clear);
+                }
                 else if (Input.GetMouseButton(1))
-                    terrainMesh.DrawOnChunk(hit.point, drawRange, digStrength, 1);
+                {
+                    terrainMesh.DrawOnChunk(hit.point, terrainEditingRange, digStrength, 1);
+                    colourGenerator2D.DrawTextureOnWorldPos(hit.point, terrainEditingRange, ColourGenerator2D.DrawType.Clear);
+                }
 
                 Profiler.EndSample();
             }
@@ -385,13 +391,13 @@ public class PlayerController : MonoBehaviour
 
                 if (Input.GetMouseButton(0))
                 {
-                    terrainMesh.DrawOnChunk(hit.point, drawRange, 0.0f, 1);
-                    colourGenerator2D.DrawTextureOnWorldPos(hit.point, drawRange, true);
+                    terrainMesh.DrawOnChunk(hit.point, terrainEditingRange, 0.0f, 1);
+                    colourGenerator2D.DrawTextureOnWorldPos(hit.point, terrainEditingRange, ColourGenerator2D.DrawType.Grass);
                 }
                 else if (Input.GetMouseButton(1))
                 {
-                    terrainMesh.DrawOnChunk(hit.point, drawRange, 0.0f, 1);
-                    colourGenerator2D.DrawTextureOnWorldPos(hit.point, drawRange, false);
+                    terrainMesh.DrawOnChunk(hit.point, terrainEditingRange, 0.0f, 1);
+                    colourGenerator2D.DrawTextureOnWorldPos(hit.point, terrainEditingRange, ColourGenerator2D.DrawType.Metal);
                 }
             }
 

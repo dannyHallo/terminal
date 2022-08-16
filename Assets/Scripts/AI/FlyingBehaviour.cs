@@ -44,7 +44,7 @@ public class FlyingBehaviour : MonoBehaviour
     [Range(1, 10)] public float initDrawRange = 1.0f;
     [Range(1, 10)] public float maxDrawRange = 10.0f;
     public bool digIn = false;
-    public bool drawMetal = false;
+    public ColourGenerator2D.DrawType drawType;
 
 
     [Header("Preferance")]
@@ -165,7 +165,7 @@ public class FlyingBehaviour : MonoBehaviour
 
         if (frameCount % skipFrameNum == 0 && isAboveTerrain)
         {
-            DrawSpecialTexture(digIn, drawMetal);
+            DrawSpecialTexture(digIn, drawType);
             frameCount = 0;
         }
     }
@@ -212,13 +212,13 @@ public class FlyingBehaviour : MonoBehaviour
         }
     }
 
-    private void DrawSpecialTexture(bool digIn, bool drawMetal)
+    private void DrawSpecialTexture(bool digIn, ColourGenerator2D.DrawType drawType)
     {
         currentDrawRange = (int)Mathf.Clamp(initDrawRange * (1 + ability_score), 0, maxDrawRange);
 
         // Draw texture
         terrainGen.GetComponent<ColourGenerator2D>().DrawTextureOnWorldPos(
-            hitTerrainPos, currentDrawRange, drawMetal);
+            hitTerrainPos, currentDrawRange, drawType);
 
         // Change env
         terrainGen.GetComponent<TerrainMesh>().DrawOnChunk(

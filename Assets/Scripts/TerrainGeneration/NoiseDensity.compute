@@ -1,5 +1,5 @@
 ﻿#include "Assets/Scripts/Compute/Includes/Noise.compute"
-#define impossibleHeight -999
+#define impossibleHeight -9999
 
 struct GroundLevelData
 {
