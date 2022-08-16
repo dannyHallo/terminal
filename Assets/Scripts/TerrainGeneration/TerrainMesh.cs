@@ -339,13 +339,10 @@ public class TerrainMesh : MonoBehaviour
         Chunk chunk = CreateChunk(coord);
         chunk.BindMaterialAndCollider(colourGenerator2D.GetTerrainColourMaterial(), generateColliders);
 
-        int chunkUseFlag = 0;
-        chunkUseFlag += UpdateChunkMesh(chunk, true);
+        int chunkUseFlag = UpdateChunkMesh(chunk, true);
 
         existingChunks.Add(coord, chunk);
         chunks.Add(chunk);
-        if (chunkUseFlag == 1)
-            activeChunks.Add(chunk);
 
         return chunkUseFlag;
     }
@@ -373,8 +370,7 @@ public class TerrainMesh : MonoBehaviour
                     existingChunks.Add(coord, chunk);
                     chunks.Add(chunk);
 
-                    int chunkUseFlag = UpdateChunkMesh(chunk, true);
-                    if (chunkUseFlag == 1) activeChunks.Add(chunk);
+                    UpdateChunkMesh(chunk, true);
                 }
             }
         }
@@ -535,6 +531,8 @@ public class TerrainMesh : MonoBehaviour
         {
             modelGrass.CalculateChunkGrassPosition(chunk);
         }
+
+        if (!activeChunks.Contains(chunk)) activeChunks.Add(chunk);
 
         return 1;
     }

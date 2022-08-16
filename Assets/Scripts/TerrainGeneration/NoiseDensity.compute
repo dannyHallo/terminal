@@ -1,4 +1,5 @@
 ﻿#include "Assets/Scripts/Compute/Includes/Noise.compute"
+#define impossibleHeight -999
 
 struct GroundLevelData
 {
@@ -43,14 +44,12 @@ float3 hitWorldPos;
 float affactRadius;
 float affactWeight;
 bool processDrawing;
-const float impossibleHeight = -99999.0f;
 
 // k0: calculate chunk volume data,
 // optional: process drawing
 #pragma kernel CalculateChunkVolumeData
-
 [numthreads(8,8,8)]
-void CalculateChunkVolumeData (int3 id : SV_DispatchThreadID)
+void CalculateChunkVolumeData (uint3 id : SV_DispatchThreadID)
 {
     if (id.x >= numPointsPerAxis || id.y >= numPointsPerAxis || id.z >= numPointsPerAxis) return;
 
@@ -105,12 +104,9 @@ void CalculateChunkVolumeData (int3 id : SV_DispatchThreadID)
 
     float finalWeight = finalVal + manualData[index];
 
-    if(finalWeight > 0){
-        pointsStatus[0] = 1;
-        // GroundLevelDataBuffer[id.x + id.z * numPointsPerAxis].hasMeshAtThisPlace = true;
-        }else{
-        pointsStatus[1] = 1;
-    }
+    if(finalWeight > 0) pointsStatus[0] = 1;
+    else pointsStatus[1] = 1;
+    
     GroundLevelDataBuffer[index].weight = finalWeight; // To GrassChunkPoint.compute
     GroundLevelDataBuffer[index].twoDimentionalHeight = impossibleHeight; // Fill default data
 

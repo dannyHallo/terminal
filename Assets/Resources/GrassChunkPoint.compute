@@ -1,6 +1,6 @@
 #include "Assets/Scripts/Compute/Includes/Noise.compute"
 #include "Assets/Resources/Random.cginc"
-
+#define impossibleHeight -999
 
 struct GrassData {
     float4 position;
@@ -27,7 +27,6 @@ float4 requiredColor;
 float ratio;
 float worldPosOffset;
 float textureSize;
-const float impossibleHeight = -99999.0f;
 
 float _DisplacementStrength;
 RWTexture3D<float4> universalRenderTex;
@@ -43,8 +42,7 @@ int colorCmp(float4 col1, float4 col2){
 }
 
 // k0: Calculate vertical position of every 2d mesh point from GroundLevelData buffer
-#pragma kernel CalculateGrassPos
-
+#pragma kernel CalculateGrassPos 
 [numthreads(8,8,8)]
 void CalculateGrassPos(int3 id : SV_DispatchThreadID) {
     if(id.y <= 0) return;
@@ -67,21 +65,18 @@ void CalculateGrassPos(int3 id : SV_DispatchThreadID) {
 }
 
 // k1: Calculate exact position of every grass from GroundLevelData (By interpolation)
-#pragma kernel InitializeGrassChunk
-
+#pragma kernel InitializeGrassChunk 
 [numthreads(8,8,1)]
 void InitializeGrassChunk(uint2 id : SV_DispatchThreadID) {
     if (id.x >= numGrassesPerAxis || id.y >= numGrassesPerAxis) return;
-    
     GrassData grass;
     grass.enable = false;
     grass.position = float4(0, 0, 0, 0);
     GrassPositionsBuffer[id.x + id.y * numGrassesPerAxis] = grass;
 
-    int2 meshCoordRef = 0.0f;
     
     float3 id223 = float3(id.x, 0, id.y);
-    float3 worldPos = centre +  id223 * grassSpacing - chunkBoundSize * 0.5f; // no y
+    float3 worldPos = centre + id223 * grassSpacing - chunkBoundSize * 0.5f; // no y
     
     float3 textureSamplePoint;
     textureSamplePoint.x = worldPos.x;
@@ -98,6 +93,7 @@ void InitializeGrassChunk(uint2 id : SV_DispatchThreadID) {
     heightMapStep = 1.0f / float(numPointsPerAxis - 1); // TODO: move divition to script
     grassMapStep = 1.0f / float(numGrassesPerAxis);
 
+    int2 meshCoordRef = 0;
     // TOPLEFT
     meshCoordRef.x = floor(id.x * float(numPointsPerAxis - 1) / float(numGrassesPerAxis));
     meshCoordRef.y = floor(id.y * float(numPointsPerAxis - 1) / float(numGrassesPerAxis));
@@ -131,7 +127,7 @@ void InitializeGrassChunk(uint2 id : SV_DispatchThreadID) {
     float min1234 = min(min12, min34);
     
     // Restrict 'k'
-    if(max1234 - min1234 > meshSpacing * 1.2f) return;
+    // if(max1234 - min1234 > meshSpacing * 1.2f) return;
     
     float2 interpolation = 0.0f;
     interpolation.x = ((id.x * grassMapStep) % heightMapStep) / heightMapStep;
