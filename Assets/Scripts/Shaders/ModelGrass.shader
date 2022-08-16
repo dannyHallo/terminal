@@ -5,13 +5,16 @@ Shader "Custom/ModelGrass" {
         _AOColor ("Ambient Occlusion", Color) = (1, 1, 1)
         _TipColor ("Tip Color", Color) = (1, 1, 1)
         verticalScale ("Vertical Scale", Range(0.0, 5.0)) = 1.0
+        verticalShift ("Vertical Shift", Range(0.0, 1.0)) = 0.5
+        minimumAge ("Grass Age Ratio", Range(0.0, 1.0)) = 0.8
+        tendernessMul ("Overall Tenderness", Range(0.0, 1.0)) = 0.8
         verticalStretchDueToHeight ("Vertical Stretch Due To Height", Range(0.0, 1.0)) = 0.5
         overallScale ("Overall Scale", Range(0.0, 5.0)) = 1.0
         bottomThickness ("Bottom Thickness", Range(0.0, 5.0)) = 2.0
         _Droop ("Droop", Range(0.0, 10.0)) = 0.0
-        _FogColor ("Fog Color", Color) = (1, 1, 1)
-        _FogDensity ("Fog Density", Range(0.0, 1.0)) = 0.0
-        _FogOffset ("Fog Offset", Range(0.0, 10.0)) = 0.0
+
+        windChangeFrequency ("Wind Change Frequency", Range(0.0, 0.1)) = 0.02
+        windStrengthMul ("Overall Wind Strength", Range(0.0, 10.0)) = 2.0
     }
 
     SubShader {
@@ -33,7 +36,7 @@ Shader "Custom/ModelGrass" {
             #include "UnityPBSLighting.cginc"
             #include "AutoLight.cginc"
             #include "Assets/Resources/Random.cginc"
-            #include "Assets/Scripts/Compute/Includes/Noise.compute"
+            #include "Assets/Resources/SimplexNoise2.cginc"
 
             struct VertexData {
                 float4 vertex : POSITION;
@@ -53,7 +56,8 @@ Shader "Custom/ModelGrass" {
 
             float4 _Albedo1, _Albedo2, _AOColor, _TipColor, _FogColor;
             StructuredBuffer<GrassData> positionBuffer;
-            float verticalStretchDueToHeight, _Droop, _FogDensity, _FogOffset, windStrength;
+            float verticalShift, verticalStretchDueToHeight, _Droop, _FogDensity, 
+            _FogOffset, windStrength, minimumAge, tendernessMul, windStrengthMul, windChangeFrequency;
             float overallScale, verticalScale;
             float bottomThickness;
             
@@ -81,8 +85,8 @@ Shader "Custom/ModelGrass" {
 
                 // A random val ranged from 0 to 1 only due to its world position
                 float idHash = randValue(abs(grassPosition.x * 10000 + grassPosition.y * 100 + grassPosition.z * 0.05f));
-                float age = lerp(0.4f, 1.0f, idHash);
-                float tenderness = (1.4f - age) * lerp(0.1f, 0.3f, idHash);
+                float age = lerp(minimumAge, 1.0f, idHash);
+                float tenderness = (1.4f - age) * lerp(0.1f, 0.3f, idHash) * tendernessMul;
 
                 // Transform the grass rotation
                 float4 localPosition = RotateAroundXInDegrees(v.vertex, 90.0f);
@@ -90,14 +94,14 @@ Shader "Custom/ModelGrass" {
                 localPosition = RotateAroundYInDegrees(localPosition, idHash * 180.0f);
 
                 // Stretch grass vertically
-                localPosition.y += verticalStretchDueToHeight * v.uv.y * v.uv.y * v.uv.y;
+                localPosition.y += verticalShift;
+                localPosition.y += verticalStretchDueToHeight * v.uv.y * v.uv.y;
                 localPosition.y *= verticalScale;
 
                 // Droop the grass
                 float4 animationDirection = float4(0.0f, 0.0f, 1.0f, 0.0f);
                 animationDirection = normalize(RotateAroundYInDegrees(animationDirection, idHash * 180.0f));
-                localPosition.xz += _Droop * lerp(0.5f, 1.0f, idHash) * (v.uv.y * v.uv.y * tenderness) 
-                * animationDirection;
+                localPosition.xz += _Droop * lerp(0.5f, 1.0f, idHash) * (v.uv.y * v.uv.y * tenderness) * animationDirection;
 
                 // Stretch the grass horizontally
                 localPosition.xz *= bottomThickness;
@@ -112,7 +116,7 @@ Shader "Custom/ModelGrass" {
                 float persistence = 0.4f;
                 float lacunarity = 1.4f;
 
-                // Wind strength by perlin noise
+                // Wind strength by simplex perlin noise
                 for(int j = 0; j < numOctaves; j++){
                     float n = abs(snoise(float3(
                     (grassPosition.x * windScale + _Time.y), 
@@ -125,13 +129,12 @@ Shader "Custom/ModelGrass" {
                     windScale *= lacunarity;
                 }
 
-                float2 windDirection = 0.0f;
-                float windChangeFrequency = 0.02f;
+                float2 windDirection;
                 float angle01 = snoise(float3(_Time.y * windChangeFrequency, 0 , 0));
                 windDirection = float2(cos(angle01 * 2 * UNITY_PI), sin(angle01 * 2 * UNITY_PI));
 
-                localPosition.x += windDirection.x * windStrength * v.uv.y * tenderness * 2.0f;
-                localPosition.z += windDirection.y * windStrength * v.uv.y * tenderness * 2.0f;
+                localPosition.x += windDirection.x * windStrength * windStrengthMul * v.uv.y * tenderness;
+                localPosition.z += windDirection.y * windStrength * windStrengthMul * v.uv.y * tenderness;
                 
                 float4 worldPosition = float4(grassPosition.xyz + localPosition, 0.0f);
                 
@@ -151,13 +154,7 @@ Shader "Custom/ModelGrass" {
 
                 float4 grassColor = (col + tip) * ndotl * ao;
 
-                /* Fog */
-                float viewDistance = length(_WorldSpaceCameraPos - i.worldPos);
-                float fogFactor = (_FogDensity / sqrt(log(2))) * (max(0.0f, viewDistance - _FogOffset));
-                fogFactor = exp2(-fogFactor * fogFactor);
-
-
-                return lerp(_FogColor, grassColor, fogFactor);
+                return grassColor;
             }
 
             ENDCG

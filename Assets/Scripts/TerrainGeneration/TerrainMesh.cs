@@ -135,11 +135,7 @@ public class TerrainMesh : MonoBehaviour
 
     void ReleaseExistingChunkBuffers()
     {
-        var oldChunks = FindObjectsOfType<Chunk>(true);
-        for (int i = 0; i < oldChunks.Length; i++)
-        {
-            oldChunks[i].FreeBuffers();
-        }
+        for (int i = 0; i < chunks.Count; i++) chunks[i].FreeBuffers();
     }
 
     private void Update()
@@ -533,7 +529,9 @@ public class TerrainMesh : MonoBehaviour
             if (existingChunks.ContainsKey(chunkBelowCoord))
             {
                 modelGrass.CalculateChunkGrassPosition(chunk, existingChunks[chunkBelowCoord].groundLevelDataBuffer);
-            }else{
+            }
+            else
+            {
                 modelGrass.CalculateChunkGrassPosition(chunk);
             }
         }

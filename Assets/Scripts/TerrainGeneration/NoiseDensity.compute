@@ -1,5 +1,9 @@
-﻿#include "Assets/Scripts/Compute/Includes/Noise.compute"
-#define impossibleHeight -9999
+﻿// #include "Assets/Scripts/Compute/Includes/Noise.compute"
+#include "Assets/Resources/SimplexNoise2.cginc"
+
+#define FLT_MAX 1e+10
+#define FLT_MIN -1e+10
+#define FLT_MIN_POS 1e-10
 
 struct GroundLevelData
 {
@@ -19,9 +23,6 @@ int octaves;
 float radius;
 float lacunarity, persistence, noiseScale, noiseWeight, floorOffset, 
 heightGredient, multiFractalWeight;
-
-bool b1, b2;
-float f1, f2, f3;
 
 float4 params;
 int numPointsPerAxis;
@@ -49,7 +50,7 @@ bool processDrawing;
 // optional: process drawing
 #pragma kernel CalculateChunkVolumeData
 [numthreads(8,8,8)]
-void CalculateChunkVolumeData (uint3 id : SV_DispatchThreadID)
+void CalculateChunkVolumeData (int3 id : SV_DispatchThreadID)
 {
     if (id.x >= numPointsPerAxis || id.y >= numPointsPerAxis || id.z >= numPointsPerAxis) return;
 
@@ -108,7 +109,7 @@ void CalculateChunkVolumeData (uint3 id : SV_DispatchThreadID)
     else pointsStatus[1] = 1;
     
     GroundLevelDataBuffer[index].weight = finalWeight; // To GrassChunkPoint.compute
-    GroundLevelDataBuffer[index].twoDimentionalHeight = impossibleHeight; // Fill default data
+    GroundLevelDataBuffer[index].twoDimentionalHeight = FLT_MIN; // Fill default data
 
     points[index] = float4(pos, finalWeight); // To marchingcubes.compute
 }

@@ -38,12 +38,6 @@ public class NoiseDensity : MonoBehaviour
     public float noiseWeight = 1;
     public bool closeEdges;
 
-    public bool b1;
-    public bool b2;
-    public float f1;
-    public float f2;
-    public float f3;
-
     public float floorOffset = 1;
 
     public Vector4 shaderParams;
@@ -123,8 +117,6 @@ public class NoiseDensity : MonoBehaviour
         noiseDensityShader.SetVector("worldSize", worldSize);
         noiseDensityShader.SetVector("params", shaderParams);
 
-        noiseDensityShader.SetBool("b1", b1);
-        noiseDensityShader.SetBool("b2", b2);
         noiseDensityShader.SetBool("closeEdges", closeEdges);
 
         noiseDensityShader.SetInt("octaves", Mathf.Max(1, numOctaves));
@@ -136,9 +128,6 @@ public class NoiseDensity : MonoBehaviour
         noiseDensityShader.SetFloat("persistence", persistence);
         noiseDensityShader.SetFloat("noiseScale", noiseScale);
         noiseDensityShader.SetFloat("noiseWeight", noiseWeight);
-        noiseDensityShader.SetFloat("f1", f1);
-        noiseDensityShader.SetFloat("f2", f2);
-        noiseDensityShader.SetFloat("f3", f3);
         noiseDensityShader.SetFloat("floorOffset", floorOffset);
         noiseDensityShader.SetFloat("radius", planetRadius);
         noiseDensityShader.SetFloat("heightGredient", heightGredient);

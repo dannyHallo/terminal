@@ -57,7 +57,7 @@ MonoBehaviour:
   metalSpiritPrefab: {fileID: 2835868219209234114, guid: 2cb95cb37e9efc84c900f95043b1b1e5,
     type: 3}
   screenShotMask: {fileID: 0}
-  walkingSpeed: 10
+  walkingSpeed: 15
   runningSpeed: 20
   jumpSpeed: 30
   flySpeed: 160
@@ -65,8 +65,8 @@ MonoBehaviour:
   lookSpeed: 2
   lookYLimit: 90
   canMove: 1
-  drawRange: 20
-  digStrength: 0.2
+  terrainEditingRange: 10
+  digStrength: 0.1
   Cam_35mm: {fileID: 8300000, guid: 0392f216d18f6804080c30a6037e7c0b, type: 3}
   instruments:
   - e: 2
