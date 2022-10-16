@@ -200,8 +200,6 @@ void InitializeGrassChunk(int2 id : SV_DispatchThreadID) {
         height = lerp(h1, h2, interpolation.y);
     }
     
-
-    
     pos.y = height;
     pos.w = 0.0f;       // Out of order
 
@@ -217,7 +215,7 @@ void InitializeGrassChunk(int2 id : SV_DispatchThreadID) {
     textureSamplePoint *= ratio * textureSize;
 
     // Kick grass without paint
-    if(!colorCmp(requiredColor, universalRenderTex[textureSamplePoint])) return;
+    if(1 - step(0, universalRenderTex[textureSamplePoint].x - randValue())) return;
 
     grass.position = pos;
     grass.enable = true;

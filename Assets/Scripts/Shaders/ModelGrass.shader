@@ -61,8 +61,6 @@ Shader "Custom/ModelGrass" {
             float overallScale, verticalScale;
             float bottomThickness;
             
-            // int _ChunkNum;
-
             float4 RotateAroundYInDegrees (float4 vertex, float degrees) {
                 float alpha = degrees * UNITY_PI / 180.0;
                 float sina, cosa;

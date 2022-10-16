@@ -10,13 +10,6 @@ using UnityEngine.Profiling;
 public class PlayerController : MonoBehaviour
 {
     public String botName;
-    private UIManager uiManager
-    {
-        get
-        {
-            return GameObject.Find("Canvas").GetComponent<UIManager>();
-        }
-    }
 
     private TerrainMesh terrainMesh
     {
@@ -34,11 +27,9 @@ public class PlayerController : MonoBehaviour
         }
     }
 
-    public GameObject butterflyPrefab;
-    public GameObject metalSpiritPrefab;
-
     public Image screenShotMask;
 
+    [Header("Movement")]
     public float walkingSpeed = 7.5f;
     public float runningSpeed = 11.5f;
     public float jumpSpeed = 8.0f;
@@ -47,49 +38,20 @@ public class PlayerController : MonoBehaviour
     public float lookSpeed = 2.0f;
     public float lookYLimit = 45.0f;
 
+    [HideInInspector] public bool canMove = true;
+
+
+    [Header("Terrain Editing")]
+    [Range(1, 20)] public float terrainEditingHardRange = 5.0f;
+    [Range(1, 20)] public float terrainEditingSoftRange = 10.0f;
+    public float digStrength = 1.0f;
+
+    public AudioClip screenShotSound;
+    AudioSource audioSource;
+    PlayerInputActions playerInputActions;
     CharacterController characterController;
     Vector3 moveDirection = Vector3.zero;
     float rotationY = 0;
-
-    [HideInInspector]
-    public bool canMove = true;
-
-    [Range(1, 20)]
-    public float terrainEditingRange = 5.0f;
-    public float digStrength = 1.0f;
-
-    AudioSource audioSource;
-    public AudioClip Cam_35mm;
-    PlayerInputActions playerInputActions;
-    //Instrument
-    public enum InstrumentTypes
-    {
-        Guitar,
-        Violin,
-        Sax,
-        Dudelsa,
-        Mic,
-        None
-    };
-
-    public List<enumToInstrument> instruments;
-
-    [Serializable]
-    public struct enumToInstrument
-    {
-        public InstrumentTypes e;
-        public GameObject i;
-        public GameObject s;
-        public bool have;
-    }
-
-    public GameObject mainSocket;
-    public GameObject tmpSocket;
-    private InstrumentTypes mainSocketCurrentStoringInstrument = InstrumentTypes.None;
-
-    public float socketMoveFreq, socketMoveBoundary;
-    public float instrumentChaseSocketSpeed;
-    private float floatingHeight;
 
     void Start()
     {
@@ -101,212 +63,9 @@ public class PlayerController : MonoBehaviour
         playerInputActions.Player.Enable();
     }
 
-    public void EquipInstrument(InstrumentTypes instrumentType)
-    {
-        for (int i = 0; i < instruments.Count; i++)
-        {
-            enumToInstrument enumToInstrument = instruments[i];
-
-            if (enumToInstrument.e == instrumentType)
-            {
-                if (enumToInstrument.have == true) return;
-
-                GameObject genInstrument = GameObject.Instantiate(
-                    enumToInstrument.i, enumToInstrument.s.transform.position, Quaternion.identity);
-
-                enumToInstrument.i = genInstrument;
-                enumToInstrument.have = true;
-
-                instruments[i] = enumToInstrument;
-                return;
-            }
-        }
-    }
-
-    public void EquipInstrument(int i)
-    {
-        if (i >= instruments.Count) return;
-
-        if (instruments[i].have == true) return;
-
-        GameObject genInstrument = GameObject.Instantiate(
-            instruments[i].i, instruments[i].s.transform.position, Quaternion.identity);
-
-        // Change equip status to true, and change prefab to scene object
-        enumToInstrument tmpInstrument;
-        tmpInstrument.e = instruments[i].e;
-        tmpInstrument.s = instruments[i].s;
-        tmpInstrument.i = genInstrument;
-        tmpInstrument.have = true;
-
-        instruments[i] = tmpInstrument;
-    }
-
-    private void MoveSockets()
-    {
-        if (instruments.Count <= 0)
-            return;
-
-        if (floatingHeight == 0) floatingHeight = instruments[0].s.transform.localPosition.y;
-
-        for (int i = 0; i < instruments.Count; i++)
-        {
-            if (!instruments[i].have)
-                continue;
-
-            Vector3 pos = instruments[i].s.transform.localPosition;
-            pos.y = floatingHeight + Mathf.Sin(
-                (2 * Mathf.PI * ((float)i / (2 * instruments.Count))) +
-                (2 * Mathf.PI * Time.time * socketMoveFreq)) * socketMoveBoundary;
-
-            instruments[i].s.transform.localPosition = pos;
-            // instruments[i].i.transform.localPosition = pos;
-            instruments[i].i.transform.position = Vector3.Lerp(instruments[i].i.transform.position,
-                instruments[i].s.transform.position, Time.deltaTime * instrumentChaseSocketSpeed);
-        }
-    }
-
-
-    private void ChangeWeaponCheck()
-    {
-        if (Input.GetKeyDown(KeyCode.Alpha1))
-        {
-            TryToggleInstrument(0);
-        }
-        if (Input.GetKeyDown(KeyCode.Alpha2))
-        {
-            TryToggleInstrument(1);
-        }
-        if (Input.GetKeyDown(KeyCode.Alpha3))
-        {
-            TryToggleInstrument(2);
-        }
-        if (Input.GetKeyDown(KeyCode.Alpha4))
-        {
-            TryToggleInstrument(3);
-        }
-        if (Input.GetKeyDown(KeyCode.Alpha5))
-        {
-            TryToggleInstrument(4);
-        }
-    }
-
-    private void TryToggleInstrument(int i)
-    {
-        if (mainSocketCurrentStoringInstrument == instruments[i].e)
-        {
-            TryUseInstrument(InstrumentTypes.None);
-        }
-        else
-        {
-            TryUseInstrument(instruments[i].e);
-        }
-    }
-
-    public void TryUseInstrument(InstrumentTypes instrument)
-    {
-        // No Instrument
-        if (instrument == InstrumentTypes.None)
-        {
-            // Place the former instrument back - IDENTICAL
-            if (mainSocketCurrentStoringInstrument != InstrumentTypes.None)
-            {
-                for (int i = 0; i < instruments.Count; i++)
-                {
-
-                    if (instruments[i].e == mainSocketCurrentStoringInstrument)
-                    {
-                        enumToInstrument enumToInstrument = instruments[i];
-                        enumToInstrument.s = tmpSocket;
-                        instruments[i] = enumToInstrument;
-                    }
-                }
-            }
-            uiManager.hintText.text = "";
-
-            // clear sockets
-            mainSocketCurrentStoringInstrument = InstrumentTypes.None;
-            tmpSocket = null;
-            return;
-        }
-
-        // Valid instrument
-        for (int instru = 0; instru < instruments.Count; instru++)
-        {
-            enumToInstrument queriedInstrument = instruments[instru];
-
-            if (queriedInstrument.e == instrument)
-            {
-                if (!queriedInstrument.have)
-                {
-                    print("Unusable because you don't have this instrument!");
-                    return;
-                }
-
-                switch (instru)
-                {
-                    case 0:
-                        uiManager.hintText.text = "1 Remove dirt";
-                        break;
-
-                    case 1:
-                        uiManager.hintText.text = "2 Add dirt";
-                        break;
-
-                    case 2:
-                        uiManager.hintText.text = "3 Add Butterfly";
-                        break;
-
-                    case 3:
-                        uiManager.hintText.text = "4 Add Metal Spirit";
-                        break;
-
-                    case 4:
-                        uiManager.hintText.text = "5 Not implemented...";
-                        break;
-                }
-
-
-                // Place the former instrument back
-                if (mainSocketCurrentStoringInstrument != InstrumentTypes.None)
-                {
-                    for (int i = 0; i < instruments.Count; i++)
-                    {
-                        if (instruments[i].e == mainSocketCurrentStoringInstrument)
-                        {
-                            enumToInstrument enumToInstrument = instruments[i];
-                            enumToInstrument.s = tmpSocket;
-                            instruments[i] = enumToInstrument;
-                        }
-                    }
-                }
-
-                // Storing the current socket for future use
-                mainSocketCurrentStoringInstrument = queriedInstrument.e;
-                tmpSocket = queriedInstrument.s;
-                // Change socket
-                queriedInstrument.s = mainSocket;
-
-                // Save
-                instruments[instru] = queriedInstrument;
-            }
-        }
-    }
-
-    private void Awake()
-    {
-        for (int i = 0; i < instruments.Count; i++)
-        {
-            EquipInstrument(i);
-        }
-        TryToggleInstrument(0);
-    }
-
     private void Update()
     {
         CheckRay();
-        ChangeWeaponCheck();
-        MoveSockets();
 
         if (Cursor.lockState == CursorLockMode.None)
         {
@@ -319,7 +78,6 @@ public class PlayerController : MonoBehaviour
             if (PlayerWantsToUnlockCursor())
                 UnlockCursor();
             Movement(true);
-            // CheckRay();
             CheckScreenShot();
         }
     }
@@ -336,7 +94,7 @@ public class PlayerController : MonoBehaviour
             + ".png";
         ScreenCapture.CaptureScreenshot(filename, 1);
         yield return new WaitForSeconds(0.05f);
-        audioSource.PlayOneShot(Cam_35mm);
+        audioSource.PlayOneShot(screenShotSound);
         yield return new WaitForSeconds(0.05f);
         Color tempColForMask = screenShotMask.color;
         tempColForMask.a = 1;
@@ -365,74 +123,36 @@ public class PlayerController : MonoBehaviour
         RaycastHit hit;
         if (Physics.Raycast(ray, out hit, rayLength, ~IgnoreMe))
         {
-            if (mainSocketCurrentStoringInstrument == InstrumentTypes.Sax)
+            if (hit.collider.tag != "Chunk") return;
+
+            // Profiler.BeginSample("PF_DrawOnChunk");
+
+            // if (Input.GetMouseButton(0))
+            // {
+            //     terrainMesh.DrawOnChunk(hit.point, terrainEditingRange, digStrength, 0);
+            //     colourGenerator2D.DrawTextureOnWorldPos(hit.point, terrainEditingRange, ColourGenerator2D.DrawType.Clear);
+            // }
+            // else if (Input.GetMouseButton(1))
+            // {
+            //     terrainMesh.DrawOnChunk(hit.point, terrainEditingRange, digStrength, 1);
+            //     colourGenerator2D.DrawTextureOnWorldPos(hit.point, terrainEditingRange, ColourGenerator2D.DrawType.Clear);
+            // }
+
+            // Profiler.EndSample();
+
+            if (hit.collider.tag != "Chunk") return;
+
+            if (Input.GetMouseButton(0))
             {
-                if (hit.collider.tag != "Chunk") return;
-
-                Profiler.BeginSample("PF_DrawOnChunk");
-
-                if (Input.GetMouseButton(0))
-                {
-                    terrainMesh.DrawOnChunk(hit.point, terrainEditingRange, digStrength, 0);
-                    colourGenerator2D.DrawTextureOnWorldPos(hit.point, terrainEditingRange, ColourGenerator2D.DrawType.Clear);
-                }
-                else if (Input.GetMouseButton(1))
-                {
-                    terrainMesh.DrawOnChunk(hit.point, terrainEditingRange, digStrength, 1);
-                    colourGenerator2D.DrawTextureOnWorldPos(hit.point, terrainEditingRange, ColourGenerator2D.DrawType.Clear);
-                }
-
-                Profiler.EndSample();
+                terrainMesh.DrawOnChunk(hit.point, terrainEditingSoftRange, 0.0f, 1);
+                colourGenerator2D.DrawTextureOnWorldPos(hit.point, terrainEditingHardRange, terrainEditingSoftRange, ColourGenerator2D.DrawType.Grass);
+            }
+            else if (Input.GetMouseButton(1))
+            {
+                terrainMesh.DrawOnChunk(hit.point, terrainEditingSoftRange, 0.0f, 1);
+                colourGenerator2D.DrawTextureOnWorldPos(hit.point, terrainEditingHardRange, terrainEditingSoftRange, ColourGenerator2D.DrawType.Metal);
             }
 
-            else if (mainSocketCurrentStoringInstrument == InstrumentTypes.Dudelsa)
-            {
-                if (hit.collider.tag != "Chunk") return;
-
-                if (Input.GetMouseButton(0))
-                {
-                    terrainMesh.DrawOnChunk(hit.point, terrainEditingRange, 0.0f, 1);
-                    colourGenerator2D.DrawTextureOnWorldPos(hit.point, terrainEditingRange, ColourGenerator2D.DrawType.Grass);
-                }
-                else if (Input.GetMouseButton(1))
-                {
-                    terrainMesh.DrawOnChunk(hit.point, terrainEditingRange, 0.0f, 1);
-                    colourGenerator2D.DrawTextureOnWorldPos(hit.point, terrainEditingRange, ColourGenerator2D.DrawType.Metal);
-                }
-            }
-
-            else if (mainSocketCurrentStoringInstrument == InstrumentTypes.Guitar)
-            {
-                // Create butterfly
-                if (hit.collider.tag == "Chunk")
-                {
-                    if (Input.GetMouseButtonDown(0))
-                    {
-                        GameObject bufferflyCreated =
-                        GameObject.Instantiate(
-                            butterflyPrefab,
-                            new Vector3(hit.point.x, hit.point.y + 5.0f, hit.point.z),
-                            Quaternion.identity);
-                        bufferflyCreated.GetComponent<FlyingBehaviour>().seed = Time.time;
-                    }
-                }
-            }
-            else if (mainSocketCurrentStoringInstrument == InstrumentTypes.Mic)
-            {
-                // Create metal spirit
-                if (hit.collider.tag == "Chunk")
-                {
-                    if (Input.GetMouseButtonDown(0))
-                    {
-                        GameObject metalSpititCreated =
-                        GameObject.Instantiate(
-                            metalSpiritPrefab,
-                            new Vector3(hit.point.x, hit.point.y + 5.0f, hit.point.z),
-                            Quaternion.identity);
-                        metalSpititCreated.GetComponent<FlyingBehaviour>().seed = Time.time;
-                    }
-                }
-            }
         }
     }
 
@@ -517,7 +237,7 @@ public class PlayerController : MonoBehaviour
         {
             rotationY += yDrift * lookSpeed;
             rotationY = Mathf.Clamp(rotationY, -lookYLimit, lookYLimit);
-            // playerCamera.transform.localRotation = Quaternion.Euler(rotationY, 0, 0);
+            Camera.main.transform.localRotation = Quaternion.Euler(rotationY, 0, 0);
             transform.rotation *= Quaternion.Euler(0, xDrift * lookSpeed, 0);
         }
     }

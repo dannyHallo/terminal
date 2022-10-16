@@ -155,8 +155,10 @@ public class ColourGenerator2D : MonoBehaviour
         dst.Apply();
     }
 
-    public void DrawTextureOnWorldPos(Vector3 position, float radius, DrawType drawType)
+    public void DrawTextureOnWorldPos(Vector3 position, float hardRadius, float softRadius, DrawType drawType)
     {
+        if (softRadius < hardRadius) return;
+
         float ratio = 1 / (2.0f * worldPosOffset);
         float textureScaleMul = textureResolution / 1024.0f;
 
@@ -172,7 +174,11 @@ public class ColourGenerator2D : MonoBehaviour
         y *= ratio * textureResolution;
         z *= ratio * textureResolution;
 
-        DrawOnTexture((int)x, (int)y, (int)z, Mathf.CeilToInt(textureScaleMul * radius * strokeMul), drawType);
+        DrawOnTexture(
+            (int)x, (int)y, (int)z,
+         Mathf.CeilToInt(textureScaleMul * hardRadius * strokeMul),
+        Mathf.CeilToInt(textureScaleMul * softRadius * strokeMul),
+        drawType);
     }
 
     public float[] fillColor(Color color)
@@ -185,7 +191,7 @@ public class ColourGenerator2D : MonoBehaviour
         return colorArray;
     }
 
-    private void DrawOnTexture(int originX, int originY, int originZ, int radius, DrawType drawType)
+    private void DrawOnTexture(int originX, int originY, int originZ, int hardRadius, int softRadius, DrawType drawType)
     {
         int[] origin = new int[3];
         origin[0] = originX;
@@ -208,7 +214,8 @@ public class ColourGenerator2D : MonoBehaviour
         }
 
         GetDrawImageComputeShader().SetFloats("drawColor", drawColor);
-        GetDrawImageComputeShader().SetInt("radius", radius);
+        GetDrawImageComputeShader().SetInt("hardRadius", hardRadius);
+        GetDrawImageComputeShader().SetInt("softRadius", softRadius);
         GetDrawImageComputeShader().SetInts("origin", origin);
         GetDrawImageComputeShader().SetTexture(0, "universalRenderTex", GetUniversalRenderTexture());
         GetDrawImageComputeShader().Dispatch(

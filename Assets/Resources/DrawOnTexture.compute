@@ -1,5 +1,6 @@
 RWTexture3D<float4> universalRenderTex;
-int radius;
+int hardRadius;
+int softRadius;
 float4 drawColor;
 int3 origin;
 
@@ -9,7 +10,17 @@ int3 origin;
 [numthreads(8,8,8)]
 void DrawOnTexture (uint3 id : SV_DispatchThreadID)
 {
-    if(distance(id, origin) <= radius){
-        universalRenderTex[id.xyz] = drawColor;
+    float4 outCol = float4(0,0,0,0);
+    float4 originalCol =  universalRenderTex[id.xyz];
+
+    float distToCenter = distance(id, origin);
+    // outCol.w = 1;
+    if(distToCenter <= softRadius){
+        if(distToCenter <= hardRadius){
+            outCol.x = 1.0f;
+            }else{
+            outCol.x = max(originalCol.x, 1 - (distToCenter - hardRadius) / (softRadius - hardRadius));
+        }
+        universalRenderTex[id.xyz] = outCol;
     }
 }
